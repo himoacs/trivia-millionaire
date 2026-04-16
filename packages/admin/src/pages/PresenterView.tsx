@@ -600,7 +600,7 @@ export default function PresenterView() {
       {/* Fullscreen button */}
       <button
         onClick={toggleFullscreen}
-        className="absolute top-14 right-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors z-10"
+        className="absolute top-14 left-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors z-10"
       >
         {isFullscreen ? '⊠' : '⛶'}
       </button>
@@ -608,7 +608,7 @@ export default function PresenterView() {
       {/* QR Code toggle button */}
       <button
         onClick={() => setShowQROverlay(!showQROverlay)}
-        className={`absolute top-14 right-16 p-2 rounded-lg text-white transition-colors z-10 ${
+        className={`absolute top-14 left-16 p-2 rounded-lg text-white transition-colors z-10 ${
           showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-purple-800/50 hover:bg-purple-700/50'
         }`}
         title={showQROverlay ? 'Hide QR Code' : 'Show QR Code for late joiners'}
@@ -810,7 +810,7 @@ export default function PresenterView() {
 
         {/* Money Ladder - Right Side */}
         {currentQuestion && (
-          <div className="hidden xl:block w-56 ml-6">
+          <div className="hidden xl:block w-56 ml-6 pl-3">
             <MoneyLadder 
               currentQuestion={currentQuestion.questionNumber} 
               totalQuestions={currentQuestion.totalQuestions}

@@ -39,7 +39,7 @@ export function MoneyLadder({ currentQuestion, totalQuestions, questionResults =
   const relevantLadder = MONEY_LADDER.slice(0, totalQuestions).reverse();
   
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className={`flex flex-col gap-2 overflow-visible ${className}`}>
       {relevantLadder.map((level, index) => {
         const actualLevel = totalQuestions - index;
         const isCurrent = actualLevel === currentQuestion;
