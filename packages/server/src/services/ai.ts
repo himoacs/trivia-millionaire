@@ -4,102 +4,48 @@ import type {
   Question,
   QuestionCategory,
   QuestionDifficulty,
-  AIQuestionRequest
+  AIQuestionRequest,
+  AdminSettings
 } from '@trivia-millionaire/shared';
 import { generateQuestionId } from '@trivia-millionaire/shared';
 
-export interface AIConfig {
-  openaiApiKey?: string;
-  anthropicApiKey?: string;
-  litellmBaseUrl?: string;
-  litellmApiKey?: string;
-  defaultModel?: string;
-}
-
 export class AIQuestionGenerator {
-  private openai?: OpenAI;
-  private anthropic?: Anthropic;
-  private litellm?: OpenAI;
-  private defaultModel: string;
-
-  constructor(config: AIConfig) {
-    // Prioritize LiteLLM if configured
-    if (config.litellmBaseUrl && config.litellmApiKey) {
-      this.litellm = new OpenAI({
-        apiKey: config.litellmApiKey,
-        baseURL: config.litellmBaseUrl
-      });
-      console.log(`✅ LiteLLM configured: ${config.litellmBaseUrl}`);
-    } else {
-      // Fall back to native providers
-      if (config.openaiApiKey && !config.openaiApiKey.startsWith('your-')) {
-        this.openai = new OpenAI({ apiKey: config.openaiApiKey });
-        console.log('✅ OpenAI configured');
-      }
-
-      if (config.anthropicApiKey && !config.anthropicApiKey.startsWith('your-')) {
-        this.anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
-        console.log('✅ Anthropic configured');
-      }
-    }
-
-    this.defaultModel = config.defaultModel || 'gpt-3.5-turbo';
-  }
-
   /**
-   * Generate trivia questions using AI
+   * Generate trivia questions using AI with session-scoped settings
    */
-  async generateQuestions(request: AIQuestionRequest): Promise<Question[]> {
-    // If user provides their own configuration, it overrides server defaults
-    if (request.userProvider && request.userApiKey) {
-      console.log(`🔑 Using user-provided ${request.userProvider.toUpperCase()} credentials`);
-      
-      if (request.userProvider === 'litellm') {
-        return this.generateWithLiteLLM(request);
-      } else if (request.userProvider === 'openai') {
-        return this.generateWithOpenAI(request);
-      } else if (request.userProvider === 'anthropic') {
-        return this.generateWithAnthropic(request);
-      }
+  async generateQuestions(request: AIQuestionRequest, settings?: AdminSettings): Promise<Question[]> {
+    if (!settings || !settings.provider || !settings.apiKey) {
+      throw new Error('No AI provider configured. Please configure AI settings in the admin panel first.');
     }
+
+    console.log(`🔑 Using ${settings.provider.toUpperCase()} for question generation`);
     
-    // Otherwise use server defaults
-    if (this.litellm) {
-      return this.generateWithLiteLLM(request);
-    } else if (this.openai) {
-      return this.generateWithOpenAI(request);
-    } else if (this.anthropic) {
-      return this.generateWithAnthropic(request);
+    if (settings.provider === 'litellm') {
+      return this.generateWithLiteLLM(request, settings);
+    } else if (settings.provider === 'openai') {
+      return this.generateWithOpenAI(request, settings);
+    } else if (settings.provider === 'anthropic') {
+      return this.generateWithAnthropic(request, settings);
     } else {
-      throw new Error('No AI provider configured. Please provide an API key or set LITELLM_BASE_URL and LITELLM_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY in your .env file.');
+      throw new Error(`Unknown provider: ${settings.provider}`);
     }
   }
 
   /**
    * Generate questions using LiteLLM (OpenAI-compatible API)
    */
-  private async generateWithLiteLLM(request: AIQuestionRequest): Promise<Question[]> {
-    let client: OpenAI;
-    let model: string;
-    
-    // Use user-provided configuration if available (overrides server defaults)
-    if (request.userApiKey && request.userProvider === 'litellm') {
-      const baseURL = request.userBaseUrl || process.env.LITELLM_BASE_URL;
-      if (!baseURL) {
-        throw new Error('LiteLLM Base URL is required');
-      }
-      client = new OpenAI({
-        apiKey: request.userApiKey,
-        baseURL
-      });
-      model = request.userModel || process.env.LITELLM_MODEL || this.defaultModel;
-      console.log(`✅ Using user LiteLLM config: ${baseURL}, model: ${model}`);
-    } else if (this.litellm) {
-      client = this.litellm;
-      model = this.defaultModel;
-    } else {
-      throw new Error('LiteLLM not configured');
+  private async generateWithLiteLLM(request: AIQuestionRequest, settings: AdminSettings): Promise<Question[]> {
+    if (!settings.baseUrl) {
+      throw new Error('LiteLLM Base URL is required');
     }
+
+    const client = new OpenAI({
+      apiKey: settings.apiKey!,
+      baseURL: settings.baseUrl
+    });
+
+    const model = settings.model || 'gpt-3.5-turbo';
+    console.log(`✅ Using LiteLLM: ${settings.baseUrl}, model: ${model}`);
 
     const prompt = this.buildPrompt(request);
 
@@ -132,25 +78,15 @@ export class AIQuestionGenerator {
   /**
    * Generate questions using OpenAI
    */
-  private async generateWithOpenAI(request: AIQuestionRequest): Promise<Question[]> {
-    let client: OpenAI;
-    let model: string;
-    
-    // Use user-provided configuration if available (overrides server defaults)
-    if (request.userApiKey && request.userProvider === 'openai') {
-      const config: any = { apiKey: request.userApiKey };
-      if (request.userBaseUrl) {
-        config.baseURL = request.userBaseUrl;
-      }
-      client = new OpenAI(config);
-      model = request.userModel || 'gpt-3.5-turbo';
-      console.log(`✅ Using user OpenAI config, model: ${model}`);
-    } else if (this.openai) {
-      client = this.openai;
-      model = this.defaultModel.startsWith('gpt') ? this.defaultModel : 'gpt-3.5-turbo';
-    } else {
-      throw new Error('OpenAI not configured');
+  private async generateWithOpenAI(request: AIQuestionRequest, settings: AdminSettings): Promise<Question[]> {
+    const config: any = { apiKey: settings.apiKey! };
+    if (settings.baseUrl) {
+      config.baseURL = settings.baseUrl;
     }
+
+    const client = new OpenAI(config);
+    const model = settings.model || 'gpt-3.5-turbo';
+    console.log(`✅ Using OpenAI, model: ${model}`);
 
     const prompt = this.buildPrompt(request);
 
@@ -186,25 +122,15 @@ export class AIQuestionGenerator {
   /**
    * Generate questions using Anthropic Claude
    */
-  private async generateWithAnthropic(request: AIQuestionRequest): Promise<Question[]> {
-    let client: Anthropic;
-    let model: string;
-    
-    // Use user-provided configuration if available (overrides server defaults)
-    if (request.userApiKey && request.userProvider === 'anthropic') {
-      const config: any = { apiKey: request.userApiKey };
-      if (request.userBaseUrl) {
-        config.baseURL = request.userBaseUrl;
-      }
-      client = new Anthropic(config);
-      model = request.userModel || 'claude-3-sonnet-20240229';
-      console.log(`✅ Using user Anthropic config, model: ${model}`);
-    } else if (this.anthropic) {
-      client = this.anthropic;
-      model = this.defaultModel.startsWith('claude') ? this.defaultModel : 'claude-3-sonnet-20240229';
-    } else {
-      throw new Error('Anthropic not configured');
+  private async generateWithAnthropic(request: AIQuestionRequest, settings: AdminSettings): Promise<Question[]> {
+    const config: any = { apiKey: settings.apiKey! };
+    if (settings.baseUrl) {
+      config.baseURL = settings.baseUrl;
     }
+
+    const client = new Anthropic(config);
+    const model = settings.model || 'claude-3-sonnet-20240229';
+    console.log(`✅ Using Anthropic, model: ${model}`);
 
     const prompt = this.buildPrompt(request);
 

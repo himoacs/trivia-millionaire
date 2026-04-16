@@ -8,7 +8,8 @@ import type {
   SessionState,
   PlayerAvatar,
   Leaderboard,
-  LeaderboardEntry
+  LeaderboardEntry,
+  AdminSettings
 } from '@trivia-millionaire/shared';
 import {
   generateSessionId,
@@ -335,5 +336,39 @@ export class SessionManager {
     if (!session || session.currentQuestionIndex < 0) return null;
 
     return session.questions[session.currentQuestionIndex] || null;
+  }
+
+  /**
+   * Get admin settings for session
+   */
+  getSettings(sessionId: string): AdminSettings | null {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+
+    return session.settings || null;
+  }
+
+  /**
+   * Update admin settings for session
+   */
+  updateSettings(sessionId: string, settings: AdminSettings): boolean {
+    const session = this.sessions.get(sessionId);
+    if (!session) return false;
+
+    session.settings = settings;
+    console.log(`⚙️  Updated settings for ${session.code}:`, settings.provider || 'none');
+    return true;
+  }
+
+  /**
+   * Clear admin settings for session
+   */
+  clearSettings(sessionId: string): boolean {
+    const session = this.sessions.get(sessionId);
+    if (!session) return false;
+
+    session.settings = undefined;
+    console.log(`🧹 Cleared settings for ${session.code}`);
+    return true;
   }
 }

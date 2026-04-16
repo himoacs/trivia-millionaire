@@ -15,7 +15,8 @@ import type {
   ApiResponse,
   CreateSessionResponse,
   JoinSessionResponse,
-  AIQuestionRequest
+  AIQuestionRequest,
+  AdminSettings
 } from '@trivia-millionaire/shared';
 
 // Load environment variables from root .env file
@@ -40,17 +41,9 @@ const solaceConfig = {
   password: process.env.SOLACE_PASSWORD || 'default'
 };
 
-const aiConfig = {
-  openaiApiKey: process.env.OPENAI_API_KEY,
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-  litellmBaseUrl: process.env.LITELLM_BASE_URL,
-  litellmApiKey: process.env.LITELLM_API_KEY,
-  defaultModel: process.env.LITELLM_MODEL || 'gpt-3.5-turbo'
-};
-
 const solaceService = new SolaceService(solaceConfig);
 const sessionManager = new SessionManager();
-const aiGenerator = new AIQuestionGenerator(aiConfig);
+const aiGenerator = new AIQuestionGenerator();
 
 // --- API Routes ---
 
@@ -60,8 +53,7 @@ const aiGenerator = new AIQuestionGenerator(aiConfig);
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
-    solace: solaceService.isConnected(),
-    ai: aiGenerator.isAvailable()
+    solace: solaceService.isConnected()
   });
 });
 
@@ -219,7 +211,27 @@ app.post('/api/admin/session/:sessionId/questions/generate', async (req: Request
     const { sessionId } = req.params;
     const request: AIQuestionRequest = req.body;
 
-    const questions = await aiGenerator.generateQuestions(request);
+    // Get session settings
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    const settings = sessionManager.getSettings(sessionId);
+    if (!settings || !settings.provider || !settings.apiKey) {
+      res.status(400).json({
+        success: false,
+        error: 'AI not configured for this session. Please configure AI settings first.'
+      } as ApiResponse);
+      return;
+    }
+
+    // Generate questions using session settings
+    const questions = await aiGenerator.generateQuestions(request, settings);
     const success = sessionManager.addQuestions(sessionId, questions);
 
     if (success) {
@@ -230,13 +242,118 @@ app.post('/api/admin/session/:sessionId/questions/generate', async (req: Request
     } else {
       res.status(404).json({
         success: false,
-        error: 'Session not found'
+        error: 'Failed to add questions to session'
       } as ApiResponse);
     }
   } catch (error) {
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate questions'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Get admin settings for session
+ */
+app.get('/api/admin/session/:sessionId/settings', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = sessionManager.getSession(sessionId);
+
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    const settings = sessionManager.getSettings(sessionId);
+    res.json({
+      success: true,
+      data: settings || {}
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get settings'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Update admin settings for session
+ */
+app.post('/api/admin/session/:sessionId/settings', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const settings: AdminSettings = req.body;
+
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    // Validate settings
+    if (settings.provider && !settings.apiKey) {
+      res.status(400).json({
+        success: false,
+        error: 'API key is required when provider is specified'
+      } as ApiResponse);
+      return;
+    }
+
+    if (settings.provider === 'litellm' && !settings.baseUrl) {
+      res.status(400).json({
+        success: false,
+        error: 'Base URL is required for LiteLLM provider'
+      } as ApiResponse);
+      return;
+    }
+
+    const success = sessionManager.updateSettings(sessionId, settings);
+    res.json({
+      success,
+      data: settings
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update settings'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Clear admin settings for session
+ */
+app.delete('/api/admin/session/:sessionId/settings', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = sessionManager.getSession(sessionId);
+
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    const success = sessionManager.clearSettings(sessionId);
+    res.json({
+      success,
+      data: null
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to clear settings'
     } as ApiResponse);
   }
 });

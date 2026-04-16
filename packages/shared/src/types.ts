@@ -101,6 +101,7 @@ export interface Session {
   currentQuestionIndex: number;
   currentQuestionStartTime?: number;
   config: SessionConfig;
+  settings?: AdminSettings; // Admin-configured AI settings
 }
 
 // Session configuration
@@ -109,6 +110,14 @@ export interface SessionConfig {
   pointsPerQuestion: number; // base points
   timeBonusMultiplier: number; // multiplier for time-based bonus
   maxPlayers: number;
+}
+
+// Admin AI configuration for session
+export interface AdminSettings {
+  provider?: 'litellm' | 'openai' | 'anthropic';
+  apiKey?: string;
+  baseUrl?: string; // Required for LiteLLM, optional for others
+  model?: string; // Optional - provider-specific model
 }
 
 // Leaderboard entry
@@ -182,14 +191,8 @@ export interface AIQuestionRequest {
   count: number;
   category?: QuestionCategory;
   difficulty?: QuestionDifficulty;
-  provider?: 'openai' | 'anthropic' | 'litellm';
   topic?: string;
   docs?: string;
-  // User-provided configuration (overrides server defaults)
-  userApiKey?: string;
-  userBaseUrl?: string;
-  userModel?: string;
-  userProvider?: 'openai' | 'anthropic' | 'litellm';
 }
 
 // Topic subscription for debug panel

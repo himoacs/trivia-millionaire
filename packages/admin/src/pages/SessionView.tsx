@@ -9,6 +9,7 @@ import SolaceDebugPanel from '../components/SolaceDebugPanel';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
 import ManualQuestionModal from '../components/ManualQuestionModal';
 import AIGenerateModal from '../components/AIGenerateModal';
+import AdminSettingsModal from '../components/AdminSettingsModal';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
 import { useSolace } from '../hooks/useSolace';
 
@@ -26,6 +27,7 @@ export default function SessionView() {
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showManualQuestionModal, setShowManualQuestionModal] = useState(false);
   const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
+  const [showAdminSettingsModal, setShowAdminSettingsModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<{ question: Question; index: number } | null>(null);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
@@ -158,7 +160,7 @@ export default function SessionView() {
     setShowAIGenerateModal(true);
   };
 
-  const handleAIGenerate = async (topic: string, count: number, docs?: string, provider?: string, apiKey?: string, baseUrl?: string, model?: string): Promise<Question[]> => {
+  const handleAIGenerate = async (topic: string, count: number, docs?: string): Promise<Question[]> => {
     try {
       const response = await axios.post(
         `${API_URL}/api/admin/session/${sessionId}/questions/generate`,
@@ -167,11 +169,7 @@ export default function SessionView() {
           topic,
           docs,
           category: 'general',
-          difficulty: 'medium',
-          userProvider: provider,
-          userApiKey: apiKey,
-          userBaseUrl: baseUrl,
-          userModel: model
+          difficulty: 'medium'
         }
       );
 
@@ -181,7 +179,7 @@ export default function SessionView() {
       throw new Error('Failed to generate questions');
     } catch (error: any) {
       console.error('Failed to generate questions:', error);
-      throw new Error(error.response?.data?.message || 'Failed to generate questions');
+      throw new Error(error.response?.data?.error || error.response?.data?.message || 'Failed to generate questions');
     }
   };
 
@@ -385,7 +383,7 @@ export default function SessionView() {
       {/* Top Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-purple-dark via-millionaire-dark to-millionaire-purple-dark border-b border-millionaire-gold/30 px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          {/* Left: Solace Logo + Dashboard button */}
+          {/* Left: Solace Logo + Dashboard button + Settings button */}
           <div className="flex items-center gap-2">
             <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
             <button
@@ -394,6 +392,14 @@ export default function SessionView() {
               title="Back to Dashboard"
             >
               <span className="hidden md:inline font-semibold">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setShowAdminSettingsModal(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 rounded-lg transition-colors"
+              title="AI Settings"
+            >
+              <span>⚙️</span>
+              <span className="hidden md:inline font-semibold">AI Settings</span>
             </button>
           </div>
           
@@ -828,6 +834,16 @@ export default function SessionView() {
               onClose={() => setShowAIGenerateModal(false)}
               onGenerate={handleAIGenerate}
               onSave={handleSaveAIQuestions}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Admin Settings Modal */}
+        <AnimatePresence>
+          {showAdminSettingsModal && sessionId && (
+            <AdminSettingsModal
+              sessionId={sessionId}
+              onClose={() => setShowAdminSettingsModal(false)}
             />
           )}
         </AnimatePresence>
