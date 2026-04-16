@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import type { Player, Question, Answer } from '@trivia-millionaire/shared';
 import { getAvatarEmoji } from '@trivia-millionaire/shared';
 import SolaceDebugPanel from '../components/SolaceDebugPanel';
+import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
 import ManualQuestionModal from '../components/ManualQuestionModal';
 import AIGenerateModal from '../components/AIGenerateModal';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
@@ -16,6 +17,7 @@ const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
 
 export default function SessionView() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const [sessionCode, setSessionCode] = useState('');
   const [sessionName, setSessionName] = useState('');
   const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'CLOSED'>('LOBBY');
@@ -376,9 +378,24 @@ export default function SessionView() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Solace Logo Banner */}
+      {/* Top Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-purple-dark via-millionaire-dark to-millionaire-purple-dark border-b border-millionaire-gold/30 px-6 py-3 flex-shrink-0">
-        <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between">
+          {/* Left: Solace Logo + Dashboard button */}
+          <div className="flex items-center gap-2">
+            <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 px-3 py-2 bg-millionaire-gold/20 hover:bg-millionaire-gold/30 text-millionaire-gold rounded-lg transition-colors"
+              title="Back to Dashboard"
+            >
+              <span className="hidden md:inline font-semibold">Dashboard</span>
+            </button>
+          </div>
+          
+          {/* Right: Connection Status */}
+          <SolaceStatusIndicator />
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -420,8 +437,15 @@ export default function SessionView() {
           <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-6"
+          className="mb-6 flex gap-4"
         >
+          <button
+            onClick={() => window.open(`/presenter/${sessionId}`, '_blank', 'width=1920,height=1080')}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <span>🖥️</span>
+            <span>Open Presenter View</span>
+          </button>
           <button
             onClick={() => setShowDebugPanel(!showDebugPanel)}
             className="btn-primary flex items-center space-x-2"
@@ -684,12 +708,12 @@ export default function SessionView() {
               )}
 
               {questions.length > 0 && currentQuestionIndex >= 0 && !showAnswerDistribution && (
-                <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                <div className="mt-4 p-4 bg-gradient-to-br from-millionaire-purple-dark/80 to-millionaire-dark border-2 border-millionaire-gold/40 rounded-lg">
                   <div className="text-center mb-3">
-                    <div className="text-3xl font-black text-solace-navy">
+                    <div className="text-3xl font-black text-white">
                       {answeredCount} / {players.length}
                     </div>
-                    <div className="text-sm text-gray-600 font-semibold">
+                    <div className="text-sm text-gray-300 font-semibold">
                       players have answered
                     </div>
                   </div>
