@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import SoundToggle from '../components/SoundToggle';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -45,6 +46,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10">
+      {/* Sound Toggle */}
+      <SoundToggle />
+      
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
@@ -69,9 +73,12 @@ export default function Home() {
           <h1 className="text-5xl font-black text-white mb-2 drop-shadow-lg">
             Trivia Millionaire
           </h1>
-          <p className="text-orange-400 text-lg font-semibold drop-shadow-lg">
-            Powered by Solace
-          </p>
+          <div className="text-orange-400 text-lg font-semibold drop-shadow-lg">
+            <div className="flex items-center justify-center gap-2">
+              <span>Powered by</span>
+              <img src="/solace-logo.svg" alt="Solace" className="h-6" />
+            </div>
+          </div>
         </motion.div>
 
         {/* Code Input */}

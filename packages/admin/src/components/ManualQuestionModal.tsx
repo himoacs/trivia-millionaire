@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import type { Question, QuestionCategory, QuestionDifficulty } from '@trivia-millionaire/shared';
+import type { Question, QuestionDifficulty } from '@trivia-millionaire/shared';
 import yaml from 'js-yaml';
 
 interface ManualQuestionModalProps {
@@ -19,10 +19,8 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
   const [choice3, setChoice3] = useState('');
   const [choice4, setChoice4] = useState('');
   const [correctIndex, setCorrectIndex] = useState(0);
-  const [category, setCategory] = useState<QuestionCategory>('general');
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>('medium');
   const [timeLimit, setTimeLimit] = useState(30);
-  const [points, setPoints] = useState(1000);
   
   // YAML state
   const [yamlContent, setYamlContent] = useState('');
@@ -37,10 +35,8 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
       setChoice3(editQuestion.choices[2] || '');
       setChoice4(editQuestion.choices[3] || '');
       setCorrectIndex(editQuestion.correctIndex);
-      setCategory(editQuestion.category || 'general');
       setDifficulty(editQuestion.difficulty || 'medium');
       setTimeLimit(editQuestion.timeLimit);
-      setPoints(editQuestion.points);
     }
   }, [editQuestion]);
 
@@ -56,8 +52,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
       choices: [choice1, choice2, choice3, choice4],
       correctIndex,
       timeLimit,
-      points,
-      category,
+      points: 1000,
       difficulty
     };
 
@@ -100,8 +95,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
           choices: q.choices,
           correctIndex: q.correctIndex,
           timeLimit: q.timeLimit || 30,
-          points: q.points || 1000,
-          category: q.category || 'general',
+          points: 1000,
           difficulty: q.difficulty || 'medium'
         };
       });
@@ -222,25 +216,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
               </div>
 
               {/* Settings Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-millionaire-gold mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as QuestionCategory)}
-                    className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-white"
-                  >
-                    <option value="general">General</option>
-                    <option value="science">Science</option>
-                    <option value="history">History</option>
-                    <option value="geography">Geography</option>
-                    <option value="sports">Sports</option>
-                    <option value="entertainment">Entertainment</option>
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-millionaire-gold mb-2">
                     Difficulty
@@ -266,21 +242,6 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
                     onChange={(e) => setTimeLimit(parseInt(e.target.value) || 30)}
                     min="5"
                     max="120"
-                    className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-millionaire-gold mb-2">
-                    Points
-                  </label>
-                  <input
-                    type="number"
-                    value={points}
-                    onChange={(e) => setPoints(parseInt(e.target.value) || 1000)}
-                    min="100"
-                    max="5000"
-                    step="100"
                     className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-white"
                   />
                 </div>
@@ -318,8 +279,6 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
       - "Madrid"
     correctIndex: 2
     timeLimit: 30
-    points: 1000
-    category: "geography"
     difficulty: "easy"
   - text: "Who painted the Mona Lisa?"
     choices:
@@ -328,8 +287,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
       - "Picasso"
       - "Monet"
     correctIndex: 1
-    timeLimit: 20
-    points: 1200`}
+    timeLimit: 20`}
                   rows={15}
                   className="w-full px-4 py-3 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold font-mono text-sm text-white placeholder-gray-500"
                 />
@@ -345,7 +303,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
               {/* Format Help */}
               <div className="bg-millionaire-blue/30 border border-millionaire-blue text-blue-200 px-4 py-3 rounded-lg text-sm">
                 <strong>Format:</strong> Each question must have text, choices (array of 4), 
-                correctIndex (0-3), and optionally timeLimit, points, category, difficulty.
+                correctIndex (0-3), and optionally timeLimit and difficulty.
               </div>
             </div>
           )}

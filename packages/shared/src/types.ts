@@ -37,6 +37,7 @@ export interface Player {
   score: number;
   correctAnswers: number;
   totalAnswers: number;
+  totalMoney: number; // Cumulative money earned with speed bonuses
   connectedAt: number;
   lastAnswerTime?: number;
   lastAnswerChoice?: number;
@@ -84,6 +85,8 @@ export interface ScoreUpdate {
   pointsEarned: number;
   totalScore: number;
   timeTaken: number;
+  moneyEarned: number; // Money earned this question (with speed bonus)
+  totalMoney: number;  // Cumulative money earned
 }
 
 // Game session
@@ -115,6 +118,7 @@ export interface LeaderboardEntry {
   avatar: PlayerAvatar;
   score: number;
   correctAnswers: number;
+  totalMoney: number; // Cumulative money earned with speed bonuses
   rank: number;
   averageTime?: number;
 }
@@ -181,6 +185,11 @@ export interface AIQuestionRequest {
   provider?: 'openai' | 'anthropic' | 'litellm';
   topic?: string;
   docs?: string;
+  // User-provided configuration (overrides server defaults)
+  userApiKey?: string;
+  userBaseUrl?: string;
+  userModel?: string;
+  userProvider?: 'openai' | 'anthropic' | 'litellm';
 }
 
 // Topic subscription for debug panel

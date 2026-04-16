@@ -15,6 +15,7 @@ import {
   generateSessionCode,
   generatePlayerId,
   calculateScore,
+  calculateMoneyWithSpeedBonus,
   sanitizeNickname
 } from '@trivia-millionaire/shared';
 
@@ -100,6 +101,7 @@ export class SessionManager {
       score: 0,
       correctAnswers: 0,
       totalAnswers: 0,
+      totalMoney: 0,
       connectedAt: Date.now()
     };
 
@@ -207,8 +209,19 @@ export class SessionManager {
       session.config.timeBonusMultiplier
     );
 
+    // Calculate money earned with speed bonus (only for correct answers)
+    const moneyEarned = correct 
+      ? calculateMoneyWithSpeedBonus(
+          session.currentQuestionIndex,
+          answer.timeTaken,
+          question.timeLimit,
+          1.5 // Max 50% speed bonus
+        )
+      : 0;
+
     // Update player stats
     player.score += pointsEarned;
+    player.totalMoney += moneyEarned;
     player.lastAnswerTime = answer.timestamp;
     player.totalAnswers++;
     if (correct) {
@@ -221,10 +234,12 @@ export class SessionManager {
       correct,
       pointsEarned,
       totalScore: player.score,
-      timeTaken: answer.timeTaken
+      timeTaken: answer.timeTaken,
+      moneyEarned,
+      totalMoney: player.totalMoney
     };
 
-    console.log(`💯 ${player.nickname}: ${correct ? '✓' : '✗'} ${pointsEarned} pts (total: ${player.score})`);
+    console.log(`💯 ${player.nickname}: ${correct ? '✓' : '✗'} ${pointsEarned} pts, $${moneyEarned} (total: $${player.totalMoney})`);
     return scoreUpdate;
   }
 
@@ -245,10 +260,13 @@ export class SessionManager {
         avatar: player.avatar,
         score: player.score,
         correctAnswers: player.correctAnswers,
+        totalMoney: player.totalMoney,
         rank: 0, // Will be set after sorting
         averageTime: 0 // Calculate if needed
       }))
       .sort((a, b) => {
+        // Sort by totalMoney first, then by score as tiebreaker
+        if (b.totalMoney !== a.totalMoney) return b.totalMoney - a.totalMoney;
         if (b.score !== a.score) return b.score - a.score;
         return a.nickname.localeCompare(b.nickname);
       })
@@ -289,6 +307,13 @@ export class SessionManager {
     return Array.from(this.sessions.values()).filter(
       s => s.state !== 'CLOSED'
     );
+  }
+
+  /**
+   * Get all sessions (including closed)
+   */
+  getAllSessions(): Session[] {
+    return Array.from(this.sessions.values());
   }
 
   /**

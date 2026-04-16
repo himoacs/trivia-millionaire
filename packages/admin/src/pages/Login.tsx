@@ -47,7 +47,7 @@ export default function Login() {
             Trivia Millionaire
           </h1>
           <p className="text-millionaire-gold drop-shadow-lg">Admin Portal</p>
-          <div className="mt-4 text-sm text-gray-400 flex items-center justify-center gap-2">
+          <div className="mt-4 text-sm text-gray-400 w-full flex items-center justify-center gap-2 pl-12">
             <span>Powered by</span>
             <img src="/solace-logo.svg" alt="Solace" className="h-5" />
           </div>

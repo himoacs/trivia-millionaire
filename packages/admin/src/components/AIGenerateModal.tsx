@@ -4,7 +4,7 @@ import type { Question } from '@trivia-millionaire/shared';
 
 interface AIGenerateModalProps {
   onClose: () => void;
-  onGenerate: (topic: string, count: number, docs?: string) => Promise<Question[]>;
+  onGenerate: (topic: string, count: number, docs?: string, provider?: string, apiKey?: string, baseUrl?: string, model?: string) => Promise<Question[]>;
   onSave: (questions: Question[]) => void;
 }
 
@@ -12,6 +12,10 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
   const [topic, setTopic] = useState('');
   const [count, setCount] = useState(5);
   const [docs, setDocs] = useState('');
+  const [provider, setProvider] = useState<'server-default' | 'litellm' | 'openai' | 'anthropic'>('server-default');
+  const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [model, setModel] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -22,7 +26,6 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
   const [editChoices, setEditChoices] = useState(['', '', '', '']);
   const [editCorrectIndex, setEditCorrectIndex] = useState(0);
   const [editTimeLimit, setEditTimeLimit] = useState(30);
-  const [editPoints, setEditPoints] = useState(1000);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -39,7 +42,15 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
     setIsGenerating(true);
 
     try {
-      const questions = await onGenerate(topic, count, docs || undefined);
+      const questions = await onGenerate(
+        topic, 
+        count, 
+        docs || undefined,
+        provider !== 'server-default' ? provider : undefined,
+        apiKey || undefined,
+        baseUrl || undefined,
+        model || undefined
+      );
       setGeneratedQuestions(questions);
     } catch (err: any) {
       setError(err.message || 'Failed to generate questions');
@@ -55,7 +66,6 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
     setEditChoices([...q.choices]);
     setEditCorrectIndex(q.correctIndex);
     setEditTimeLimit(q.timeLimit);
-    setEditPoints(q.points);
   };
 
   const handleSaveEdit = () => {
@@ -67,8 +77,7 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
       text: editText,
       choices: [...editChoices],
       correctIndex: editCorrectIndex,
-      timeLimit: editTimeLimit,
-      points: editPoints
+      timeLimit: editTimeLimit
     };
 
     setGeneratedQuestions(updated);
@@ -147,6 +156,114 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
                   disabled={isGenerating}
                 />
                 <p className="text-sm text-gray-300 mt-1">Between 1 and 20 questions</p>
+              </div>
+
+              <div className="space-y-4 p-4 bg-millionaire-dark/50 rounded-lg border border-millionaire-gold/20">
+                <div className="text-sm font-semibold text-millionaire-gold mb-2">
+                  🤖 AI Provider Configuration
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    AI Provider
+                  </label>
+                  <select
+                    value={provider}
+                    onChange={(e) => {
+                      setProvider(e.target.value as any);
+                      // Reset fields when provider changes
+                      setApiKey('');
+                      setBaseUrl('');
+                      setModel('');
+                    }}
+                    className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white"
+                    disabled={isGenerating}
+                  >
+                    <option value="server-default">Use Server Default</option>
+                    <option value="litellm">LiteLLM (Custom Endpoint)</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {provider === 'server-default' 
+                      ? 'Use API keys configured on the server'
+                      : 'Provide your own API credentials (overrides server settings)'}
+                  </p>
+                </div>
+
+                {provider !== 'server-default' && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-300 mb-1">
+                        API Key <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
+                        className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white placeholder-gray-500"
+                        disabled={isGenerating}
+                      />
+                    </div>
+
+                    {provider === 'litellm' && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-300 mb-1">
+                          Base URL <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={baseUrl}
+                          onChange={(e) => setBaseUrl(e.target.value)}
+                          placeholder="https://lite-llm.mymaas.net"
+                          className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white placeholder-gray-500"
+                          disabled={isGenerating}
+                        />
+                      </div>
+                    )}
+
+                    {(provider === 'openai' || provider === 'anthropic') && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-300 mb-1">
+                          Base URL (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={baseUrl}
+                          onChange={(e) => setBaseUrl(e.target.value)}
+                          placeholder={provider === 'openai' ? 'https://api.openai.com/v1' : 'https://api.anthropic.com'}
+                          className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white placeholder-gray-500"
+                          disabled={isGenerating}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          For proxies or Azure. Leave blank for default.
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-300 mb-1">
+                        Model (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        placeholder={
+                          provider === 'litellm' ? 'bedrock-claude-4-5-sonnet' :
+                          provider === 'openai' ? 'gpt-4' :
+                          'claude-3-5-sonnet-20240620'
+                        }
+                        className="w-full px-3 py-2 bg-millionaire-dark-light border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white placeholder-gray-500"
+                        disabled={isGenerating}
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Leave blank to use default model
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div>
@@ -259,17 +376,6 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
                             className="w-full px-3 py-2 bg-millionaire-dark border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-300 mb-1">
-                            Points
-                          </label>
-                          <input
-                            type="number"
-                            value={editPoints}
-                            onChange={(e) => setEditPoints(parseInt(e.target.value) || 1000)}
-                            className="w-full px-3 py-2 bg-millionaire-dark border border-millionaire-gold/30 rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm text-white"
-                          />
-                        </div>
                       </div>
 
                       <div className="flex space-x-2 pt-2">
@@ -311,7 +417,7 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
                             ))}
                           </div>
                           <div className="text-xs text-gray-400 mt-2">
-                            ⏱️ {q.timeLimit}s · 🏆 {q.points} pts
+                            ⏱️ {q.timeLimit}s
                           </div>
                         </div>
                         <div className="flex space-x-2 ml-3">

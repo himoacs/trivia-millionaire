@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { toPng } from 'html-to-image';
 import axios from 'axios';
-import { getAvatarEmoji, pointsToMoney, formatMoney } from '@trivia-millionaire/shared';
+import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
+import { useSound } from '../utils/sound';
+import SoundToggle from '../components/SoundToggle';
 
 interface LeaderboardEntry {
   playerId: string;
@@ -13,6 +15,7 @@ interface LeaderboardEntry {
   score: number;
   correctAnswers: number;
   totalAnswers: number;
+  totalMoney: number;
 }
 
 export default function Results() {
@@ -21,6 +24,7 @@ export default function Results() {
   const [myRank, setMyRank] = useState(0);
   const [myCorrectAnswers, setMyCorrectAnswers] = useState(0);
   const [myTotalAnswers, setMyTotalAnswers] = useState(0);
+  const [myTotalMoney, setMyTotalMoney] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const scoreCardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -29,9 +33,15 @@ export default function Results() {
   const nickname = localStorage.getItem('nickname') || 'Player';
   const avatarName = localStorage.getItem('avatar') || 'robot';
   const avatar = getAvatarEmoji(avatarName);
+  
+  // Sound effects
+  const { play: playSound } = useSound();
 
   useEffect(() => {
     fetchLeaderboard();
+    
+    // Play leaderboard reveal sound
+    playSound('leaderboard');
   }, [sessionId]);
 
   const fetchLeaderboard = async () => {
@@ -49,6 +59,7 @@ export default function Results() {
           setMyRank(playerIndex + 1);
           setMyCorrectAnswers(data[playerIndex].correctAnswers);
           setMyTotalAnswers(data[playerIndex].totalAnswers);
+          setMyTotalMoney(data[playerIndex].totalMoney);
           
           // Celebrate if top 3
           if (playerIndex < 3) {
@@ -111,10 +122,9 @@ export default function Results() {
   };
 
   const handleShareLinkedIn = () => {
-    const moneyWon = pointsToMoney(myCorrectAnswers);
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}`;
     window.open(url, '_blank');
-    alert(`Share your ${formatMoney(moneyWon)} winnings! Remember to upload your downloaded scorecard image to your LinkedIn post!`);
+    alert(`Share your ${formatMoney(myTotalMoney)} winnings! Remember to upload your downloaded scorecard image to your LinkedIn post!`);
   };
 
   const handlePlayAgain = () => {
@@ -122,10 +132,12 @@ export default function Results() {
   };
 
   const accuracy = myTotalAnswers > 0 ? Math.round((myCorrectAnswers / myTotalAnswers) * 100) : 0;
-  const moneyWon = pointsToMoney(myCorrectAnswers);
 
   return (
     <div className="min-h-screen flex flex-col relative z-10 overflow-x-hidden">
+      {/* Sound Toggle */}
+      <SoundToggle />
+      
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
@@ -150,7 +162,7 @@ export default function Results() {
               <div className="text-7xl mb-3">{avatar}</div>
               <h3 className="text-4xl font-black text-white mb-4">{nickname}</h3>
               <div className="text-8xl font-black mb-6 bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text">
-                {formatMoney(moneyWon)}
+                {formatMoney(myTotalMoney)}
               </div>
               <div className="flex space-x-16 text-center">
                 <div>
@@ -213,7 +225,7 @@ export default function Results() {
             <div className="text-sm text-orange-400 font-bold uppercase tracking-wider mb-1">Total Winnings</div>
             <div className="text-5xl md:text-6xl font-black bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text"
                  style={{ filter: 'drop-shadow(0 0 20px rgba(255,165,0,0.7))' }}>
-              {formatMoney(moneyWon)}
+              {formatMoney(myTotalMoney)}
             </div>
           </motion.div>
         </motion.div>
@@ -311,7 +323,6 @@ export default function Results() {
               {leaderboard.slice(0, 3).map((entry, index) => {
                 const isMe = entry.playerId === playerId;
                 const rankDisplay = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
-                const entryMoney = pointsToMoney(entry.correctAnswers);
                 
                 return (
                   <div
@@ -328,7 +339,7 @@ export default function Results() {
                       {entry.name} {isMe && '(You)'}
                     </span>
                     <span className={`text-sm font-bold ${isMe ? 'text-orange-400' : 'text-orange-400/80'}`}>
-                      {formatMoney(entryMoney)}
+                      {formatMoney(entry.totalMoney)}
                     </span>
                   </div>
                 );

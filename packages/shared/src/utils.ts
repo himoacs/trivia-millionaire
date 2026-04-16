@@ -191,3 +191,33 @@ export function pointsToMoney(correctAnswers: number): number {
   const ladderIndex = Math.min(correctAnswers - 1, MONEY_LADDER.length - 1);
   return MONEY_LADDER[ladderIndex]?.amount || 0;
 }
+
+/**
+ * Calculates money earned for a question with speed bonus multiplier
+ * Faster answers get higher multiplier (1.0x to maxMultiplier)
+ * 
+ * @param questionIndex - 0-based index of the question in the game
+ * @param timeTaken - Time in seconds the player took to answer
+ * @param timeLimit - Total time limit for the question in seconds
+ * @param maxMultiplier - Maximum multiplier for instant answers (default 1.5 = 50% bonus)
+ * @returns Money amount with speed bonus applied
+ */
+export function calculateMoneyWithSpeedBonus(
+  questionIndex: number,
+  timeTaken: number,
+  timeLimit: number,
+  maxMultiplier: number = 1.5
+): number {
+  if (questionIndex < 0 || questionIndex >= MONEY_LADDER.length) return 0;
+  
+  const baseAmount = MONEY_LADDER[questionIndex]?.amount || 0;
+  
+  // Calculate speed multiplier: faster = higher multiplier
+  // timeRatio goes from 1.0 (instant) to 0.0 (at time limit)
+  const timeRatio = Math.max(0, Math.min(1, (timeLimit - timeTaken) / timeLimit));
+  
+  // Multiplier scales from 1.0 (slowest) to maxMultiplier (fastest)
+  const multiplier = 1 + (maxMultiplier - 1) * timeRatio;
+  
+  return Math.floor(baseAmount * multiplier);
+}

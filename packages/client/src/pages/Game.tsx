@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import type { QuestionMessage, ScoreUpdate } from '@trivia-millionaire/shared';
-import { pointsToMoney, formatMoney } from '@trivia-millionaire/shared';
+import { formatMoney } from '@trivia-millionaire/shared';
 import { useSolace } from '../hooks/useSolace';
 import { MoneyLadder, MONEY_LADDER, formatMoney as formatMoneyLadder } from '../components/MoneyLadder';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
+import { useSound } from '../utils/sound';
+import SoundToggle from '../components/SoundToggle';
 
 // Answer letters A, B, C, D
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
@@ -19,6 +21,9 @@ export default function Game() {
   const [currentQuestion, setCurrentQuestion] = useState<QuestionMessage | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [totalMoney, setTotalMoney] = useState(0);
+  const [questionResults, setQuestionResults] = useState<Record<number, boolean>>({});
+  const pendingQuestionResult = useRef<{ questionNumber: number; correct: boolean } | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [waiting, setWaiting] = useState(true);
@@ -42,6 +47,9 @@ export default function Game() {
 
   const playerId = localStorage.getItem('playerId') || '';
 
+  // Sound effects
+  const { play: playSound } = useSound();
+
   // Connect to Solace
   const { connected, subscribe, publish } = useSolace();
 
@@ -55,6 +63,15 @@ export default function Game() {
       
       // New question arrived
       if (currentQuestionId.current !== questionMsg.question.id) {
+        // Commit pending question result to the ladder before switching to new question
+        if (pendingQuestionResult.current) {
+          setQuestionResults(prev => ({
+            ...prev,
+            [pendingQuestionResult.current!.questionNumber]: pendingQuestionResult.current!.correct
+          }));
+          pendingQuestionResult.current = null;
+        }
+        
         currentQuestionId.current = questionMsg.question.id;
         setCurrentQuestion(questionMsg);
         setWaiting(false);
@@ -69,6 +86,9 @@ export default function Game() {
         // Reset lifeline effects for new question (but keep used state)
         setEliminatedAnswers([]);
         setAiSuggestion(null);
+        
+        // Play question start sound
+        playSound('question-start');
       }
     });
 
@@ -119,9 +139,23 @@ export default function Game() {
     const unsubscribe = subscribe(`trivia/session/${sessionId}/player/${playerId}/scored`, (message) => {
       const scoreUpdate = message.payload as ScoreUpdate;
       console.log('💯 Player scored:', scoreUpdate);
-      // Update correct answers count for money display
+      // Update money from server (includes speed bonus)
+      setTotalMoney(scoreUpdate.totalMoney);
+      // Store this question's result as pending (will show on ladder when next question starts)
+      if (currentQuestion) {
+        pendingQuestionResult.current = {
+          questionNumber: currentQuestion.questionNumber,
+          correct: scoreUpdate.correct
+        };
+      }
+      // Update correct answers count
       if (scoreUpdate.correct) {
         setCorrectAnswers(prev => prev + 1);
+        // Play correct answer sound
+        playSound('correct');
+      } else {
+        // Play wrong answer sound
+        playSound('wrong');
       }
     });
 
@@ -132,15 +166,40 @@ export default function Game() {
   useEffect(() => {
     if (!connected || !sessionId) return;
 
-    const unsubscribe = subscribe(`trivia/session/${sessionId}/game/ended`, () => {
+    const unsubscribe = subscribe(`trivia/session/${sessionId}/game/ended`, async () => {
       console.log('🏆 Game ended, showing results');
+      
+      // Commit any pending question result before game ends
+      if (pendingQuestionResult.current) {
+        setQuestionResults(prev => ({
+          ...prev,
+          [pendingQuestionResult.current!.questionNumber]: pendingQuestionResult.current!.correct
+        }));
+        pendingQuestionResult.current = null;
+      }
+      
       setSessionState('CLOSED');
       setWaiting(true);
       setCurrentQuestion(null);
+      
+      // Fetch player's final score from leaderboard to ensure accuracy
+      try {
+        const response = await axios.get(`${API_URL}/api/session/${sessionId}/leaderboard`);
+        if (response.data.success) {
+          const playerData = response.data.data.find((p: any) => p.playerId === playerId);
+          if (playerData) {
+            setTotalMoney(playerData.totalMoney);
+            setCorrectAnswers(playerData.correctAnswers);
+            console.log('📊 Updated final score from leaderboard:', playerData.totalMoney);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch final score:', error);
+      }
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe]);
+  }, [connected, sessionId, subscribe, playerId]);
 
   // Subscribe to answer stats updates
   useEffect(() => {
@@ -213,7 +272,13 @@ export default function Game() {
       const updateTimer = () => {
         const now = Date.now();
         const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+        const previousTime = timeLeft;
         setTimeLeft(remaining);
+        
+        // Play countdown sound for last 5 seconds
+        if (remaining <= 5 && remaining > 0 && remaining !== previousTime) {
+          playSound('countdown');
+        }
         
         if (remaining <= 0) {
           handleTimeout();
@@ -290,7 +355,7 @@ export default function Game() {
   const handleTimeout = () => {
     if (!isAnswered) {
       setIsAnswered(true);
-      // playSound('timeout');
+      playSound('wrong');
     }
   };
 
@@ -301,7 +366,8 @@ export default function Game() {
     setIsAnswered(true);
 
     try {
-      const timeTaken = Date.now() - currentQuestion.startTime;
+      // Convert to seconds to match timeLimit units
+      const timeTaken = (Date.now() - currentQuestion.startTime) / 1000;
       
       // Publish answer submitted event to Solace
       if (connected) {
@@ -323,7 +389,8 @@ export default function Game() {
         timestamp: Date.now()
       });
       
-      // playSound('answer-submit');
+      // Play tick sound when answer is submitted
+      playSound('tick');
     } catch (error) {
       console.error('Failed to submit answer:', error);
     }
@@ -337,7 +404,7 @@ export default function Game() {
       : 'Waiting for next question...';
 
     const waitingEmoji = sessionState === 'LOBBY' ? '⏳' : sessionState === 'CLOSED' ? '�' : '⏱️';
-    const moneyWon = pointsToMoney(correctAnswers);
+
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
@@ -368,7 +435,7 @@ export default function Game() {
             transition={{ delay: 0.3 }}
           >
             <div className="text-lg font-semibold text-orange-400">Your Winnings</div>
-            <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(moneyWon)}</div>
+            <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             <div className="text-sm text-gray-400 mt-2">{correctAnswers} correct {correctAnswers === 1 ? 'answer' : 'answers'}</div>
           </motion.div>
 
@@ -392,7 +459,6 @@ export default function Game() {
   // Show "waiting for others" screen after answering
   if (showWaitingForOthers && isAnswered && !showDistribution) {
     const percentage = totalPlayers > 0 ? Math.round((answeredCount / totalPlayers) * 100) : 0;
-    const moneyWon = pointsToMoney(correctAnswers);
     
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
@@ -438,7 +504,7 @@ export default function Game() {
           {/* Score */}
           <div className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
             <div className="text-lg font-semibold text-orange-400">Your Winnings</div>
-            <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(moneyWon)}</div>
+            <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             <div className="text-sm text-gray-400 mt-1">{correctAnswers} correct</div>
           </div>
         </motion.div>
@@ -473,7 +539,7 @@ export default function Game() {
           <div className="mt-6 text-center">
             <div className="bg-gradient-to-br from-millionaire-purple-dark via-millionaire-purple to-millionaire-blue rounded-xl p-4 border-2 border-millionaire-gold">
               <div className="text-lg font-semibold text-millionaire-gold">Your Winnings</div>
-              <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{formatMoney(pointsToMoney(correctAnswers))}</div>
+              <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             </div>
           </div>
         </div>
@@ -483,6 +549,9 @@ export default function Game() {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10">
+      {/* Sound Toggle */}
+      <SoundToggle />
+      
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80 hover:opacity-100 transition-opacity" />
@@ -506,7 +575,7 @@ export default function Game() {
                      textShadow: '0 0 20px rgba(255,149,0,0.5)',
                      WebkitTextStroke: '1px rgba(255,149,0,0.3)'
                    }}>
-                {formatMoney(pointsToMoney(correctAnswers))}
+                {formatMoney(totalMoney)}
               </div>
             </div>
           </div>
@@ -759,7 +828,7 @@ export default function Game() {
                      filter: 'drop-shadow(0 0 20px rgba(255,149,0,0.7))',
                      WebkitTextStroke: '1px rgba(255,149,0,0.2)'
                    }}>
-                {formatMoney(pointsToMoney(currentQuestion.questionNumber))}
+                {formatMoneyLadder(MONEY_LADDER[currentQuestion.questionNumber - 1]?.amount || 0)}
               </div>
             </div>
 
@@ -819,15 +888,6 @@ export default function Game() {
                     style={{ textShadow: '0 3px 8px rgba(0,0,0,0.6), 0 0 20px rgba(59,130,246,0.3)' }}>
                   {currentQuestion.question.text}
                 </h2>
-                
-                {currentQuestion.question.category && (
-                  <div className="mt-3 text-center relative z-10">
-                    <span className="inline-block bg-blue-800/60 text-blue-200 px-3 py-1 rounded text-xs md:text-sm font-semibold border border-blue-600/80"
-                          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                      {currentQuestion.question.category}
-                    </span>
-                  </div>
-                )}
               </div>
             </motion.div>
 
@@ -893,6 +953,7 @@ export default function Game() {
           <MoneyLadder 
             currentQuestion={currentQuestion.questionNumber} 
             totalQuestions={currentQuestion.totalQuestions}
+            questionResults={questionResults}
             className="sticky top-4"
           />
         </div>

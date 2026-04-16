@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import type { PlayerAvatar } from '@trivia-millionaire/shared';
 import { AVATAR_EMOJIS } from '@trivia-millionaire/shared';
+import { useSound } from '../utils/sound';
+import SoundToggle from '../components/SoundToggle';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -20,6 +22,9 @@ export default function Join() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  
+  // Sound effects
+  const { play: playSound } = useSound();
 
   useEffect(() => {
     loadSessionInfo();
@@ -47,6 +52,9 @@ export default function Join() {
     setError('');
 
     try {
+      // Play join sound
+      playSound('join');
+      
       const response = await axios.post(`${API_URL}/api/session/${sessionCode}/join`, {
         nickname: nickname.trim(),
         avatar: selectedAvatar
@@ -68,6 +76,9 @@ export default function Join() {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10">
+      {/* Sound Toggle */}
+      <SoundToggle />
+      
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />

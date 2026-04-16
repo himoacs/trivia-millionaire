@@ -158,7 +158,7 @@ export default function SessionView() {
     setShowAIGenerateModal(true);
   };
 
-  const handleAIGenerate = async (topic: string, count: number, docs?: string): Promise<Question[]> => {
+  const handleAIGenerate = async (topic: string, count: number, docs?: string, provider?: string, apiKey?: string, baseUrl?: string, model?: string): Promise<Question[]> => {
     try {
       const response = await axios.post(
         `${API_URL}/api/admin/session/${sessionId}/questions/generate`,
@@ -167,7 +167,11 @@ export default function SessionView() {
           topic,
           docs,
           category: 'general',
-          difficulty: 'medium'
+          difficulty: 'medium',
+          userProvider: provider,
+          userApiKey: apiKey,
+          userBaseUrl: baseUrl,
+          userModel: model
         }
       );
 

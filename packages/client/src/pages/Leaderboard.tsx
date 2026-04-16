@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { getAvatarEmoji, pointsToMoney, formatMoney } from '@trivia-millionaire/shared';
+import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 
 interface LeaderboardEntry {
   playerId: string;
@@ -11,6 +11,7 @@ interface LeaderboardEntry {
   score: number;
   correctAnswers: number;
   totalAnswers: number;
+  totalMoney: number;
 }
 
 export default function Leaderboard() {
@@ -111,7 +112,7 @@ export default function Leaderboard() {
                     {leaderboard[1].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
-                    {formatMoney(pointsToMoney(leaderboard[1].correctAnswers))}
+                    {formatMoney(leaderboard[1].totalMoney)}
                   </div>
                   <div className="w-20 h-16 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-lg mt-2 flex items-center justify-center">
                     <span className="text-3xl">🥈</span>
@@ -130,7 +131,7 @@ export default function Leaderboard() {
                     {leaderboard[0].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
-                    {formatMoney(pointsToMoney(leaderboard[0].correctAnswers))}
+                    {formatMoney(leaderboard[0].totalMoney)}
                   </div>
                   <div className="w-24 h-24 bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg mt-2 flex items-center justify-center shadow-[0_0_30px_rgba(255,200,0,0.5)]">
                     <span className="text-4xl">🥇</span>
@@ -149,7 +150,7 @@ export default function Leaderboard() {
                     {leaderboard[2].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
-                    {formatMoney(pointsToMoney(leaderboard[2].correctAnswers))}
+                    {formatMoney(leaderboard[2].totalMoney)}
                   </div>
                   <div className="w-20 h-12 bg-gradient-to-t from-amber-700 to-amber-600 rounded-t-lg mt-2 flex items-center justify-center">
                     <span className="text-3xl">🥉</span>
@@ -163,7 +164,6 @@ export default function Leaderboard() {
               {leaderboard.map((entry, index) => {
                 const isMe = entry.playerId === playerId;
                 const rankDisplay = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
-                const entryMoney = pointsToMoney(entry.correctAnswers);
                 const accuracy = entry.totalAnswers > 0 
                   ? Math.round((entry.correctAnswers / entry.totalAnswers) * 100) 
                   : 0;
@@ -193,7 +193,7 @@ export default function Leaderboard() {
                       </div>
                     </div>
                     <div className={`font-black text-lg ${isMe ? 'text-white' : 'text-orange-400'}`}>
-                      {formatMoney(entryMoney)}
+                      {formatMoney(entry.totalMoney)}
                     </div>
                   </motion.div>
                 );

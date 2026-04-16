@@ -109,6 +109,36 @@ app.post('/api/admin/session', (req: Request, res: Response) => {
 });
 
 /**
+ * List all sessions
+ */
+app.get('/api/admin/sessions', (req: Request, res: Response) => {
+  try {
+    const sessions = sessionManager.getAllSessions();
+    
+    const sessionList = sessions.map(session => ({
+      id: session.id,
+      code: session.code,
+      name: session.name,
+      state: session.state,
+      playerCount: session.players.size,
+      questionCount: session.questions.length,
+      currentQuestionIndex: session.currentQuestionIndex,
+      createdAt: session.createdAt
+    }));
+
+    res.json({
+      success: true,
+      data: { sessions: sessionList }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to list sessions'
+    } as ApiResponse);
+  }
+});
+
+/**
  * Get session details
  */
 app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
@@ -733,17 +763,22 @@ app.get('/api/session/:sessionId/leaderboard', (req: Request, res: Response) => 
       return;
     }
 
-    // Convert players map to array and sort by score
+    // Convert players map to array and sort by totalMoney (speed bonus included)
     const leaderboard = Array.from(session.players.values())
       .map(player => ({
         playerId: player.id,
-        name: player.name,
+        name: player.nickname,
         avatar: player.avatar,
         score: player.score,
         correctAnswers: player.correctAnswers,
-        totalAnswers: player.totalAnswers
+        totalAnswers: player.totalAnswers,
+        totalMoney: player.totalMoney
       }))
-      .sort((a, b) => b.score - a.score); // Sort by score descending
+      .sort((a, b) => {
+        // Sort by totalMoney first, then score as tiebreaker
+        if (b.totalMoney !== a.totalMoney) return b.totalMoney - a.totalMoney;
+        return b.score - a.score;
+      });
 
     res.json({
       success: true,
