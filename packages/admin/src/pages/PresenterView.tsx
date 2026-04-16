@@ -9,6 +9,8 @@ import { useSolace } from '../hooks/useSolace';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
 import { MoneyLadder, MONEY_LADDER, formatMoney } from '../components/MoneyLadder';
+import { usePresenterSound } from '../utils/presenterSound';
+import PresenterSoundToggle from '../components/PresenterSoundToggle';
 
 interface LeaderboardEntry {
   playerId: string;
@@ -47,6 +49,7 @@ export default function PresenterView() {
   const currentQuestionId = useRef<string | null>(null);
 
   const { connected, subscribe } = useSolace();
+  const { play, startTicking, stopTicking } = usePresenterSound();
 
   const joinUrl = `${CLIENT_URL}/?code=${sessionCode}`;
 
@@ -80,13 +83,14 @@ export default function PresenterView() {
       setPlayers(prev => {
         const exists = prev.some(p => p.id === newPlayer.id);
         if (exists) return prev;
+        play('player-join');
         return [...prev, newPlayer];
       });
       setTotalPlayers(prev => prev + 1);
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe]);
+  }, [connected, sessionId, subscribe, play]);
 
   // Subscribe to question released events
   useEffect(() => {
@@ -105,11 +109,13 @@ export default function PresenterView() {
         setShowCorrectAnswer(false);
         setRevealedCorrectIndex(null);
         setAnswerDistribution({ 0: 0, 1: 0, 2: 0, 3: 0 });
+        play('question-reveal');
+        startTicking();
       }
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe]);
+  }, [connected, sessionId, subscribe, play, startTicking]);
 
   // Subscribe to answer stats updates
   useEffect(() => {
@@ -144,10 +150,12 @@ export default function PresenterView() {
       if (data.totalPlayers) {
         setTotalPlayers(data.totalPlayers);
       }
+      stopTicking();
+      play('show-distribution');
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe]);
+  }, [connected, sessionId, subscribe, play, stopTicking]);
 
   // Subscribe to admin reveal answer event
   useEffect(() => {
@@ -167,11 +175,13 @@ export default function PresenterView() {
             [currentQuestion.questionNumber]: true
           }));
         }
+        play('reveal-answer');
+        setTimeout(() => play('correct-celebration'), 500);
       }
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe, currentQuestion]);
+  }, [connected, sessionId, subscribe, currentQuestion, play]);
 
   // Subscribe to game ended event
   useEffect(() => {
@@ -181,6 +191,8 @@ export default function PresenterView() {
       console.log('🏆 Game ended');
       setSessionState('CLOSED');
       setCurrentQuestion(null);
+      stopTicking();
+      play('leaderboard');
       
       // Fetch leaderboard
       try {
@@ -194,16 +206,28 @@ export default function PresenterView() {
     });
 
     return unsubscribe;
-  }, [connected, sessionId, subscribe]);
+  }, [connected, sessionId, subscribe, play, stopTicking]);
 
-  // Timer management
+  // Timer management with sound effects
   useEffect(() => {
     if (currentQuestion && !showDistribution) {
       const endTime = currentQuestion.endTime;
       const updateTimer = () => {
         const now = Date.now();
         const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+        const previousTime = timeLeft;
         setTimeLeft(remaining);
+        
+        // Play tension sound when crossing into last 5 seconds
+        if (previousTime === 6 && remaining === 5) {
+          play('timer-tension');
+        }
+        
+        // Play time-up sound when timer hits zero
+        if (previousTime === 1 && remaining === 0) {
+          stopTicking();
+          play('time-up');
+        }
       };
 
       updateTimer();
@@ -212,8 +236,10 @@ export default function PresenterView() {
       return () => {
         if (timerRef.current) clearInterval(timerRef.current);
       };
+    } else {
+      stopTicking();
     }
-  }, [currentQuestion, showDistribution]);
+  }, [currentQuestion, showDistribution, timeLeft, play, stopTicking]);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -243,8 +269,11 @@ export default function PresenterView() {
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
             
-            {/* Solace Connection Status - Right */}
-            <SolaceStatusIndicator />
+            {/* Right side controls */}
+            <div className="flex items-center gap-3">
+              <PresenterSoundToggle />
+              <SolaceStatusIndicator />
+            </div>
           </div>
         </div>
 
@@ -311,8 +340,11 @@ export default function PresenterView() {
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
             
-            {/* Solace Connection Status - Right */}
-            <SolaceStatusIndicator />
+            {/* Right side controls */}
+            <div className="flex items-center gap-3">
+              <PresenterSoundToggle />
+              <SolaceStatusIndicator />
+            </div>
           </div>
         </div>
 
@@ -420,8 +452,11 @@ export default function PresenterView() {
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
             
-            {/* Solace Connection Status - Right */}
-            <SolaceStatusIndicator />
+            {/* Right side controls */}
+            <div className="flex items-center gap-3">
+              <PresenterSoundToggle />
+              <SolaceStatusIndicator />
+            </div>
           </div>
         </div>
 
@@ -592,8 +627,11 @@ export default function PresenterView() {
           {/* Solace Logo - Left */}
           <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
           
-          {/* Solace Connection Status - Right */}
-          <SolaceStatusIndicator />
+          {/* Right side controls */}
+          <div className="flex items-center gap-3">
+            <PresenterSoundToggle />
+            <SolaceStatusIndicator />
+          </div>
         </div>
       </div>
 
