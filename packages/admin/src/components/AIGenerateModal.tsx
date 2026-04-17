@@ -13,7 +13,7 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
   const [count, setCount] = useState(5);
   const [docs, setDocs] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedQuestions, set GeneratedQuestions] = useState<Question[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [error, setError] = useState('');
 
