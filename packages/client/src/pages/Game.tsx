@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import type { QuestionMessage, ScoreUpdate } from '@trivia-millionaire/shared';
+import type { QuestionMessage, ScoreUpdate, RoundStartedMessage, RoundEndedMessage, LeaderboardEntry } from '@trivia-millionaire/shared';
 import { formatMoney } from '@trivia-millionaire/shared';
 import { useSolace } from '../hooks/useSolace';
 import { MoneyLadder, MONEY_LADDER, formatMoney as formatMoneyLadder } from '../components/MoneyLadder';
@@ -13,7 +13,7 @@ import SoundToggle from '../components/SoundToggle';
 // Answer letters A, B, C, D
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
 export default function Game() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -27,7 +27,7 @@ export default function Game() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [waiting, setWaiting] = useState(true);
-  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'CLOSED'>('LOBBY');
+  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'PAUSED' | 'CLOSED'>('LOBBY');
   const [showWaitingForOthers, setShowWaitingForOthers] = useState(false);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
@@ -37,6 +37,13 @@ export default function Game() {
   const [answerDistribution, setAnswerDistribution] = useState<Record<number, number>>({ 0: 0, 1: 0, 2: 0, 3: 0 });
   const timerRef = useRef<NodeJS.Timeout>();
   const currentQuestionId = useRef<string | null>(null);
+
+  // Round-related state
+  const [currentRound, setCurrentRound] = useState<{ name: string; number: number; totalRounds: number } | null>(null);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [breakLeaderboard, setBreakLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [nextRoundName, setNextRoundName] = useState<string | undefined>();
+  const [hasReconnected, setHasReconnected] = useState(false);
 
   // Lifeline states
   const [usedFiftyFifty, setUsedFiftyFifty] = useState(false);
@@ -53,6 +60,104 @@ export default function Game() {
   // Connect to Solace
   const { connected, subscribe, publish } = useSolace();
 
+  // Try to reconnect on mount using stored token
+  useEffect(() => {
+    const attemptReconnect = async () => {
+      const token = localStorage.getItem('reconnectToken');
+      const storedSessionId = localStorage.getItem('reconnectSessionId');
+      
+      if (!token || !storedSessionId || storedSessionId !== sessionId || hasReconnected) {
+        return;
+      }
+
+      try {
+        console.log('🔄 Attempting reconnection...');
+        const response = await axios.post(`${API_URL}/api/session/${sessionId}/reconnect`, { token });
+        
+        if (response.data.success && response.data.data.success) {
+          const data = response.data.data;
+          console.log('✅ Reconnected successfully:', data.player?.nickname);
+          
+          // Restore player state
+          if (data.player) {
+            setTotalMoney(data.player.totalMoney || 0);
+            setCorrectAnswers(data.player.correctAnswers || 0);
+          }
+          
+          // Restore session state
+          if (data.sessionState) {
+            setSessionState(data.sessionState);
+            if (data.sessionState === 'PAUSED') {
+              setIsOnBreak(true);
+            }
+          }
+          
+          // Restore current round info
+          if (data.currentRound) {
+            setCurrentRound({
+              name: data.currentRound.name,
+              number: 0, // Will be updated by round events
+              totalRounds: 0
+            });
+          }
+          
+          // Restore current question if any
+          if (data.currentQuestion && data.sessionState === 'ACTIVE') {
+            setCurrentQuestion(data.currentQuestion);
+            setWaiting(false);
+            currentQuestionId.current = data.currentQuestion.question.id;
+          }
+          
+          setHasReconnected(true);
+        }
+      } catch (error) {
+        console.log('Reconnection failed, continuing as new session');
+      }
+    };
+
+    attemptReconnect();
+  }, [sessionId, hasReconnected]);
+
+  // Subscribe to round started events
+  useEffect(() => {
+    if (!connected || !sessionId) return;
+
+    const unsubscribe = subscribe(`trivia/session/${sessionId}/round/started`, (message) => {
+      const roundMsg = message.payload as RoundStartedMessage;
+      console.log('🎯 Round started:', roundMsg);
+      
+      setCurrentRound({
+        name: roundMsg.roundName,
+        number: roundMsg.roundNumber,
+        totalRounds: roundMsg.totalRounds
+      });
+      setIsOnBreak(false);
+      setWaiting(true);
+      setSessionState('ACTIVE');
+    });
+
+    return unsubscribe;
+  }, [connected, sessionId, subscribe]);
+
+  // Subscribe to round ended events
+  useEffect(() => {
+    if (!connected || !sessionId) return;
+
+    const unsubscribe = subscribe(`trivia/session/${sessionId}/round/ended`, (message) => {
+      const roundMsg = message.payload as RoundEndedMessage;
+      console.log('☕ Round ended:', roundMsg);
+      
+      setIsOnBreak(true);
+      setSessionState('PAUSED');
+      setBreakLeaderboard(roundMsg.leaderboard || []);
+      setNextRoundName(roundMsg.nextRoundName);
+      setWaiting(true);
+      setCurrentQuestion(null);
+    });
+
+    return unsubscribe;
+  }, [connected, sessionId, subscribe]);
+
   // Subscribe to question released events
   useEffect(() => {
     if (!connected || !sessionId) return;
@@ -65,11 +170,12 @@ export default function Game() {
       if (currentQuestionId.current !== questionMsg.question.id) {
         // Commit pending question result to the ladder before switching to new question
         if (pendingQuestionResult.current) {
+          const result = pendingQuestionResult.current;
+          pendingQuestionResult.current = null;
           setQuestionResults(prev => ({
             ...prev,
-            [pendingQuestionResult.current!.questionNumber]: pendingQuestionResult.current!.correct
+            [result.questionNumber]: result.correct
           }));
-          pendingQuestionResult.current = null;
         }
         
         currentQuestionId.current = questionMsg.question.id;
@@ -171,11 +277,12 @@ export default function Game() {
       
       // Commit any pending question result before game ends
       if (pendingQuestionResult.current) {
+        const result = pendingQuestionResult.current;
+        pendingQuestionResult.current = null;
         setQuestionResults(prev => ({
           ...prev,
-          [pendingQuestionResult.current!.questionNumber]: pendingQuestionResult.current!.correct
+          [result.questionNumber]: result.correct
         }));
-        pendingQuestionResult.current = null;
       }
       
       setSessionState('CLOSED');
@@ -397,13 +504,83 @@ export default function Game() {
   };
 
   if (waiting) {
+    // Show break screen between rounds
+    if (isOnBreak && sessionState === 'PAUSED') {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-lg w-full"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-8xl mb-6 drop-shadow-[0_0_15px_rgba(247,148,29,0.5)]"
+            >
+              ☕
+            </motion.div>
+            <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+              Break Time!
+            </h2>
+            <p className="text-orange-400 text-xl mb-6 drop-shadow-lg">
+              {currentRound?.name && `${currentRound.name} completed`}
+            </p>
+            
+            {nextRoundName && (
+              <p className="text-gray-300 mb-6">
+                Up next: <span className="text-orange-400 font-semibold">{nextRoundName}</span>
+              </p>
+            )}
+
+            {/* Leaderboard during break */}
+            {breakLeaderboard.length > 0 && (
+              <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-4 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)] mb-6">
+                <h3 className="text-lg font-semibold text-orange-400 mb-3">Current Standings</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {breakLeaderboard.slice(0, 10).map((entry, idx) => (
+                    <div 
+                      key={entry.playerId} 
+                      className={`flex justify-between items-center p-2 rounded ${
+                        entry.playerId === playerId 
+                          ? 'bg-orange-500/20 border border-orange-500/50' 
+                          : 'bg-gray-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className={`font-bold ${idx < 3 ? 'text-orange-400' : 'text-gray-400'}`}>
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                        </span>
+                        <span className="text-white">{entry.nickname}</span>
+                      </div>
+                      <span className="text-orange-400 font-semibold">{formatMoney(entry.totalMoney)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Your winnings */}
+            <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-4 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
+              <div className="text-sm font-semibold text-orange-400">Your Winnings</div>
+              <div className="text-4xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
+            </div>
+            
+            <p className="text-gray-400 mt-6 text-sm">
+              Waiting for the host to start the next round...
+            </p>
+          </motion.div>
+        </div>
+      );
+    }
+
     const waitingMessage = sessionState === 'LOBBY' 
       ? 'Waiting for game to start...'
       : sessionState === 'CLOSED'
       ? 'Game has ended!'
       : 'Waiting for next question...';
 
-    const waitingEmoji = sessionState === 'LOBBY' ? '⏳' : sessionState === 'CLOSED' ? '�' : '⏱️';
+    const waitingEmoji = sessionState === 'LOBBY' ? '⏳' : sessionState === 'CLOSED' ? '🏆' : '⏱️';
 
 
     return (
@@ -429,7 +606,7 @@ export default function Game() {
             {sessionState === 'CLOSED' && 'Check out the final leaderboard!'}
           </p>
           <motion.div
-            className="mt-8 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]"
+            className="mt-8 bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -482,7 +659,7 @@ export default function Game() {
           </p>
 
           {/* Progress */}
-          <div className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-2xl p-6 mb-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
+          <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-6 mb-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
             <div className="text-6xl font-black text-white mb-2 drop-shadow-lg">
               {answeredCount} / {totalPlayers}
             </div>
@@ -502,7 +679,7 @@ export default function Game() {
           </div>
 
           {/* Score */}
-          <div className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
+          <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]">
             <div className="text-lg font-semibold text-orange-400">Your Winnings</div>
             <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             <div className="text-sm text-gray-400 mt-1">{correctAnswers} correct</div>
@@ -537,7 +714,7 @@ export default function Game() {
           />
           
           <div className="mt-6 text-center">
-            <div className="bg-gradient-to-br from-millionaire-purple-dark via-millionaire-purple to-millionaire-blue rounded-xl p-4 border-2 border-millionaire-gold">
+            <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-xl p-4 border-2 border-millionaire-gold">
               <div className="text-lg font-semibold text-millionaire-gold">Your Winnings</div>
               <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             </div>
@@ -553,7 +730,7 @@ export default function Game() {
       <SoundToggle />
       
       {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
@@ -796,7 +973,7 @@ export default function Game() {
                           ? 'bg-gray-800/50 text-gray-500'
                           : isMilestone
                             ? 'bg-blue-900/80 text-orange-400 border border-orange-500/50'
-                            : 'bg-purple-950/50 text-gray-400'
+                            : 'bg-millionaire-navy-dark/50 text-gray-400'
                       }
                     `}
                   >
@@ -961,7 +1138,7 @@ export default function Game() {
     </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 

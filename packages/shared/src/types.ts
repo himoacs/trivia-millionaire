@@ -1,5 +1,8 @@
 // Session states
-export type SessionState = 'LOBBY' | 'ACTIVE' | 'CLOSED';
+export type SessionState = 'LOBBY' | 'ACTIVE' | 'PAUSED' | 'CLOSED';
+
+// Round states
+export type RoundState = 'PENDING' | 'ACTIVE' | 'COMPLETED';
 
 // Player avatar options
 export type PlayerAvatar = 
@@ -41,6 +44,8 @@ export interface Player {
   connectedAt: number;
   lastAnswerTime?: number;
   lastAnswerChoice?: number;
+  reconnectToken?: string; // Token for reconnecting after disconnect
+  roundScores?: Record<string, number>; // roundId -> money earned in that round
 }
 
 // Question difficulty levels
@@ -66,6 +71,18 @@ export interface Question {
   difficulty?: QuestionDifficulty;
   timeLimit: number; // in seconds
   points: number; // base points for correct answer
+  roundId?: string; // optional round assignment
+}
+
+// Round within a session (for workshop breaks)
+export interface Round {
+  id: string;
+  name: string; // e.g., "Module 1: Basics", "Module 2: Advanced"
+  questionIds: string[]; // ordered question IDs in this round
+  questions?: Question[]; // full question objects (populated in unified view)
+  state: RoundState;
+  startedAt?: number;
+  completedAt?: number;
 }
 
 // Answer submission from player
@@ -102,6 +119,9 @@ export interface Session {
   currentQuestionStartTime?: number;
   config: SessionConfig;
   settings?: AdminSettings; // Admin-configured AI settings
+  // Round support
+  rounds: Round[];
+  currentRoundIndex: number; // -1 if no rounds defined or using flat question list
 }
 
 // Session configuration
@@ -175,6 +195,48 @@ export interface QuestionMessage {
   totalQuestions: number;
   startTime: number; // Server timestamp when question starts
   endTime: number; // Server timestamp when question ends
+  roundInfo?: {
+    roundId: string;
+    roundName: string;
+    roundNumber: number;
+    totalRounds: number;
+    questionInRound: number;
+    totalQuestionsInRound: number;
+  };
+}
+
+// Round event messages
+export interface RoundStartedMessage {
+  roundId: string;
+  roundName: string;
+  roundNumber: number;
+  totalRounds: number;
+  questionCount: number;
+  timestamp: number;
+}
+
+export interface RoundEndedMessage {
+  roundId: string;
+  roundName: string;
+  roundNumber: number;
+  totalRounds: number;
+  timestamp: number;
+  leaderboard: LeaderboardEntry[]; // Current standings
+  nextRoundName?: string; // Preview of next round if any
+}
+
+// Player reconnection
+export interface ReconnectRequest {
+  token: string;
+  sessionId: string;
+}
+
+export interface ReconnectResponse {
+  success: boolean;
+  player?: Player;
+  sessionState?: SessionState;
+  currentRound?: Round;
+  currentQuestion?: QuestionMessage;
 }
 
 // Message for Solace debug panel
@@ -277,6 +339,7 @@ export interface CreateSessionResponse {
 export interface JoinSessionResponse {
   sessionId: string;
   playerId: string;
+  reconnectToken?: string;
   sessionName: string;
   state: SessionState;
 }

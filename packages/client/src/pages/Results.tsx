@@ -8,6 +8,8 @@ import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 import { useSound } from '../utils/sound';
 import SoundToggle from '../components/SoundToggle';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+
 interface LeaderboardEntry {
   playerId: string;
   name: string;
@@ -46,7 +48,7 @@ export default function Results() {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/session/${sessionId}/leaderboard`);
+      const response = await axios.get(`${API_URL}/api/session/${sessionId}/leaderboard`);
       
       if (response.data.success) {
         const data: LeaderboardEntry[] = response.data.data;
@@ -98,7 +100,7 @@ export default function Results() {
           x: randomInRange(0.1, 0.9),
           y: Math.random() - 0.2
         },
-        colors: ['#F7941D', '#FFB81C', '#0052A3', '#2D1B69', '#FF6B35']
+        colors: ['#F7941D', '#FFB81C', '#0052A3', '#0D1B2A', '#FF6B35']
       });
     }, 250);
   };
@@ -139,7 +141,7 @@ export default function Results() {
       <SoundToggle />
       
       {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
@@ -148,7 +150,7 @@ export default function Results() {
       <div className="fixed -left-[9999px] -top-[9999px]">
         <div
           ref={scoreCardRef}
-          className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950"
+          className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark"
           style={{ width: '1200px', height: '630px' }}
         >
           <div className="flex flex-col h-full p-12 border-8 border-orange-500 rounded-3xl">
@@ -235,7 +237,7 @@ export default function Results() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-purple-900/80 to-purple-950/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-orange-500/50"
+          className="bg-gradient-to-br from-millionaire-navy/80 to-millionaire-navy-dark/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-orange-500/50"
         >
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="text-5xl">{avatar}</div>
@@ -246,15 +248,15 @@ export default function Results() {
           </div>
           
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-purple-950/60 rounded-xl p-3">
+            <div className="bg-millionaire-navy-dark/60 rounded-xl p-3">
               <div className="text-2xl md:text-3xl font-black text-white">#{myRank}</div>
               <div className="text-xs text-gray-400 uppercase tracking-wide">Rank</div>
             </div>
-            <div className="bg-purple-950/60 rounded-xl p-3">
+            <div className="bg-millionaire-navy-dark/60 rounded-xl p-3">
               <div className="text-2xl md:text-3xl font-black text-white">{accuracy}%</div>
               <div className="text-xs text-gray-400 uppercase tracking-wide">Accuracy</div>
             </div>
-            <div className="bg-purple-950/60 rounded-xl p-3">
+            <div className="bg-millionaire-navy-dark/60 rounded-xl p-3">
               <div className="text-2xl md:text-3xl font-black text-white">{myCorrectAnswers}/{myTotalAnswers}</div>
               <div className="text-xs text-gray-400 uppercase tracking-wide">Correct</div>
             </div>
@@ -307,7 +309,7 @@ export default function Results() {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-purple-900/60 to-purple-950/60 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30"
+            className="bg-gradient-to-br from-millionaire-navy/60 to-millionaire-navy-dark/60 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30"
           >
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-300">Top Players</h2>
@@ -330,7 +332,7 @@ export default function Results() {
                     className={`flex items-center gap-2 p-2 rounded-lg ${
                       isMe 
                         ? 'bg-orange-500/20 ring-1 ring-orange-400/50' 
-                        : 'bg-purple-950/40'
+                        : 'bg-millionaire-navy-dark/40'
                     }`}
                   >
                     <span className="text-lg">{rankDisplay}</span>
@@ -356,7 +358,7 @@ export default function Results() {
       </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 

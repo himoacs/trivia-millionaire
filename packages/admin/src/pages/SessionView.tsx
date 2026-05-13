@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import type { Player, Question, Answer } from '@trivia-millionaire/shared';
+import type { Player, Question, Answer, Round } from '@trivia-millionaire/shared';
 import { getAvatarEmoji } from '@trivia-millionaire/shared';
 import SolaceDebugPanel from '../components/SolaceDebugPanel';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
@@ -11,19 +11,22 @@ import ManualQuestionModal from '../components/ManualQuestionModal';
 import AIGenerateModal from '../components/AIGenerateModal';
 import AdminSettingsModal from '../components/AdminSettingsModal';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
+import RoundManager from '../components/RoundManager';
 import { useSolace } from '../hooks/useSolace';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:4849';
 
 export default function SessionView() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [sessionCode, setSessionCode] = useState('');
   const [sessionName, setSessionName] = useState('');
-  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'CLOSED'>('LOBBY');
+  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'PAUSED' | 'CLOSED'>('LOBBY');
   const [players, setPlayers] = useState<Player[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(-1);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showManualQuestionModal, setShowManualQuestionModal] = useState(false);
   const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
@@ -129,6 +132,14 @@ export default function SessionView() {
         if (sessionData.currentQuestionIndex !== undefined) {
           setCurrentQuestionIndex(sessionData.currentQuestionIndex);
         }
+
+        // Load rounds data
+        if (sessionData.rounds) {
+          setRounds(sessionData.rounds);
+        }
+        if (sessionData.currentRoundIndex !== undefined) {
+          setCurrentRoundIndex(sessionData.currentRoundIndex);
+        }
         
         // Store in localStorage for backup
         localStorage.setItem(`session_${sessionId}_code`, sessionData.code);
@@ -191,8 +202,8 @@ export default function SessionView() {
         { questions: aiQuestions }
       );
       
-      // Update local state
-      setQuestions([...questions, ...aiQuestions]);
+      // Reload data from server (source of truth) to avoid duplicates
+      await loadSessionData();
       setShowAIGenerateModal(false);
     } catch (error) {
       console.error('Failed to save AI questions:', error);
@@ -243,7 +254,8 @@ export default function SessionView() {
           { questions: newQuestions }
         );
         
-        setQuestions([...questions, ...newQuestions]);
+        // Reload from server to avoid duplicates
+        await loadSessionData();
       }
       setShowManualQuestionModal(false);
     } catch (error) {
@@ -339,20 +351,9 @@ export default function SessionView() {
       });
     }
   };
-  // Show answer distribution when timer expires
-  useEffect(() => {
-    if (questionTimerEnd) {
-      const timeout = questionTimerEnd - Date.now();
-      if (timeout > 0) {
-        const timer = setTimeout(() => {
-          setShowAnswerDistribution(true);
-        }, timeout);
-        return () => clearTimeout(timer);
-      } else {
-        setShowAnswerDistribution(true);
-      }
-    }
-  }, [questionTimerEnd]);
+  
+  // Note: Timer expiry now just enables the "Show Distribution" button in RoundManager
+  // Admin must manually click the button to show distribution
 
   const handleCloseSession = async () => {
     const unreleasedQuestions = questions.length - (currentQuestionIndex + 1);
@@ -381,7 +382,7 @@ export default function SessionView() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-millionaire-purple-dark via-millionaire-dark to-millionaire-purple-dark border-b border-millionaire-gold/30 px-6 py-3 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark via-millionaire-dark to-millionaire-navy-dark border-b border-millionaire-gold/30 px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           {/* Left: Solace Logo + Dashboard button + Settings button */}
           <div className="flex items-center gap-2">
@@ -400,6 +401,26 @@ export default function SessionView() {
             >
               <span>⚙️</span>
               <span className="hidden md:inline font-semibold">AI Settings</span>
+            </button>
+          </div>
+          
+          {/* Center: Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.open(`/presenter/${sessionId}`, '_blank', 'width=1920,height=1080')}
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-lg transition-all font-semibold"
+              title="Open Presenter View"
+            >
+              <span>🖥️</span>
+              <span className="hidden md:inline">Presenter View</span>
+            </button>
+            <button
+              onClick={() => setShowDebugPanel(!showDebugPanel)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 text-white' : 'bg-orange-600/30 hover:bg-orange-600/50 text-orange-300'}`}
+              title="Toggle Solace Messages"
+            >
+              <span>📡</span>
+              <span className="hidden md:inline">{showDebugPanel ? 'Hide' : 'Show'} Solace</span>
             </button>
           </div>
           
@@ -428,10 +449,12 @@ export default function SessionView() {
                 <span className={`px-4 py-2 rounded-full text-sm font-bold ${
                   sessionState === 'LOBBY' ? 'bg-blue-500 text-white' :
                   sessionState === 'ACTIVE' ? 'bg-green-500 text-white' :
+                  sessionState === 'PAUSED' ? 'bg-yellow-500 text-white' :
                   'bg-red-500 text-white'
                 }`}>
                   {sessionState === 'LOBBY' ? '📋 Lobby' :
                    sessionState === 'ACTIVE' ? '🎮 Active Game' :
+                   sessionState === 'PAUSED' ? '☕ Break' :
                    '🏁 Closed'}
                 </span>
                 {currentQuestionIndex >= 0 && (
@@ -439,379 +462,227 @@ export default function SessionView() {
                     Question {currentQuestionIndex + 1} of {questions.length}
                   </span>
                 )}
+                {currentRoundIndex >= 0 && rounds[currentRoundIndex] && (
+                  <span className="text-purple-400 font-semibold drop-shadow-lg">
+                    {rounds[currentRoundIndex].name} (Round {currentRoundIndex + 1}/{rounds.length})
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>
 
-          {/* Solace Debug Toggle */}
-          <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-6 flex gap-4"
-        >
-          <button
-            onClick={() => window.open(`/presenter/${sessionId}`, '_blank', 'width=1920,height=1080')}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <span>🖥️</span>
-            <span>Open Presenter View</span>
-          </button>
-          <button
-            onClick={() => setShowDebugPanel(!showDebugPanel)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <span>📡</span>
-            <span>{showDebugPanel ? 'Hide' : 'Show'} Solace Messages</span>
-          </button>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* QR Code & Players */}
-          <div className="space-y-6">
-            {/* QR Code */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="card text-center"
-            >
-              <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
-                Scan to Join
-              </h2>
-              <div className="bg-millionaire-dark p-4 rounded-lg inline-block border-2 border-millionaire-gold">
-                <QRCodeSVG value={joinUrl} size={showDebugPanel ? 150 : 200} />
-              </div>
-              <p className="mt-4 text-sm text-gray-400">
-                Or visit: <br />
-                <code className="text-millionaire-gold">{CLIENT_URL}</code>
-              </p>
-            </motion.div>
-
-            {/* Players */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="card"
-            >
-              <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
-                Players ({players.length})
-              </h2>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                <AnimatePresence>
-                  {players.map((player) => (
-                    <motion.div
-                      key={player.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex items-center space-x-3 p-3 bg-purple-950/50 rounded-lg border border-purple-800/50"
-                    >
-                      <div className="text-2xl">{getAvatarEmoji(player.avatar)}</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-white">{player.nickname}</div>
-                        <div className="text-sm text-gray-400">
-                          Score: {player.score}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {players.length === 0 && (
-                  <p className="text-gray-400 text-center py-4">
-                    Waiting for players...
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Questions & Controls */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Question Controls */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="card"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white drop-shadow-lg">
-                  Question Queue
+        {/* LOBBY Layout: 2 columns - QR/Players (narrow) + Rounds (wide) */}
+        {sessionState === 'LOBBY' && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Column: QR Code & Players */}
+            <div className="space-y-6">
+              {/* QR Code */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="card text-center"
+              >
+                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                  Scan to Join
                 </h2>
-                <button
-                  onClick={() => setHideQuestions(!hideQuestions)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                    hideQuestions
-                      ? 'bg-millionaire-gold text-millionaire-dark'
-                      : 'bg-millionaire-purple-light text-white hover:bg-millionaire-purple'
-                  }`}
-                  title={hideQuestions ? 'Show questions' : 'Hide questions for screen sharing'}
-                >
-                  {hideQuestions ? '👁️ Show Questions' : '🙈 Hide Questions'}
-                </button>
-              </div>
+                <div className="bg-millionaire-dark p-4 rounded-lg inline-block border-2 border-millionaire-gold">
+                  <QRCodeSVG value={joinUrl} size={160} />
+                </div>
+                <p className="mt-4 text-sm text-gray-400">
+                  Or visit: <br />
+                  <code className="text-millionaire-gold">{CLIENT_URL}</code>
+                </p>
+              </motion.div>
 
+              {/* Players */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="card"
+              >
+                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                  Players ({players.length})
+                </h2>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  <AnimatePresence>
+                    {players.map((player) => (
+                      <motion.div
+                        key={player.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center space-x-3 p-3 bg-millionaire-navy-dark/50 rounded-lg border border-millionaire-blue-dark/50"
+                      >
+                        <div className="text-2xl">{getAvatarEmoji(player.avatar)}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-white">{player.nickname}</div>
+                          <div className="text-sm text-gray-400">
+                            Score: {player.score}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {players.length === 0 && (
+                    <p className="text-gray-400 text-center py-4">
+                      Waiting for players...
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Column: Rounds Management (spans 3 cols) */}
+            <div className="lg:col-span-3">
+              {sessionId && (
+                <RoundManager
+                  sessionId={sessionId}
+                  questions={questions}
+                  sessionState={sessionState}
+                  currentRoundIndex={currentRoundIndex}
+                  onRoundStarted={(round) => {
+                    setSessionState('ACTIVE');
+                    setCurrentRoundIndex(rounds.findIndex(r => r.id === round.id));
+                    loadSessionData();
+                  }}
+                  onRoundEnded={(round, leaderboard) => {
+                    setSessionState('PAUSED');
+                    loadSessionData();
+                  }}
+                  onRoundsChanged={(newRounds) => {
+                    setRounds(newRounds);
+                  }}
+                  onQuestionsChanged={() => {
+                    loadSessionData();
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ACTIVE/PAUSED/CLOSED Layout: Same as LOBBY - QR/Players left, Rounds right */}
+        {sessionState !== 'LOBBY' && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Column: QR Code & Players */}
+            <div className="space-y-6">
+              {/* QR Code */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="card text-center"
+              >
+                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                  Scan to Join
+                </h2>
+                <div className="bg-millionaire-dark p-4 rounded-lg inline-block border-2 border-millionaire-gold">
+                  <QRCodeSVG value={joinUrl} size={160} />
+                </div>
+                <p className="mt-4 text-sm text-gray-400">
+                  Or visit: <br />
+                  <code className="text-millionaire-gold">{CLIENT_URL}</code>
+                </p>
+              </motion.div>
+
+              {/* Players */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="card"
+              >
+                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                  Players ({players.length})
+                </h2>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  <AnimatePresence>
+                    {players.map((player) => (
+                      <motion.div
+                        key={player.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center space-x-3 p-3 bg-millionaire-navy-dark/50 rounded-lg border border-millionaire-blue-dark/50"
+                      >
+                        <div className="text-2xl">{getAvatarEmoji(player.avatar)}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-white">{player.nickname}</div>
+                          <div className="text-sm text-gray-400">
+                            Score: {player.score}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {players.length === 0 && (
+                    <p className="text-gray-400 text-center py-4">
+                      Waiting for players...
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Session Closed Notice */}
               {sessionState === 'CLOSED' && (
-                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
-                  <div className="flex items-center space-x-2 text-red-700">
+                <div className="bg-red-500/20 border-2 border-red-500 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-red-300">
                     <span className="text-2xl">🏁</span>
                     <div>
                       <p className="font-bold text-lg">Game Closed</p>
-                      <p className="text-sm">This session has ended. No more questions can be added.</p>
+                      <p className="text-sm">This session has ended.</p>
                     </div>
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="flex space-x-3 mb-6">
-                <button 
-                  onClick={handleAddManualQuestion} 
-                  className="btn-secondary"
-                  disabled={sessionState === 'CLOSED'}
-                >
-                  ➕ Add Manual
-                </button>
-                <button 
-                  onClick={handleGenerateAI} 
-                  className="btn-primary"
-                  disabled={sessionState === 'CLOSED'}
-                >
-                  🤖 Generate with AI
-                </button>
-              </div>
-
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {hideQuestions ? (
-                  <div className="text-center py-12 bg-purple-950/50 rounded-lg border border-purple-800/50">
-                    <div className="text-6xl mb-4">🙈</div>
-                    <p className="text-gray-300 text-lg font-semibold mb-2">Questions Hidden</p>
-                    <p className="text-gray-400 text-sm">Click "Show Questions" to reveal ({questions.length} question{questions.length !== 1 ? 's' : ''} in queue)</p>
-                  </div>
-                ) : questions.length === 0 ? (
-                  <div className="text-center py-12 bg-purple-950/50 rounded-lg border border-purple-800/50">
-                    <div className="text-6xl mb-4">📝</div>
-                    <p className="text-gray-300 text-lg font-semibold mb-2">No questions yet</p>
-                    <p className="text-gray-400 text-sm">Add questions manually or generate with AI to get started</p>
-                  </div>
-                ) : (
-                  questions.map((q, index) => {
-                    const isExpanded = expandedQuestions.has(q.id);
-                    const isNext = index === currentQuestionIndex + 1;
-                    const canEdit = index > currentQuestionIndex && sessionState !== 'CLOSED';
-                    
-                    return (
-                      <motion.div
-                        key={q.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`rounded-lg border-2 ${
-                          isNext
-                            ? 'border-millionaire-gold bg-millionaire-gold/20'
-                            : 'border-millionaire-gold/30 bg-millionaire-dark-light'
-                        }`}
-                      >
-                        {/* Question Header - Always Visible */}
-                        <div 
-                          className="p-4 cursor-pointer hover:bg-purple-900/50 transition-colors rounded-t-lg"
-                          onClick={() => toggleQuestionExpanded(q.id)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-bold text-lg text-white drop-shadow-lg">
-                                  Q{index + 1}
-                                </span>
-                                <span className="font-semibold text-white drop-shadow-lg">
-                                  {q.text}
-                                </span>
-                              </div>
-                              <div className="text-sm text-gray-400 mt-1">
-                                {q.timeLimit}s · {q.points} pts
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2 ml-2">
-                              {isNext && (
-                                <span className="bg-gradient-to-r from-millionaire-gold to-millionaire-orange text-white px-2 py-1 rounded text-xs font-semibold shadow-lg">
-                                  NEXT
-                                </span>
-                              )}
-                              <span className="text-gray-500">
-                                {isExpanded ? '▲' : '▼'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Expanded Details */}
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden border-t border-purple-700/50"
-                            >
-                              <div className="p-4 bg-purple-950/30">
-                                {/* Answer Choices */}
-                                <div className="space-y-2 mb-4">
-                                  {q.choices.map((choice, i) => (
-                                    <div
-                                      key={i}
-                                      className={`px-3 py-2 rounded-lg ${
-                                        i === q.correctIndex
-                                          ? 'bg-green-900/50 border-2 border-green-500 font-semibold text-green-300'
-                                          : 'bg-millionaire-dark-light border border-millionaire-gold/30 text-white'
-                                      }`}
-                                    >
-                                      <span className="font-bold">
-                                        {String.fromCharCode(65 + i)}:
-                                      </span>{' '}
-                                      {choice}
-                                      {i === q.correctIndex && (
-                                        <span className="ml-2 text-green-400">✓ Correct</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Action Buttons */}
-                                {canEdit && (
-                                  <div className="flex space-x-2">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditQuestion(q, index);
-                                      }}
-                                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-semibold"
-                                    >
-                                      ✏️ Edit Question
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteQuestion(index);
-                                      }}
-                                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-semibold"
-                                    >
-                                      🗑️ Delete
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    );
-                  })
-                )}
-              </div>
-
-              {questions.length > 0 && currentQuestionIndex === -1 && (
-                <button
-                  onClick={handleStartGame}
-                  className="bg-solace-green hover:bg-solace-green-dark text-white font-bold py-4 px-6 rounded-lg w-full mt-4 text-xl"
-                >
-                  🎮 Start Game (Release First Question)
-                </button>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= 0 && !showAnswerDistribution && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-millionaire-purple-dark/80 to-millionaire-dark border-2 border-millionaire-gold/40 rounded-lg">
-                  <div className="text-center mb-3">
-                    <div className="text-3xl font-black text-white">
-                      {answeredCount} / {players.length}
-                    </div>
-                    <div className="text-sm text-gray-300 font-semibold">
-                      players have answered
-                    </div>
-                  </div>
-                  {allAnswered && (
-                    <div className="text-center text-green-400 font-bold mb-2">
-                      ✅ All players answered!
-                    </div>
-                  )}
-                  <button
-                    onClick={handleShowResults}
-                    disabled={answeredCount === 0 || sessionState === 'CLOSED'}
-                    className="btn-primary w-full disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    📊 Show Answer Distribution
-                  </button>
-                </div>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= 0 && showAnswerDistribution && !showCorrectAnswer && (
-                <button
-                  onClick={handleRevealCorrectAnswer}
-                  disabled={sessionState === 'CLOSED'}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg w-full mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ✨ Reveal Correct Answer
-                </button>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= 0 && showCorrectAnswer && currentQuestionIndex < questions.length - 1 && (
-                <button
-                  onClick={handleReleaseQuestion}
-                  disabled={sessionState === 'CLOSED'}
-                  className="btn-primary w-full mt-4 text-lg"
-                >
-                  🚀 Release Next Question
-                </button>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= 0 && currentQuestionIndex < questions.length - 1 && !showAnswerDistribution && (
-                <button
-                  onClick={handleReleaseQuestion}
-                  disabled={sessionState === 'CLOSED'}
-                  className="btn-secondary w-full mt-2 text-sm"
-                >
-                  ⏭️ Skip to Next Question
-                </button>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= questions.length - 1 && sessionState !== 'CLOSED' && (
-                <button
-                  onClick={handleCloseSession}
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg w-full mt-4"
-                >
-                  🏁 Close Session & Show Leaderboard
-                </button>
-              )}
-
-              {questions.length > 0 && currentQuestionIndex >= 0 && currentQuestionIndex < questions.length - 1 && sessionState !== 'CLOSED' && (
-                <button
-                  onClick={handleCloseSession}
-                  className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg w-full mt-4"
-                >
-                  ⚠️ End Game Early
-                </button>
-              )}
-            </motion.div>
-
-            {/* Answer Distribution Chart */}
-            <AnimatePresence>
-              {showAnswerDistribution && currentQuestionIndex >= 0 && questions[currentQuestionIndex] && (
-                <AnswerDistributionChart
-                  questionText={questions[currentQuestionIndex].text}
-                  choices={questions[currentQuestionIndex].choices}
-                  correctIndex={questions[currentQuestionIndex].correctIndex}
-                  stats={[0, 1, 2, 3].map(index => ({
-                    choiceIndex: index,
-                    count: answerCounts[index] || 0,
-                    percentage: players.length > 0 
-                      ? ((answerCounts[index] || 0) / players.length) * 100 
-                      : 0
-                  }))}
-                  totalResponses={Object.values(answerCounts).reduce((a, b) => a + b, 0)}
-                  showCorrectAnswer={showCorrectAnswer}
+            {/* Right Column: Rounds Management with Game Controls (spans 3 cols) */}
+            <div className="lg:col-span-3">
+              {sessionId && (
+                <RoundManager
+                  sessionId={sessionId}
+                  questions={questions}
+                  sessionState={sessionState}
+                  currentRoundIndex={currentRoundIndex}
+                  onRoundStarted={(round) => {
+                    setSessionState('ACTIVE');
+                    setCurrentRoundIndex(rounds.findIndex(r => r.id === round.id));
+                    loadSessionData();
+                  }}
+                  onRoundEnded={(round, leaderboard) => {
+                    setSessionState('PAUSED');
+                    loadSessionData();
+                  }}
+                  onRoundsChanged={(newRounds) => {
+                    setRounds(newRounds);
+                  }}
+                  onQuestionsChanged={() => {
+                    loadSessionData();
+                  }}
+                  gameState={{
+                    currentQuestionIndex,
+                    answeredCount,
+                    totalPlayers: players.length,
+                    allAnswered,
+                    showAnswerDistribution,
+                    showCorrectAnswer,
+                    answerCounts,
+                    questionTimerEnd
+                  }}
+                  gameHandlers={{
+                    onStartGame: handleStartGame,
+                    onShowResults: handleShowResults,
+                    onRevealAnswer: handleRevealCorrectAnswer,
+                    onNextQuestion: handleReleaseQuestion,
+                    onSkipQuestion: handleReleaseQuestion,
+                    onCloseSession: handleCloseSession
+                  }}
                 />
               )}
-            </AnimatePresence>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Manual Question Modal */}
         <AnimatePresence>
@@ -860,19 +731,21 @@ export default function SessionView() {
         )}
       </AnimatePresence>
 
-      {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
-        <span>Created by Himanshu Gupta</span>
-        <a 
-          href="https://www.linkedin.com/in/guptahim/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:opacity-80 transition-opacity"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF">
-            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-          </svg>
-        </a>
+      {/* Footer Credit Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20">
+        <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
+          <span>Created by Himanshu Gupta</span>
+          <a 
+            href="https://www.linkedin.com/in/guptahim/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF">
+              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+          </a>
+        </div>
       </div>
       </div>
     </div>

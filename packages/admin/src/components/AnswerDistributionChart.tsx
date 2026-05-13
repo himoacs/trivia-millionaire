@@ -17,13 +17,26 @@ interface AnswerDistributionChartProps {
 
 export default function AnswerDistributionChart({
   questionText,
-  choices,
+  choices = [],
   correctIndex,
   stats,
   totalResponses,
   showCorrectAnswer = true
 }: AnswerDistributionChartProps) {
   const answerLabels = ['A', 'B', 'C', 'D'];
+  
+  // Guard against missing choices
+  if (!choices || choices.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-lg shadow-glow-gold p-6 border-2 border-millionaire-gold"
+      >
+        <p className="text-gray-300">No answer choices available</p>
+      </motion.div>
+    );
+  }
   
   // Default bar colors (blue shades for all)
   const defaultBarColor = 'bg-millionaire-blue';
@@ -36,7 +49,7 @@ export default function AnswerDistributionChart({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-millionaire-purple-dark via-millionaire-purple to-millionaire-blue rounded-lg shadow-glow-gold p-6 border-2 border-millionaire-gold"
+      className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-lg shadow-glow-gold p-6 border-2 border-millionaire-gold"
     >
       {/* Header */}
       <div className="mb-6">
@@ -80,15 +93,35 @@ export default function AnswerDistributionChart({
                 return (
                   <div
                     key={stat.choiceIndex}
-                    className="flex flex-col items-center"
+                    className={`flex flex-col items-center transition-all duration-500 ${
+                      showCorrectAnswer && !isCorrect ? 'opacity-50' : ''
+                    }`}
                     style={{ width: '20%' }}
                   >
+                    {/* Correct Answer Badge */}
+                    {showCorrectAnswer && isCorrect && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.8, type: 'spring', stiffness: 200 }}
+                        className="absolute -top-8 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg shadow-emerald-500/50 animate-pulse"
+                      >
+                        ✓ CORRECT
+                      </motion.div>
+                    )}
+                    
                     {/* Percentage label above bar */}
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.5 + stat.choiceIndex * 0.1 }}
-                      className={`text-sm font-bold mb-1 ${showCorrectAnswer && isCorrect ? 'text-emerald-400' : 'text-white'}`}
+                      className={`text-sm font-bold mb-1 ${
+                        showCorrectAnswer && isCorrect 
+                          ? 'text-emerald-400 text-lg' 
+                          : showCorrectAnswer && !isCorrect 
+                            ? 'text-gray-500'
+                            : 'text-white'
+                      }`}
                     >
                       {stat.percentage.toFixed(0)}%
                     </motion.div>
@@ -98,10 +131,12 @@ export default function AnswerDistributionChart({
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
                       transition={{ duration: 0.8, delay: stat.choiceIndex * 0.1 }}
-                      className={`w-full max-w-[60px] ${barColor} rounded-t-lg relative ${
+                      className={`w-full max-w-[60px] rounded-t-lg relative ${
                         showCorrectAnswer && isCorrect 
-                          ? 'ring-4 ring-emerald-400 shadow-lg shadow-emerald-500/50' 
-                          : ''
+                          ? `${barColor} ring-4 ring-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.7)]` 
+                          : showCorrectAnswer && !isCorrect
+                            ? 'bg-gray-600'
+                            : barColor
                       }`}
                     >
                       {/* Count inside bar if tall enough */}
@@ -124,24 +159,43 @@ export default function AnswerDistributionChart({
               return (
                 <div
                   key={stat.choiceIndex}
-                  className={`text-center ${showCorrectAnswer && isCorrect ? 'transform scale-105' : ''}`}
+                  className={`text-center transition-all duration-500 ${
+                    showCorrectAnswer && isCorrect 
+                      ? 'transform scale-110' 
+                      : showCorrectAnswer && !isCorrect 
+                        ? 'opacity-50'
+                        : ''
+                  }`}
                   style={{ width: '20%' }}
                 >
-                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm mb-1 ${
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-bold text-base mb-1 transition-all duration-500 ${
                     showCorrectAnswer && isCorrect 
-                      ? 'bg-emerald-500 text-white ring-2 ring-emerald-300' 
-                      : 'bg-millionaire-blue text-white'
+                      ? 'bg-emerald-500 text-white ring-4 ring-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.6)]' 
+                      : showCorrectAnswer && !isCorrect
+                        ? 'bg-gray-600 text-gray-400'
+                        : 'bg-millionaire-blue text-white'
                   }`}>
-                    {answerLabels[stat.choiceIndex]}
+                    {showCorrectAnswer && isCorrect ? '✓' : answerLabels[stat.choiceIndex]}
                   </div>
-                  <p className={`text-xs leading-tight line-clamp-2 ${
+                  <p className={`text-xs leading-tight line-clamp-2 transition-all duration-500 ${
                     showCorrectAnswer && isCorrect 
-                      ? 'text-emerald-400 font-bold' 
-                      : 'text-gray-300'
+                      ? 'text-emerald-400 font-bold text-sm' 
+                      : showCorrectAnswer && !isCorrect
+                        ? 'text-gray-500'
+                        : 'text-gray-300'
                   }`}>
-                    {choices[stat.choiceIndex]}
-                    {showCorrectAnswer && isCorrect && ' ✓'}
+                    {choices[stat.choiceIndex] || `Answer ${answerLabels[stat.choiceIndex]}`}
                   </p>
+                  {showCorrectAnswer && isCorrect && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1 }}
+                      className="inline-block mt-1 text-emerald-400 text-xs font-bold bg-emerald-500/20 px-2 py-0.5 rounded"
+                    >
+                      CORRECT ANSWER
+                    </motion.span>
+                  )}
                 </div>
               );
             })}
@@ -153,7 +207,7 @@ export default function AnswerDistributionChart({
       <div className="mt-6 pt-4 border-t border-millionaire-gold/30">
         <div className="flex justify-between items-center">
           <span className={`text-sm ${showCorrectAnswer ? 'text-emerald-400 font-semibold' : 'text-gray-300'}`}>
-            Correct answers: {stats[correctIndex]?.count || 0} ({stats[correctIndex]?.percentage.toFixed(1) || 0}%)
+            Correct answers: {stats[correctIndex]?.count || 0} ({(stats[correctIndex]?.percentage ?? 0).toFixed(1)}%)
           </span>
           <span className="text-sm text-gray-300">
             Incorrect: {totalResponses - (stats[correctIndex]?.count || 0)}

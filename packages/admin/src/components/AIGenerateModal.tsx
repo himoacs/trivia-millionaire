@@ -104,11 +104,11 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gradient-to-br from-millionaire-purple-dark via-millionaire-purple to-millionaire-blue rounded-lg shadow-glow-gold border-2 border-millionaire-gold max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-lg shadow-glow-gold border-2 border-millionaire-gold max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-millionaire-purple-dark to-millionaire-blue p-6 flex items-center justify-between border-b-2 border-millionaire-gold">
+        <div className="bg-gradient-to-r from-millionaire-navy-dark to-millionaire-blue p-6 flex items-center justify-between border-b-2 border-millionaire-gold">
           <h2 className="text-2xl font-bold text-white drop-shadow-lg">🤖 Generate Questions with AI</h2>
           <button onClick={onClose} className="text-3xl text-white hover:text-millionaire-gold leading-none transition-colors">
             ×
@@ -184,7 +184,7 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="w-full py-4 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-purple-dark font-bold rounded-lg transition-colors shadow-glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark font-bold rounded-lg transition-colors shadow-glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <span className="flex items-center justify-center">
@@ -344,10 +344,10 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
 
         {/* Footer */}
         {generatedQuestions.length > 0 && (
-          <div className="border-t border-millionaire-gold/30 p-4 flex space-x-3 bg-millionaire-purple-dark/80">
+          <div className="border-t border-millionaire-gold/30 p-4 flex space-x-3 bg-millionaire-navy-dark/80">
             <button
               onClick={handleSaveAll}
-              className="flex-1 py-3 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-purple-dark font-bold rounded-lg transition-colors shadow-glow-gold"
+              className="flex-1 py-3 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark font-bold rounded-lg transition-colors shadow-glow-gold"
             >
               💾 Add All Questions ({generatedQuestions.length})
             </button>

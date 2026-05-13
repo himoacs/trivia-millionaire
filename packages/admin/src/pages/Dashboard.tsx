@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
 interface SessionInfo {
   id: string;
@@ -80,6 +80,30 @@ export default function Dashboard() {
     localStorage.setItem(`session_${session.id}_name`, session.name);
     
     navigate(`/session/${session.id}`);
+  };
+
+  const handleDeleteSession = async (session: SessionInfo, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    const confirmed = window.confirm(
+      `Delete session "${session.name}" (${session.code})?\n\nThis will permanently remove all questions, rounds, and player data.`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      const response = await axios.delete(`${API_URL}/api/admin/session/${session.id}`);
+      if (response.data.success) {
+        // Remove from local storage
+        localStorage.removeItem(`session_${session.id}_code`);
+        localStorage.removeItem(`session_${session.id}_name`);
+        // Refresh sessions list
+        loadSessions();
+      }
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      alert('Failed to delete session');
+    }
   };
 
   const getStateColor = (state: string) => {
@@ -262,12 +286,21 @@ export default function Dashboard() {
                               </div>
                             </div>
                             
-                            <button
-                              onClick={() => handleRejoinSession(session)}
-                              className="px-4 py-2 bg-millionaire-gold hover:bg-millionaire-gold/80 text-millionaire-dark font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2"
-                            >
-                              {session.state === 'CLOSED' ? '📊 View' : '▶️ Open'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleRejoinSession(session)}
+                                className="px-4 py-2 bg-millionaire-gold hover:bg-millionaire-gold/80 text-millionaire-dark font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2"
+                              >
+                                {session.state === 'CLOSED' ? '📊 View' : '▶️ Open'}
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteSession(session, e)}
+                                className="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300 rounded-lg transition-colors"
+                                title="Delete session"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         </motion.div>
                       ))}
@@ -280,19 +313,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
-        <span>Created by Himanshu Gupta</span>
-        <a 
-          href="https://www.linkedin.com/in/guptahim/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:opacity-80 transition-opacity"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF">
-            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-          </svg>
-        </a>
+      {/* Footer Credit Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20">
+        <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
+          <span>Created by Himanshu Gupta</span>
+          <a 
+            href="https://www.linkedin.com/in/guptahim/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF">
+              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -11,18 +11,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
     "@trivia-millionaire/shared": "*",
-    "express": "^4.18.2",
+    "axios": "^1.6.5",
+    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "solclientjs": "^10.18.0",
+    "express": "^4.18.2",
+    "js-yaml": "^4.1.1",
     "openai": "^4.28.0",
-    "@anthropic-ai/sdk": "^0.20.0",
-    "axios": "^1.6.5"
+    "solclientjs": "^10.18.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.11.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"

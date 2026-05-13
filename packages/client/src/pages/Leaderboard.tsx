@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+
 interface LeaderboardEntry {
   playerId: string;
   name: string;
@@ -28,7 +30,7 @@ export default function Leaderboard() {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/session/${sessionId}/leaderboard`);
+      const response = await axios.get(`${API_URL}/api/session/${sessionId}/leaderboard`);
       if (response.data.success) {
         setLeaderboard(response.data.data);
       }
@@ -42,7 +44,7 @@ export default function Leaderboard() {
   return (
     <div className="min-h-screen flex flex-col relative z-10">
       {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
@@ -95,7 +97,7 @@ export default function Leaderboard() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-purple-900/80 to-purple-950/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-orange-500/50"
+            className="bg-gradient-to-br from-millionaire-navy/80 to-millionaire-navy-dark/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-orange-500/50"
           >
             {/* Top 3 Podium */}
             {leaderboard.length >= 3 && (
@@ -108,7 +110,7 @@ export default function Leaderboard() {
                   className="flex flex-col items-center"
                 >
                   <div className="text-4xl mb-2">{getAvatarEmoji(leaderboard[1].avatar)}</div>
-                  <div className="text-sm font-bold text-gray-200 truncate max-w-[80px] text-center">
+                  <div className="text-sm font-bold text-gray-200 truncate max-w-[70px] sm:max-w-[100px] text-center">
                     {leaderboard[1].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
@@ -127,7 +129,7 @@ export default function Leaderboard() {
                   className="flex flex-col items-center"
                 >
                   <div className="text-5xl mb-2">{getAvatarEmoji(leaderboard[0].avatar)}</div>
-                  <div className="text-sm font-bold text-white truncate max-w-[80px] text-center">
+                  <div className="text-sm font-bold text-white truncate max-w-[70px] sm:max-w-[100px] text-center">
                     {leaderboard[0].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
@@ -146,7 +148,7 @@ export default function Leaderboard() {
                   className="flex flex-col items-center"
                 >
                   <div className="text-4xl mb-2">{getAvatarEmoji(leaderboard[2].avatar)}</div>
-                  <div className="text-sm font-bold text-gray-200 truncate max-w-[80px] text-center">
+                  <div className="text-sm font-bold text-gray-200 truncate max-w-[70px] sm:max-w-[100px] text-center">
                     {leaderboard[2].name}
                   </div>
                   <div className="text-xs text-orange-400 font-bold">
@@ -177,7 +179,7 @@ export default function Leaderboard() {
                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                       isMe 
                         ? 'bg-gradient-to-r from-orange-500/90 to-amber-500/90 ring-2 ring-orange-300' 
-                        : 'bg-purple-950/50 hover:bg-purple-900/50'
+                        : 'bg-millionaire-navy-dark/50 hover:bg-millionaire-navy/50'
                     }`}
                   >
                     <div className={`w-10 text-center font-bold ${index < 3 ? 'text-xl' : 'text-sm text-gray-400'}`}>
@@ -210,7 +212,7 @@ export default function Leaderboard() {
       </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 

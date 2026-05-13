@@ -8,18 +8,29 @@ export default {
     extend: {
       colors: {
         millionaire: {
-          purple: '#2D1B69',
-          'purple-dark': '#1A0F3E',
-          'purple-light': '#3D2B79',
+          // Primary navy backgrounds (authentic WWTBAM)
+          navy: '#0D1B2A',
+          'navy-dark': '#050D18',
+          'navy-light': '#1B3A5A',
+          // Blue accents (answer boxes)
           blue: '#0052A3',
           'blue-dark': '#003D7A',
           'blue-light': '#1A6BC0',
+          // Gold/Orange (highlights, money)
           gold: '#F7941D',
           'gold-dark': '#D67A0D',
           'gold-light': '#FFB81C',
+          orange: '#FF6B35',
+          // Teal (money ladder highlight)
+          teal: '#00B4D8',
+          'teal-dark': '#0096B4',
+          'teal-light': '#48CAE4',
+          // Accent purple (lighting effects)
+          purple: '#2D1B69',
+          'purple-light': '#3D2B79',
+          // Dark backgrounds
           dark: '#0A0A0A',
           'dark-light': '#1A1A2E',
-          orange: '#FF6B35',
         },
         answer: {
           primary: '#0052A3',

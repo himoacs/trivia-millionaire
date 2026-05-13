@@ -17,7 +17,7 @@ export default function AdminSettingsModal({ sessionId, onClose }: AdminSettings
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
   // Load existing settings
   useEffect(() => {
@@ -146,10 +146,10 @@ export default function AdminSettingsModal({ sessionId, onClose }: AdminSettings
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30"
+        className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-millionaire-blue/30"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-purple-950 to-indigo-950 px-6 py-4 border-b border-purple-500/30 flex items-center justify-between">
+        <div className="sticky top-0 bg-gradient-to-r from-millionaire-navy-dark to-millionaire-navy px-6 py-4 border-b border-millionaire-blue/30 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">⚙️ AI Settings</h2>
             <p className="text-sm text-gray-400 mt-1">

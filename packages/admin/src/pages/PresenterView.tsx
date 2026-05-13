@@ -3,18 +3,21 @@ import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import type { QuestionMessage, Player } from '@trivia-millionaire/shared';
+import type { QuestionMessage, Player, RoundStartedMessage, RoundEndedMessage, LeaderboardEntry as SharedLeaderboardEntry } from '@trivia-millionaire/shared';
 import { getAvatarEmoji, formatMoney as formatMoneyShared } from '@trivia-millionaire/shared';
 import { useSolace } from '../hooks/useSolace';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
+import SolaceDebugPanel from '../components/SolaceDebugPanel';
 import AnswerDistributionChart from '../components/AnswerDistributionChart';
 import { MoneyLadder, MONEY_LADDER, formatMoney } from '../components/MoneyLadder';
 import { usePresenterSound } from '../utils/presenterSound';
 import PresenterSoundToggle from '../components/PresenterSoundToggle';
 
+// Local leaderboard entry (API response format)
 interface LeaderboardEntry {
   playerId: string;
   name: string;
+  nickname?: string;
   avatar: string;
   score: number;
   correctAnswers: number;
@@ -22,15 +25,15 @@ interface LeaderboardEntry {
   totalMoney: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:4849';
 
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
 
 export default function PresenterView() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [sessionCode, setSessionCode] = useState('');
-  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'CLOSED'>('LOBBY');
+  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'PAUSED' | 'CLOSED'>('LOBBY');
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionMessage | null>(null);
   const [showDistribution, setShowDistribution] = useState(false);
@@ -44,6 +47,15 @@ export default function PresenterView() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showQROverlay, setShowQROverlay] = useState(false);
+  
+  // Round-related state
+  const [currentRound, setCurrentRound] = useState<{ name: string; number: number; totalRounds: number } | null>(null);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  
+  // Solace debug panel state
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [breakLeaderboard, setBreakLeaderboard] = useState<SharedLeaderboardEntry[]>([]);
+  const [nextRoundName, setNextRoundName] = useState<string | undefined>();
   
   const timerRef = useRef<number>();
   const currentQuestionId = useRef<string | null>(null);
@@ -191,6 +203,7 @@ export default function PresenterView() {
       console.log('🏆 Game ended');
       setSessionState('CLOSED');
       setCurrentQuestion(null);
+      setIsOnBreak(false);
       stopTicking();
       play('leaderboard');
       
@@ -207,6 +220,46 @@ export default function PresenterView() {
 
     return unsubscribe;
   }, [connected, sessionId, subscribe, play, stopTicking]);
+
+  // Subscribe to round started events
+  useEffect(() => {
+    if (!connected || !sessionId) return;
+
+    const unsubscribe = subscribe(`trivia/session/${sessionId}/round/started`, (message) => {
+      const roundMsg = message.payload as RoundStartedMessage;
+      console.log('🎯 Round started:', roundMsg);
+      
+      setCurrentRound({
+        name: roundMsg.roundName,
+        number: roundMsg.roundNumber,
+        totalRounds: roundMsg.totalRounds
+      });
+      setIsOnBreak(false);
+      setSessionState('ACTIVE');
+      // Note: We don't reset currentQuestion here - it will be set by question/released
+    });
+
+    return unsubscribe;
+  }, [connected, sessionId, subscribe]);
+
+  // Subscribe to round ended events
+  useEffect(() => {
+    if (!connected || !sessionId) return;
+
+    const unsubscribe = subscribe(`trivia/session/${sessionId}/round/ended`, async (message) => {
+      const roundMsg = message.payload as RoundEndedMessage;
+      console.log('☕ Round ended:', roundMsg);
+      
+      setIsOnBreak(true);
+      setSessionState('PAUSED');
+      setBreakLeaderboard(roundMsg.leaderboard || []);
+      setNextRoundName(roundMsg.nextRoundName);
+      setCurrentQuestion(null);
+      stopTicking();
+    });
+
+    return unsubscribe;
+  }, [connected, sessionId, subscribe, stopTicking]);
 
   // Timer management with sound effects
   useEffect(() => {
@@ -252,6 +305,133 @@ export default function PresenterView() {
     }
   };
 
+  // Render break screen between rounds
+  if (isOnBreak && sessionState === 'PAUSED') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-auto">
+        {/* Top Banner */}
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
+          <div className="flex items-center justify-between">
+            <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
+            <div className="flex items-center gap-3">
+              <PresenterSoundToggle />
+              <SolaceStatusIndicator />
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+                title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-16 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
+        >
+          {isFullscreen ? '⊠' : '⛶'}
+        </button>
+
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-4xl w-full"
+          >
+            {/* Break header */}
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="text-8xl mb-6 drop-shadow-[0_0_30px_rgba(247,148,29,0.5)]"
+            >
+              ☕
+            </motion.div>
+            <h1 className="text-5xl md:text-6xl font-black text-white mb-4"
+                style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8)' }}>
+              Break Time!
+            </h1>
+            <p className="text-2xl text-orange-400 mb-8">
+              {currentRound?.name && `${currentRound.name} completed!`}
+            </p>
+
+            {nextRoundName && (
+              <motion.p 
+                className="text-xl text-gray-300 mb-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Coming up next: <span className="text-orange-400 font-bold">{nextRoundName}</span>
+              </motion.p>
+            )}
+
+            {/* Leaderboard during break */}
+            {breakLeaderboard.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl p-6 border-2 border-orange-500 shadow-[0_0_30px_rgba(255,149,0,0.4)]"
+              >
+                <h2 className="text-2xl font-bold text-orange-400 mb-6">Current Standings</h2>
+                <div className="space-y-3">
+                  {breakLeaderboard.slice(0, 10).map((entry, idx) => (
+                    <motion.div
+                      key={entry.playerId}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      className={`flex justify-between items-center p-4 rounded-xl ${
+                        idx < 3 
+                          ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/50' 
+                          : 'bg-gray-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className={`text-3xl ${idx < 3 ? '' : 'text-gray-400'}`}>
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                        </span>
+                        <span className="text-xl text-white font-semibold">{entry.nickname}</span>
+                      </div>
+                      <span className="text-2xl text-orange-400 font-bold">
+                        {formatMoney(entry.totalMoney)}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              className="mt-8 text-lg text-gray-400"
+            >
+              Waiting for host to start the next round...
+            </motion.p>
+          </motion.div>
+        </div>
+
+        {/* Solace Debug Panel - Fixed Overlay */}
+        <AnimatePresence>
+          {showDebugPanel && sessionId && (
+            <div className="fixed top-0 right-0 h-screen z-50">
+              <SolaceDebugPanel
+                sessionId={sessionId}
+                onClose={() => setShowDebugPanel(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   // Render distribution view
   if (showDistribution && currentQuestion) {
     const totalAnswers = Object.values(answerDistribution).reduce((a, b) => a + b, 0);
@@ -262,9 +442,9 @@ export default function PresenterView() {
     }));
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-950 flex flex-col relative">
+      <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative">
         {/* Top Banner */}
-        <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
@@ -273,6 +453,15 @@ export default function PresenterView() {
             <div className="flex items-center gap-3">
               <PresenterSoundToggle />
               <SolaceStatusIndicator />
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+                title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -281,7 +470,7 @@ export default function PresenterView() {
           {/* Fullscreen button */}
           <button
             onClick={toggleFullscreen}
-            className="absolute top-4 right-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors"
+            className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors"
           >
             {isFullscreen ? '⊠' : '⛶'}
           </button>
@@ -290,7 +479,7 @@ export default function PresenterView() {
           <button
             onClick={() => setShowQROverlay(!showQROverlay)}
             className={`absolute top-4 right-16 p-2 rounded-lg text-white transition-colors ${
-              showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-purple-800/50 hover:bg-purple-700/50'
+              showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'
             }`}
             title={showQROverlay ? 'Hide QR Code' : 'Show QR Code for late joiners'}
           >
@@ -326,6 +515,18 @@ export default function PresenterView() {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Solace Debug Panel - Fixed Overlay */}
+        <AnimatePresence>
+          {showDebugPanel && sessionId && (
+            <div className="fixed top-0 right-0 h-screen z-50">
+              <SolaceDebugPanel
+                sessionId={sessionId}
+                onClose={() => setShowDebugPanel(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -333,9 +534,9 @@ export default function PresenterView() {
   // Render lobby view with QR code
   if (sessionState === 'LOBBY' || !currentQuestion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-950 flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">
         {/* Top Banner */}
-        <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
           <div className="flex items-center justify-between">
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
@@ -344,6 +545,15 @@ export default function PresenterView() {
             <div className="flex items-center gap-3">
               <PresenterSoundToggle />
               <SolaceStatusIndicator />
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+                title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -358,7 +568,7 @@ export default function PresenterView() {
           {/* Fullscreen button */}
           <button
             onClick={toggleFullscreen}
-            className="absolute top-4 right-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors z-10"
+            className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
           >
             {isFullscreen ? '⊠' : '⛶'}
           </button>
@@ -409,7 +619,7 @@ export default function PresenterView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="bg-purple-900/50 border-2 border-purple-500/50 rounded-2xl px-12 py-6"
+            className="bg-millionaire-navy/50 border-2 border-millionaire-blue/50 rounded-2xl px-12 py-6"
           >
             <motion.div
               key={players.length}
@@ -438,6 +648,18 @@ export default function PresenterView() {
           </motion.p>
         </motion.div>
         </div>
+
+        {/* Solace Debug Panel - Fixed Overlay */}
+        <AnimatePresence>
+          {showDebugPanel && sessionId && (
+            <div className="fixed top-0 right-0 h-screen z-50">
+              <SolaceDebugPanel
+                sessionId={sessionId}
+                onClose={() => setShowDebugPanel(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -445,9 +667,9 @@ export default function PresenterView() {
   // Render game ended view with leaderboard
   if (sessionState === 'CLOSED') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-950 flex flex-col relative overflow-auto">
+      <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-auto">
         {/* Top Banner */}
-        <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
           <div className="flex items-center justify-between">
             {/* Solace Logo - Left */}
             <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
@@ -456,6 +678,15 @@ export default function PresenterView() {
             <div className="flex items-center gap-3">
               <PresenterSoundToggle />
               <SolaceStatusIndicator />
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+                title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -463,7 +694,7 @@ export default function PresenterView() {
         {/* Fullscreen button */}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-16 right-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors z-10"
+          className="absolute top-16 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
         >
           {isFullscreen ? '⊠' : '⛶'}
         </button>
@@ -506,7 +737,7 @@ export default function PresenterView() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-purple-900/80 to-purple-950/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-orange-500/50"
+                className="bg-gradient-to-br from-millionaire-navy/80 to-millionaire-navy-dark/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-orange-500/50"
               >
                 {/* Top 3 Podium */}
                 {leaderboard.length >= 3 && (
@@ -584,7 +815,7 @@ export default function PresenterView() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 + index * 0.03 }}
-                        className="flex items-center gap-4 p-4 rounded-xl bg-purple-950/50 hover:bg-purple-900/50 transition-all"
+                        className="flex items-center gap-4 p-4 rounded-xl bg-millionaire-navy-dark/50 hover:bg-millionaire-navy/50 transition-all"
                       >
                         <div className={`w-12 text-center font-bold ${index < 3 ? 'text-2xl' : 'text-lg text-gray-400'}`}>
                           {rankDisplay}
@@ -614,15 +845,27 @@ export default function PresenterView() {
             </div>
           </motion.div>
         </div>
+
+        {/* Solace Debug Panel - Fixed Overlay */}
+        <AnimatePresence>
+          {showDebugPanel && sessionId && (
+            <div className="fixed top-0 right-0 h-screen z-50">
+              <SolaceDebugPanel
+                sessionId={sessionId}
+                onClose={() => setShowDebugPanel(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
 
   // Render question view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-950 flex flex-col relative">
+    <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           {/* Solace Logo - Left */}
           <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
@@ -631,6 +874,15 @@ export default function PresenterView() {
           <div className="flex items-center gap-3">
             <PresenterSoundToggle />
             <SolaceStatusIndicator />
+            <button
+              onClick={() => setShowDebugPanel(!showDebugPanel)}
+              className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+              title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -638,7 +890,7 @@ export default function PresenterView() {
       {/* Fullscreen button */}
       <button
         onClick={toggleFullscreen}
-        className="absolute top-14 left-4 p-2 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg text-white transition-colors z-10"
+        className="absolute top-14 left-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
       >
         {isFullscreen ? '⊠' : '⛶'}
       </button>
@@ -647,7 +899,7 @@ export default function PresenterView() {
       <button
         onClick={() => setShowQROverlay(!showQROverlay)}
         className={`absolute top-14 left-16 p-2 rounded-lg text-white transition-colors z-10 ${
-          showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-purple-800/50 hover:bg-purple-700/50'
+          showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'
         }`}
         title={showQROverlay ? 'Hide QR Code' : 'Show QR Code for late joiners'}
       >
@@ -858,6 +1110,18 @@ export default function PresenterView() {
           </div>
         )}
       </div>
+
+      {/* Solace Debug Panel - Fixed Overlay */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <div className="fixed top-0 right-0 h-screen z-50">
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

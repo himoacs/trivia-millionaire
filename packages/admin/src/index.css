@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* WWTBAM Theme Colors as CSS Variables */
+  --color-navy: #0D1B2A;
+  --color-navy-dark: #050D18;
+  --color-navy-light: #1B3A5A;
+  --color-blue: #0052A3;
+  --color-blue-light: #1A6BC0;
+  --color-gold: #F7941D;
+  --color-gold-light: #FFB81C;
+  --color-purple: #2D1B69;
+  --color-teal: #00B4D8;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -9,7 +22,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: radial-gradient(ellipse at center, #2D1B69 0%, #1A0F3E 50%, #0A0A0A 100%);
+  background: radial-gradient(ellipse at center, var(--color-navy-light) 0%, var(--color-navy) 50%, var(--color-navy-dark) 100%);
   min-height: 100vh;
 }
 
@@ -40,7 +53,7 @@ code {
   }
 
   .card {
-    @apply bg-gradient-to-br from-millionaire-dark-light to-millionaire-purple-dark rounded-xl shadow-lg p-6 border border-millionaire-gold/30;
+    @apply bg-gradient-to-br from-millionaire-dark-light to-millionaire-navy-dark rounded-xl shadow-lg p-6 border border-millionaire-gold/30;
   }
 
   .input-field {

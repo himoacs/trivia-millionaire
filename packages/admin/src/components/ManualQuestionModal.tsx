@@ -125,11 +125,11 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gradient-to-br from-millionaire-purple-dark via-millionaire-purple to-millionaire-blue rounded-lg shadow-glow-gold border-2 border-millionaire-gold max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-lg shadow-glow-gold border-2 border-millionaire-gold max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-millionaire-purple-dark to-millionaire-blue p-6 flex items-center justify-between border-b-2 border-millionaire-gold">
+        <div className="bg-gradient-to-r from-millionaire-navy-dark to-millionaire-blue p-6 flex items-center justify-between border-b-2 border-millionaire-gold">
           <h2 className="text-2xl font-bold text-white drop-shadow-lg">
             {editQuestion ? '✏️ Edit Question' : '➕ Add Question(s)'}
           </h2>
@@ -144,8 +144,8 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
             onClick={() => setActiveTab('form')}
             className={`flex-1 py-3 px-6 font-semibold transition-colors ${
               activeTab === 'form'
-                ? 'bg-millionaire-gold text-millionaire-purple-dark'
-                : 'bg-millionaire-purple-dark/50 text-white hover:bg-millionaire-purple-dark/80'
+                ? 'bg-millionaire-gold text-millionaire-navy-dark'
+                : 'bg-millionaire-navy-dark/50 text-white hover:bg-millionaire-navy-dark/80'
             }`}
           >
             📝 Manual Entry
@@ -155,8 +155,8 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
               onClick={() => setActiveTab('yaml')}
               className={`flex-1 py-3 px-6 font-semibold transition-colors ${
                 activeTab === 'yaml'
-                  ? 'bg-millionaire-gold text-millionaire-purple-dark'
-                  : 'bg-millionaire-purple-dark/50 text-white hover:bg-millionaire-purple-dark/80'
+                  ? 'bg-millionaire-gold text-millionaire-navy-dark'
+                  : 'bg-millionaire-navy-dark/50 text-white hover:bg-millionaire-navy-dark/80'
               }`}
             >
               📄 YAML Import
@@ -258,7 +258,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
                   type="file"
                   accept=".yaml,.yml"
                   onChange={handleFileUpload}
-                  className="w-full px-4 py-2 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-millionaire-gold file:text-millionaire-purple-dark file:font-semibold hover:file:bg-millionaire-gold-light"
+                  className="w-full px-4 py-2 bg-millionaire-dark-light border border-millionaire-gold/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-millionaire-gold file:text-millionaire-navy-dark file:font-semibold hover:file:bg-millionaire-gold-light"
                 />
               </div>
 
@@ -310,7 +310,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
         </div>
 
         {/* Footer */}
-        <div className="bg-millionaire-purple-dark/80 px-6 py-4 flex justify-end space-x-3 border-t border-millionaire-gold/30">
+        <div className="bg-millionaire-navy-dark/80 px-6 py-4 flex justify-end space-x-3 border-t border-millionaire-gold/30">
           <button
             onClick={onClose}
             className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition-colors"
@@ -319,7 +319,7 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
           </button>
           <button
             onClick={activeTab === 'form' ? handleSaveForm : handleSaveYaml}
-            className="px-6 py-3 bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-purple-dark rounded-lg font-bold transition-colors shadow-glow-gold"
+            className="px-6 py-3 bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark rounded-lg font-bold transition-colors shadow-glow-gold"
           >
             {editQuestion ? 'Save Changes' : 'Add Question'}{activeTab === 'yaml' && !editQuestion ? 's' : ''}
           </button>

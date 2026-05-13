@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import { SolaceService } from './services/solace.js';
 import { SessionManager } from './services/session.js';
 import { AIQuestionGenerator } from './services/ai.js';
+import { getDatabase } from './services/database.js';
+import yaml from 'js-yaml';
 import type {
   Answer,
   AdminCommand,
@@ -16,7 +18,11 @@ import type {
   CreateSessionResponse,
   JoinSessionResponse,
   AIQuestionRequest,
-  AdminSettings
+  AdminSettings,
+  Round,
+  RoundStartedMessage,
+  RoundEndedMessage,
+  ReconnectResponse
 } from '@trivia-millionaire/shared';
 
 // Load environment variables from root .env file
@@ -62,13 +68,16 @@ app.get('/health', (req: Request, res: Response) => {
  */
 app.post('/api/admin/login', (req: Request, res: Response) => {
   const { password } = req.body;
+  console.log(`🔐 Login attempt - received: "${password}", expected: "${process.env.ADMIN_PASSWORD}"`);
   
   if (password === process.env.ADMIN_PASSWORD) {
+    console.log('✅ Login successful');
     res.json({
       success: true,
       data: { token: 'admin-session-token' } // In production, use proper JWT
     } as ApiResponse);
   } else {
+    console.log('❌ Login failed - password mismatch');
     res.status(401).json({
       success: false,
       error: 'Invalid password'
@@ -160,10 +169,13 @@ app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
           category: q.category,
           difficulty: q.difficulty,
           timeLimit: q.timeLimit,
-          points: q.points
+          points: q.points,
+          roundId: q.roundId
         })),
         currentQuestionIndex: session.currentQuestionIndex,
-        createdAt: session.createdAt
+        createdAt: session.createdAt,
+        rounds: session.rounds,
+        currentRoundIndex: session.currentRoundIndex
       }
     } as ApiResponse);
   } catch (error) {
@@ -175,26 +187,43 @@ app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
 });
 
 /**
- * Add questions to session
+ * Add questions to session (and optionally assign to a round)
  */
 app.post('/api/admin/session/:sessionId/questions', (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params;
-    const { questions } = req.body;
+    const { questions, roundId } = req.body;
 
     const success = sessionManager.addQuestions(sessionId, questions);
 
-    if (success) {
-      res.json({
-        success: true,
-        data: { count: questions.length }
-      } as ApiResponse);
-    } else {
+    if (!success) {
       res.status(404).json({
         success: false,
         error: 'Session not found'
       } as ApiResponse);
+      return;
     }
+
+    // If roundId is provided, auto-assign questions to that round
+    if (roundId) {
+      const session = sessionManager.getSession(sessionId);
+      if (session) {
+        const round = session.rounds.find(r => r.id === roundId);
+        if (round) {
+          // Get the IDs of the newly added questions
+          const newQuestionIds = questions.map((q: Question) => q.id);
+          // Add these to the round's questionIds
+          const updatedQuestionIds = [...round.questionIds, ...newQuestionIds];
+          sessionManager.updateRound(sessionId, roundId, { questionIds: updatedQuestionIds });
+          console.log(`📎 Auto-assigned ${newQuestionIds.length} questions to round "${round.name}"`);
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { count: questions.length }
+    } as ApiResponse);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -421,7 +450,8 @@ app.post('/api/admin/session/:sessionId/release-question', (req: Request, res: R
       questionNumber: session.currentQuestionIndex + 1,
       totalQuestions: session.questions.length,
       startTime: session.currentQuestionStartTime!,
-      endTime: session.currentQuestionStartTime! + (question.timeLimit * 1000)
+      endTime: session.currentQuestionStartTime! + (question.timeLimit * 1000),
+      roundInfo: sessionManager.getRoundInfoForQuestion(sessionId)
     };
 
     solaceService.publish(
@@ -437,6 +467,34 @@ app.post('/api/admin/session/:sessionId/release-question', (req: Request, res: R
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to release question'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Delete session permanently
+ */
+app.delete('/api/admin/session/:sessionId', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const success = sessionManager.deleteSession(sessionId);
+
+    if (!success) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: { message: 'Session deleted' }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete session'
     } as ApiResponse);
   }
 });
@@ -545,6 +603,7 @@ app.post('/api/session/:code/join', (req: Request, res: Response) => {
       data: {
         sessionId: session.id,
         playerId: player.id,
+        reconnectToken: player.reconnectToken,
         sessionName: session.name,
         state: session.state
       } as JoinSessionResponse
@@ -909,7 +968,803 @@ app.get('/api/session/:sessionId/leaderboard', (req: Request, res: Response) => 
   }
 });
 
+// ===================
+// ROUND MANAGEMENT ENDPOINTS
+// ===================
+
+/**
+ * Get all rounds for a session
+ */
+app.get('/api/admin/session/:sessionId/rounds', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = sessionManager.getSession(sessionId);
+
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    // Populate questions for each round
+    const roundsWithQuestions = session.rounds.map(round => ({
+      ...round,
+      questions: round.questionIds
+        .map(qId => session.questions.find(q => q.id === qId))
+        .filter(Boolean) // Remove any undefined
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        rounds: roundsWithQuestions,
+        currentRoundIndex: session.currentRoundIndex
+      }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get rounds'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Create a new round
+ */
+app.post('/api/admin/session/:sessionId/rounds', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { name, questionIds } = req.body;
+
+    if (!name) {
+      res.status(400).json({
+        success: false,
+        error: 'Round name is required'
+      } as ApiResponse);
+      return;
+    }
+
+    const round = sessionManager.createRound(sessionId, name, questionIds);
+
+    if (!round) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: { round }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create round'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Update a round
+ */
+app.put('/api/admin/session/:sessionId/rounds/:roundId', (req: Request, res: Response) => {
+  try {
+    const { sessionId, roundId } = req.params;
+    const updates = req.body;
+
+    const round = sessionManager.updateRound(sessionId, roundId, updates);
+
+    if (!round) {
+      res.status(404).json({
+        success: false,
+        error: 'Session or round not found'
+      } as ApiResponse);
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: { round }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update round'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Delete a round
+ */
+app.delete('/api/admin/session/:sessionId/rounds/:roundId', (req: Request, res: Response) => {
+  try {
+    const { sessionId, roundId } = req.params;
+
+    const deleted = sessionManager.deleteRound(sessionId, roundId);
+
+    if (!deleted) {
+      res.status(404).json({
+        success: false,
+        error: 'Session or round not found'
+      } as ApiResponse);
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: null
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete round'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Auto-distribute questions into rounds
+ */
+app.post('/api/admin/session/:sessionId/rounds/auto-distribute', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { questionsPerRound } = req.body;
+
+    const rounds = sessionManager.autoDistributeQuestions(sessionId, questionsPerRound || 5);
+
+    res.json({
+      success: true,
+      data: { rounds }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to auto-distribute questions'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Start a specific round
+ */
+app.post('/api/admin/session/:sessionId/rounds/:roundId/start', (req: Request, res: Response) => {
+  try {
+    const { sessionId, roundId } = req.params;
+
+    const round = sessionManager.startRound(sessionId, roundId);
+
+    if (!round) {
+      res.status(404).json({
+        success: false,
+        error: 'Session or round not found'
+      } as ApiResponse);
+      return;
+    }
+
+    const session = sessionManager.getSession(sessionId);
+
+    // Publish round started event via Solace
+    const roundStartedMessage: RoundStartedMessage = {
+      roundId: round.id,
+      roundName: round.name,
+      roundNumber: (session?.currentRoundIndex ?? 0) + 1,
+      totalRounds: session?.rounds.length ?? 1,
+      questionCount: round.questionIds.length,
+      timestamp: Date.now()
+    };
+
+    solaceService.publish(
+      `trivia/session/${sessionId}/round/started`,
+      roundStartedMessage
+    );
+
+    res.json({
+      success: true,
+      data: { round }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to start round'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * End current round (triggers break/pause)
+ */
+app.post('/api/admin/session/:sessionId/rounds/end-current', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+
+    const result = sessionManager.endCurrentRound(sessionId);
+
+    if (!result) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found or no active round'
+      } as ApiResponse);
+      return;
+    }
+
+    const session = sessionManager.getSession(sessionId);
+    const nextRound = session?.rounds[(session?.currentRoundIndex ?? 0) + 1];
+
+    // Publish round ended event via Solace
+    const roundEndedMessage: RoundEndedMessage = {
+      roundId: result.round.id,
+      roundName: result.round.name,
+      roundNumber: (session?.currentRoundIndex ?? 0) + 1,
+      totalRounds: session?.rounds.length ?? 1,
+      timestamp: Date.now(),
+      leaderboard: result.leaderboard,
+      nextRoundName: nextRound?.name
+    };
+
+    solaceService.publish(
+      `trivia/session/${sessionId}/round/ended`,
+      roundEndedMessage
+    );
+
+    res.json({
+      success: true,
+      data: {
+        round: result.round,
+        leaderboard: result.leaderboard,
+        nextRound: nextRound || null
+      }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to end round'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Start next round (resume from break)
+ */
+app.post('/api/admin/session/:sessionId/rounds/start-next', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+
+    const round = sessionManager.startNextRound(sessionId);
+
+    if (!round) {
+      res.status(400).json({
+        success: false,
+        error: 'No more rounds available'
+      } as ApiResponse);
+      return;
+    }
+
+    const session = sessionManager.getSession(sessionId);
+
+    // Publish round started event via Solace
+    const roundStartedMessage: RoundStartedMessage = {
+      roundId: round.id,
+      roundName: round.name,
+      roundNumber: (session?.currentRoundIndex ?? 0) + 1,
+      totalRounds: session?.rounds.length ?? 1,
+      questionCount: round.questionIds.length,
+      timestamp: Date.now()
+    };
+
+    solaceService.publish(
+      `trivia/session/${sessionId}/round/started`,
+      roundStartedMessage
+    );
+
+    res.json({
+      success: true,
+      data: { round }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to start next round'
+    } as ApiResponse);
+  }
+});
+
+// ===================
+// PLAYER RECONNECTION
+// ===================
+
+/**
+ * Reconnect a player using their token
+ */
+app.post('/api/session/:sessionId/reconnect', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { token } = req.body;
+
+    if (!token) {
+      res.status(400).json({
+        success: false,
+        error: 'Reconnect token is required'
+      } as ApiResponse);
+      return;
+    }
+
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    const player = sessionManager.reconnectPlayer(token, sessionId);
+
+    if (!player) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid token or session mismatch'
+      } as ApiResponse);
+      return;
+    }
+
+    // Get current state for the player
+    const currentRound = sessionManager.getCurrentRound(sessionId);
+    let currentQuestion: QuestionMessage | undefined;
+
+    if (session.state === 'ACTIVE' && session.currentQuestionIndex >= 0) {
+      const question = session.questions[session.currentQuestionIndex];
+      if (question) {
+        currentQuestion = {
+          question: {
+            id: question.id,
+            text: question.text,
+            choices: question.choices,
+            category: question.category,
+            difficulty: question.difficulty,
+            timeLimit: question.timeLimit,
+            points: question.points
+          },
+          questionNumber: session.currentQuestionIndex + 1,
+          totalQuestions: session.questions.length,
+          startTime: session.currentQuestionStartTime!,
+          endTime: session.currentQuestionStartTime! + (question.timeLimit * 1000),
+          roundInfo: sessionManager.getRoundInfoForQuestion(sessionId)
+        };
+      }
+    }
+
+    const response: ReconnectResponse = {
+      success: true,
+      player,
+      sessionState: session.state,
+      currentRound: currentRound || undefined,
+      currentQuestion
+    };
+
+    res.json({
+      success: true,
+      data: response
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to reconnect'
+    } as ApiResponse);
+  }
+});
+
 // --- Solace Event Handlers ---
+
+// ===================
+// TEMPLATE OPERATIONS
+// ===================
+
+/**
+ * Get all templates (list only, without content)
+ */
+app.get('/api/admin/templates', (req: Request, res: Response) => {
+  try {
+    const db = getDatabase();
+    const templates = db.getAllTemplates();
+    res.json({
+      success: true,
+      data: { templates }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get templates'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Get a single template with content
+ */
+app.get('/api/admin/templates/:templateId', (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const db = getDatabase();
+    const template = db.getTemplate(templateId);
+    
+    if (!template) {
+      res.status(404).json({
+        success: false,
+        error: 'Template not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    res.json({
+      success: true,
+      data: { template }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get template'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Save current session rounds+questions as template
+ */
+app.post('/api/admin/templates', (req: Request, res: Response) => {
+  try {
+    const { name, description, sessionId } = req.body;
+    
+    if (!name || !sessionId) {
+      res.status(400).json({
+        success: false,
+        error: 'Name and sessionId are required'
+      } as ApiResponse);
+      return;
+    }
+    
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Build YAML content from session rounds and questions
+    const exportData = {
+      name: name,
+      rounds: session.rounds.map(round => ({
+        name: round.name,
+        questions: round.questions?.map(q => ({
+          text: q.text,
+          choices: q.choices,
+          correctIndex: q.correctIndex,
+          timeLimit: q.timeLimit,
+          difficulty: q.difficulty,
+          category: q.category
+        })) || session.questions
+          .filter(q => q.roundId === round.id)
+          .map(q => ({
+            text: q.text,
+            choices: q.choices,
+            correctIndex: q.correctIndex,
+            timeLimit: q.timeLimit,
+            difficulty: q.difficulty,
+            category: q.category
+          }))
+      }))
+    };
+    
+    const content = yaml.dump(exportData);
+    const templateId = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const db = getDatabase();
+    db.saveTemplate({
+      id: templateId,
+      name,
+      description,
+      content
+    });
+    
+    res.json({
+      success: true,
+      data: { templateId, name }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to save template'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Delete a template
+ */
+app.delete('/api/admin/templates/:templateId', (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const db = getDatabase();
+    const deleted = db.deleteTemplate(templateId);
+    
+    if (!deleted) {
+      res.status(404).json({
+        success: false,
+        error: 'Template not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    res.json({
+      success: true,
+      data: null
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete template'
+    } as ApiResponse);
+  }
+});
+
+// ===================
+// IMPORT/EXPORT OPERATIONS
+// ===================
+
+/**
+ * Export session rounds+questions as YAML
+ */
+app.get('/api/admin/session/:sessionId/export', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = sessionManager.getSession(sessionId);
+    
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Build export data
+    const exportData = {
+      name: session.name,
+      exportedAt: new Date().toISOString(),
+      rounds: session.rounds.map(round => ({
+        name: round.name,
+        questions: round.questions?.map(q => ({
+          text: q.text,
+          choices: q.choices,
+          correctIndex: q.correctIndex,
+          timeLimit: q.timeLimit,
+          difficulty: q.difficulty,
+          category: q.category
+        })) || session.questions
+          .filter(q => q.roundId === round.id)
+          .map(q => ({
+            text: q.text,
+            choices: q.choices,
+            correctIndex: q.correctIndex,
+            timeLimit: q.timeLimit,
+            difficulty: q.difficulty,
+            category: q.category
+          }))
+      }))
+    };
+    
+    const yamlContent = yaml.dump(exportData);
+    
+    res.json({
+      success: true,
+      data: { yaml: yamlContent, filename: `${session.name.replace(/\s+/g, '_')}_export.yaml` }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to export session'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Import YAML content into session (creates rounds and questions)
+ */
+app.post('/api/admin/session/:sessionId/import', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { yamlContent, replaceExisting } = req.body;
+    
+    if (!yamlContent) {
+      res.status(400).json({
+        success: false,
+        error: 'YAML content is required'
+      } as ApiResponse);
+      return;
+    }
+    
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Parse YAML
+    const parsed = yaml.load(yamlContent) as any;
+    
+    if (!parsed.rounds || !Array.isArray(parsed.rounds)) {
+      res.status(400).json({
+        success: false,
+        error: 'YAML must contain a "rounds" array'
+      } as ApiResponse);
+      return;
+    }
+    
+    // If replacing, delete existing rounds first
+    if (replaceExisting) {
+      const existingRounds = [...session.rounds];
+      for (const round of existingRounds) {
+        sessionManager.deleteRound(sessionId, round.id);
+      }
+    }
+    
+    const createdRounds: Round[] = [];
+    
+    // Create rounds and questions from YAML
+    for (const roundData of parsed.rounds) {
+      if (!roundData.name) {
+        continue; // Skip invalid rounds
+      }
+      
+      // Create round first
+      const round = sessionManager.createRound(sessionId, roundData.name, []);
+      if (!round) continue;
+      
+      // Add questions to this round
+      if (roundData.questions && Array.isArray(roundData.questions)) {
+        const questions = roundData.questions.map((q: any, idx: number) => ({
+          id: `q${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+          text: q.text,
+          choices: q.choices || [],
+          correctIndex: q.correctIndex ?? 0,
+          timeLimit: q.timeLimit || 30,
+          points: 1000,
+          difficulty: q.difficulty || 'medium',
+          category: q.category,
+          roundId: round.id
+        }));
+        
+        sessionManager.addQuestions(sessionId, questions, round.id);
+      }
+      
+      // Get updated round with questions
+      const updatedRound = sessionManager.getRound(sessionId, round.id);
+      if (updatedRound) {
+        createdRounds.push(updatedRound);
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: { 
+        roundsCreated: createdRounds.length,
+        rounds: createdRounds 
+      }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to import YAML'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Load template into session
+ */
+app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Request, res: Response) => {
+  try {
+    const { sessionId, templateId } = req.params;
+    const { replaceExisting } = req.body;
+    
+    const db = getDatabase();
+    const template = db.getTemplate(templateId);
+    
+    if (!template) {
+      res.status(404).json({
+        success: false,
+        error: 'Template not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Forward to import endpoint logic
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Parse template YAML
+    const parsed = yaml.load(template.content) as any;
+    
+    if (!parsed.rounds || !Array.isArray(parsed.rounds)) {
+      res.status(400).json({
+        success: false,
+        error: 'Template must contain a "rounds" array'
+      } as ApiResponse);
+      return;
+    }
+    
+    // If replacing, delete existing rounds first
+    if (replaceExisting) {
+      const existingRounds = [...session.rounds];
+      for (const round of existingRounds) {
+        sessionManager.deleteRound(sessionId, round.id);
+      }
+    }
+    
+    const createdRounds: Round[] = [];
+    
+    // Create rounds and questions from template
+    for (const roundData of parsed.rounds) {
+      if (!roundData.name) {
+        continue;
+      }
+      
+      const round = sessionManager.createRound(sessionId, roundData.name, []);
+      if (!round) continue;
+      
+      if (roundData.questions && Array.isArray(roundData.questions)) {
+        const questions = roundData.questions.map((q: any, idx: number) => ({
+          id: `q${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+          text: q.text,
+          choices: q.choices || [],
+          correctIndex: q.correctIndex ?? 0,
+          timeLimit: q.timeLimit || 30,
+          points: 1000,
+          difficulty: q.difficulty || 'medium',
+          category: q.category,
+          roundId: round.id
+        }));
+        
+        sessionManager.addQuestions(sessionId, questions, round.id);
+      }
+      
+      const updatedRound = sessionManager.getRound(sessionId, round.id);
+      if (updatedRound) {
+        createdRounds.push(updatedRound);
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: { 
+        templateName: template.name,
+        roundsCreated: createdRounds.length,
+        rounds: createdRounds 
+      }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load template'
+    } as ApiResponse);
+  }
+});
 
 /**
  * Initialize Solace subscriptions
@@ -954,7 +1809,6 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📡 Solace broker: ${solaceConfig.url}`);
-    console.log(`🤖 AI provider: ${aiConfig.defaultModel}`);
   });
 
   // Try to connect to Solace (non-blocking)

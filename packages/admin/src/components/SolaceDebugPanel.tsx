@@ -138,14 +138,14 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     >
       {/* Resize Handle */}
       <div
-        className="w-2 bg-millionaire-purple-dark hover:bg-millionaire-gold cursor-ew-resize flex-shrink-0 transition-colors"
+        className="w-2 bg-millionaire-navy-dark hover:bg-millionaire-gold cursor-ew-resize flex-shrink-0 transition-colors"
         onMouseDown={() => setIsResizing(true)}
       />
 
       {/* Panel Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header - Compact with just title and connection status */}
-        <div className="text-white p-3 flex-shrink-0 border-b border-millionaire-gold/30" style={{ backgroundColor: '#1A0F3E' }}>
+        <div className="text-white p-3 flex-shrink-0 border-b border-millionaire-gold/30 bg-millionaire-navy-dark">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <span className="text-xl">📡</span>
@@ -236,8 +236,8 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
           </div>
 
           <div className="mt-3 text-xs text-gray-400 bg-millionaire-dark p-2 rounded border border-millionaire-gold/20">
-            <strong className="text-millionaire-gold">Wildcards:</strong> <code className="bg-millionaire-purple-dark px-1 rounded text-white">*</code> = single level, 
-            <code className="bg-millionaire-purple-dark px-1 rounded ml-1 text-white">{'>'}</code> = multi-level
+            <strong className="text-millionaire-gold">Wildcards:</strong> <code className="bg-millionaire-navy-dark px-1 rounded text-white">*</code> = single level, 
+            <code className="bg-millionaire-navy-dark px-1 rounded ml-1 text-white">{'>'}</code> = multi-level
           </div>
         </div>
 

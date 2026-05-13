@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import SoundToggle from '../components/SoundToggle';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
 export default function Home() {
   const [code, setCode] = useState('');
@@ -50,7 +50,7 @@ export default function Home() {
       <SoundToggle />
       
       {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
@@ -86,7 +86,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-2xl shadow-[0_0_30px_rgba(255,149,0,0.4)] p-8 border-2 border-orange-500"
+          className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-2xl shadow-[0_0_30px_rgba(255,149,0,0.4)] p-8 border-2 border-orange-500"
         >
           <h2 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
             Enter Game Code
@@ -142,7 +142,7 @@ export default function Home() {
       </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 

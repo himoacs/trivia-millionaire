@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:admin\" \"npm run dev:client\"",
-    "dev:fresh": "lsof -ti:3001,5173,5176 | xargs kill -9 2>/dev/null; npm run dev",
-    "kill": "lsof -ti:3001,5173,5176 | xargs kill -9 2>/dev/null",
+    "dev:fresh": "lsof -ti:4847,4848,4849 | xargs kill -9 2>/dev/null; npm run dev",
+    "kill": "lsof -ti:4847,4848,4849 | xargs kill -9 2>/dev/null",
     "dev:server": "npm run dev --workspace=@trivia-millionaire/server",
     "dev:admin": "npm run dev --workspace=@trivia-millionaire/admin",
     "dev:client": "npm run dev --workspace=@trivia-millionaire/client",

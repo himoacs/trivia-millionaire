@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import solace from 'solclientjs';
 
 interface SolaceConfig {
@@ -122,8 +122,14 @@ export function useSolace(config?: SolaceConfig) {
     };
   }, [solaceConfig.url, solaceConfig.vpnName, solaceConfig.username, solaceConfig.password]);
 
-  const subscribe = (topicPattern: string, callback: MessageCallback) => {
-    if (!sessionRef.current || !connected) {
+  // Use a ref to track connected state for callbacks to avoid stale closures
+  const connectedRef = useRef(connected);
+  useEffect(() => {
+    connectedRef.current = connected;
+  }, [connected]);
+
+  const subscribe = useCallback((topicPattern: string, callback: MessageCallback) => {
+    if (!sessionRef.current || !connectedRef.current) {
       console.warn(`⚠️ Cannot subscribe to ${topicPattern} - not connected`);
       return () => {};
     }
@@ -157,7 +163,7 @@ export function useSolace(config?: SolaceConfig) {
           }
           if (callbacks.length === 0) {
             subscribersRef.current.delete(topicPattern);
-            if (sessionRef.current && connected) {
+            if (sessionRef.current && connectedRef.current) {
               try {
                 sessionRef.current.unsubscribe(topic, true, topicPattern, 10000);
                 console.log(`📤 [Client] Unsubscribed from ${topicPattern}`);
@@ -172,10 +178,10 @@ export function useSolace(config?: SolaceConfig) {
       console.error(`Error subscribing to ${topicPattern}:`, error);
       return () => {};
     }
-  };
+  }, []);
 
-  const publish = (topic: string, payload: any) => {
-    if (!sessionRef.current || !connected) {
+  const publish = useCallback((topic: string, payload: any) => {
+    if (!sessionRef.current || !connectedRef.current) {
       console.warn(`⚠️ Cannot publish to ${topic} - not connected`);
       return;
     }
@@ -191,7 +197,7 @@ export function useSolace(config?: SolaceConfig) {
     } catch (error) {
       console.error('Error publishing message:', error);
     }
-  };
+  }, []);
 
   return {
     connected,

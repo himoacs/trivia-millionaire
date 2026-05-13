@@ -57,7 +57,7 @@ export function MoneyLadder({ currentQuestion, totalQuestions, questionResults =
             return 'bg-gradient-to-r from-amber-600 to-yellow-500 text-white border border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]';
           }
           if (wasIncorrect) {
-            return 'bg-purple-950/80 text-purple-400/60 border border-purple-700/40 opacity-60';
+            return 'bg-millionaire-navy-dark/80 text-gray-500/60 border border-gray-700/40 opacity-60';
           }
           if (isPassed) {
             return 'bg-gray-800/40 text-gray-600 border border-gray-700/50';
@@ -65,7 +65,7 @@ export function MoneyLadder({ currentQuestion, totalQuestions, questionResults =
           if (isMilestone) {
             return 'bg-gradient-to-r from-blue-900 to-blue-800 text-amber-400 border-2 border-amber-500/60';
           }
-          return 'bg-purple-950/60 text-gray-400 border border-amber-500/20';
+          return 'bg-millionaire-navy-dark/60 text-gray-400 border border-amber-500/20';
         };
         
         return (

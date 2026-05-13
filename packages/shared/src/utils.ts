@@ -221,3 +221,22 @@ export function calculateMoneyWithSpeedBonus(
   
   return Math.floor(baseAmount * multiplier);
 }
+
+/**
+ * Generates a unique round ID
+ */
+export function generateRoundId(): string {
+  return `round_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generates a reconnect token for player session persistence
+ * Uses a longer, more secure format than regular IDs
+ */
+export function generateReconnectToken(): string {
+  const segments = [];
+  for (let i = 0; i < 4; i++) {
+    segments.push(Math.random().toString(36).substr(2, 8));
+  }
+  return segments.join('-');
+}

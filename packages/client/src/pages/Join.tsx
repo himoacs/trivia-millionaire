@@ -7,7 +7,7 @@ import { AVATAR_EMOJIS } from '@trivia-millionaire/shared';
 import { useSound } from '../utils/sound';
 import SoundToggle from '../components/SoundToggle';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
 const AVATARS: { emoji: string; name: PlayerAvatar }[] = Object.entries(AVATAR_EMOJIS).map(
   ([name, emoji]) => ({ emoji, name: name as PlayerAvatar })
@@ -18,7 +18,7 @@ export default function Join() {
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState<PlayerAvatar>('robot');
   const [sessionName, setSessionName] = useState('');
-  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'CLOSED'>('LOBBY');
+  const [sessionState, setSessionState] = useState<'LOBBY' | 'ACTIVE' | 'PAUSED' | 'CLOSED'>('LOBBY');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -61,10 +61,15 @@ export default function Join() {
       });
 
       if (response.data.success) {
-        const { sessionId, playerId } = response.data.data;
+        const { sessionId, playerId, reconnectToken } = response.data.data;
         localStorage.setItem('playerId', playerId);
         localStorage.setItem('nickname', nickname);
         localStorage.setItem('avatar', selectedAvatar);
+        // Store reconnect token for session persistence
+        if (reconnectToken) {
+          localStorage.setItem('reconnectToken', reconnectToken);
+          localStorage.setItem('reconnectSessionId', sessionId);
+        }
         navigate(`/game/${sessionId}`);
       }
     } catch (err: any) {
@@ -80,7 +85,7 @@ export default function Join() {
       <SoundToggle />
       
       {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
         <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
@@ -88,7 +93,7 @@ export default function Join() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 rounded-3xl shadow-[0_0_30px_rgba(255,149,0,0.4)] p-8 max-w-md w-full border-2 border-orange-500"
+        className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-blue-dark rounded-3xl shadow-[0_0_30px_rgba(255,149,0,0.4)] p-8 max-w-md w-full border-2 border-orange-500"
       >
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">
@@ -129,7 +134,7 @@ export default function Join() {
           <label className="block text-sm font-semibold text-orange-400 mb-3">
             Pick Your Avatar
           </label>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
             {AVATARS.map((avatar) => (
               <motion.button
                 key={avatar.name}
@@ -139,7 +144,7 @@ export default function Join() {
                 className={`text-5xl p-4 rounded-xl transition-all ${
                   selectedAvatar === avatar.name
                     ? 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-[0_0_25px_rgba(255,149,0,0.6)] ring-4 ring-orange-400'
-                    : 'bg-gray-900 hover:bg-purple-900 border border-orange-500/30'
+                    : 'bg-gray-900 hover:bg-millionaire-navy border border-orange-500/30'
                 }`}
               >
                 {avatar.emoji}
@@ -179,7 +184,7 @@ export default function Join() {
       </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 
