@@ -1648,7 +1648,8 @@ app.post('/api/admin/session/:sessionId/import', (req: Request, res: Response) =
       }
       
       // Get updated round with questions
-      const updatedRound = sessionManager.getRound(sessionId, round.id);
+      const allRounds = sessionManager.getRounds(sessionId);
+      const updatedRound = allRounds.find(r => r.id === round.id);
       if (updatedRound) {
         createdRounds.push(updatedRound);
       }
@@ -1744,7 +1745,8 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
         sessionManager.addQuestions(sessionId, questions, round.id);
       }
       
-      const updatedRound = sessionManager.getRound(sessionId, round.id);
+      const allRounds = sessionManager.getRounds(sessionId);
+      const updatedRound = allRounds.find(r => r.id === round.id);
       if (updatedRound) {
         createdRounds.push(updatedRound);
       }
