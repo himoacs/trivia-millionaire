@@ -444,6 +444,7 @@ export default function Game() {
     
     try {
       const response = await axios.post(`${API_URL}/api/lifeline/ask-ai`, {
+        sessionId,
         question: currentQuestion.question.text,
         choices: currentQuestion.question.choices
       });

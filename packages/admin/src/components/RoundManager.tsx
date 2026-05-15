@@ -28,6 +28,8 @@ interface GameControlHandlers {
   onNextQuestion: () => void;
   onSkipQuestion: () => void;
   onCloseSession: () => void;
+  onJumpToQuestion?: (questionIndex: number) => void;
+  onSkipToRound?: (roundIndex: number) => void;
 }
 
 interface RoundManagerProps {
@@ -405,15 +407,17 @@ export default function RoundManager({
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowImportExportModal(true)}
-              className="px-3 py-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded text-sm font-medium transition-all flex items-center gap-1"
-              title="Import/Export YAML"
+              className="btn-warning btn-sm"
+              title="Import or export rounds and questions as YAML"
+              aria-label="Import/Export YAML"
             >
               📥 Import/Export
             </button>
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded text-sm font-medium transition-all flex items-center gap-1"
-              title="Saved Templates"
+              className="btn-secondary btn-sm"
+              title="Load or save question templates"
+              aria-label="Manage Templates"
             >
               📁 Templates
             </button>
@@ -447,13 +451,15 @@ export default function RoundManager({
                       <button
                         onClick={handleStartNextRound}
                         className="btn-primary"
+                        title="Start the next round"
                       >
                         ▶️ Start Next Round
                       </button>
                     ) : gameHandlers?.onCloseSession && (
                       <button
                         onClick={gameHandlers.onCloseSession}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold"
+                        className="btn-danger-solid"
+                        title="End the game and show final leaderboard"
                       >
                         🏁 Close Session & Show Leaderboard
                       </button>
@@ -477,7 +483,8 @@ export default function RoundManager({
                     </div>
                     <button
                       onClick={handleEndCurrentRound}
-                      className="bg-gradient-to-r from-millionaire-orange to-millionaire-gold-dark hover:from-millionaire-gold hover:to-millionaire-orange text-white font-bold px-4 py-2 rounded-lg transition-all"
+                      className="btn-warning"
+                      title="End the current round and take a break"
                     >
                       ⏸️ End Round (Break)
                     </button>
@@ -573,13 +580,16 @@ export default function RoundManager({
                               <>
                                 <button
                                   onClick={() => openAssignModal(round)}
-                                  className="px-3 py-1 bg-gradient-to-r from-millionaire-blue to-millionaire-blue-dark hover:from-millionaire-blue-light hover:to-millionaire-blue text-white rounded text-sm transition-all"
+                                  className="btn-secondary btn-sm"
+                                  title="Assign existing questions to this round"
                                 >
                                   📝 Assign Questions
                                 </button>
                                 <button
                                   onClick={() => handleDeleteRound(round.id)}
-                                  className="px-3 py-1 bg-red-600/80 hover:bg-red-600 text-white rounded text-sm transition-all"
+                                  className="btn-icon-danger btn-icon-sm"
+                                  title="Delete this round"
+                                  aria-label="Delete round"
                                 >
                                   🗑️
                                 </button>
@@ -589,6 +599,7 @@ export default function RoundManager({
                               <button
                                 onClick={() => handleStartRound(round.id)}
                                 className="btn-primary"
+                                title="Start the game with this round"
                               >
                                 ▶️ Start Game
                               </button>
@@ -612,13 +623,15 @@ export default function RoundManager({
                                     <span className="text-gray-400 text-sm">Add questions:</span>
                                     <button
                                       onClick={(e) => { e.stopPropagation(); setShowManualModal(round.id); }}
-                                      className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded text-sm font-medium transition-all flex items-center gap-1"
+                                      className="btn-secondary btn-sm"
+                                      title="Manually create a new question"
                                     >
                                       ➕ Add Manual
                                     </button>
                                     <button
                                       onClick={(e) => { e.stopPropagation(); setShowAIModal(round.id); }}
-                                      className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded text-sm font-medium transition-all flex items-center gap-1"
+                                      className="btn-ai btn-sm"
+                                      title="Generate questions using AI"
                                     >
                                       🤖 Generate with AI
                                     </button>
@@ -627,7 +640,7 @@ export default function RoundManager({
                                 
                                 {/* Questions List */}
                                 {roundQuestions.length > 0 ? (
-                                  roundQuestions.map((q, qIndex) => {
+                                  roundQuestions.map((q: Question, qIndex: number) => {
                                     const isQuestionExpanded = expandedQuestions.has(q.id);
                                     // Determine if this is the current question being played
                                     const currentQ = gameState?.currentQuestionIndex ?? -1;
@@ -697,15 +710,23 @@ export default function RoundManager({
                                                 {isCurrentQuestion && gameState?.showAnswerDistribution && (
                                                   <div className="mb-4">
                                                     <AnswerDistributionChart
-                                                      question={q}
-                                                      answerCounts={gameState.answerCounts}
+                                                      questionText={q.text}
+                                                      choices={q.choices}
+                                                      correctIndex={gameState.showCorrectAnswer ? q.correctIndex : -1}
+                                                      stats={[0, 1, 2, 3].map(idx => ({
+                                                        choiceIndex: idx,
+                                                        count: gameState.answerCounts[idx] || 0,
+                                                        percentage: gameState.answeredCount > 0 
+                                                          ? ((gameState.answerCounts[idx] || 0) / gameState.answeredCount) * 100 
+                                                          : 0
+                                                      }))}
+                                                      totalResponses={gameState.answeredCount}
                                                       showCorrectAnswer={gameState.showCorrectAnswer}
-                                                      totalAnswers={gameState.answeredCount}
                                                     />
                                                   </div>
                                                 )}
                                                 <div className="grid grid-cols-2 gap-2">
-                                                  {q.choices.map((choice, cIndex) => (
+                                                  {q.choices.map((choice: string, cIndex: number) => (
                                                     <div
                                                       key={cIndex}
                                                       className={`px-2 py-1 rounded text-xs ${
@@ -766,7 +787,8 @@ export default function RoundManager({
                                       {gameState.currentQuestionIndex === -1 && (
                                         <button
                                           onClick={gameHandlers.onStartGame}
-                                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-lg font-bold text-lg shadow-lg"
+                                          className="btn-success btn-lg"
+                                          title="Release the first question to players"
                                         >
                                           🎮 Start Game (Release First Question)
                                         </button>
@@ -778,11 +800,8 @@ export default function RoundManager({
                                           <button
                                             onClick={gameHandlers.onShowResults}
                                             disabled={!canShowDistribution}
-                                            className={`px-4 py-2 rounded-lg font-semibold ${
-                                              canShowDistribution 
-                                                ? 'bg-blue-600 hover:bg-blue-500 text-white' 
-                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                            }`}
+                                            className="btn-secondary"
+                                            title={canShowDistribution ? 'Show answer distribution to players' : 'Wait for timer or all answers'}
                                           >
                                             {canShowDistribution 
                                               ? '📊 Show Distribution' 
@@ -794,7 +813,8 @@ export default function RoundManager({
                                       {gameState.showAnswerDistribution && !gameState.showCorrectAnswer && (
                                         <button
                                           onClick={gameHandlers.onRevealAnswer}
-                                          className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-white rounded-lg font-semibold"
+                                          className="btn-warning"
+                                          title="Reveal the correct answer to all players"
                                         >
                                           ✨ Reveal Answer
                                         </button>
@@ -803,7 +823,8 @@ export default function RoundManager({
                                       {gameState.showCorrectAnswer && gameState.currentQuestionIndex < roundQuestions.length - 1 && (
                                         <button
                                           onClick={gameHandlers.onNextQuestion}
-                                          className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-semibold"
+                                          className="btn-success"
+                                          title="Move to the next question"
                                         >
                                           🚀 Next Question
                                         </button>
@@ -812,7 +833,8 @@ export default function RoundManager({
                                       {gameState.currentQuestionIndex >= 0 && !gameState.showAnswerDistribution && gameState.currentQuestionIndex < roundQuestions.length - 1 && (
                                         <button
                                           onClick={gameHandlers.onSkipQuestion}
-                                          className="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm"
+                                          className="btn-ghost btn-sm"
+                                          title="Skip this question and move to next"
                                         >
                                           ⏭️ Skip
                                         </button>
@@ -821,11 +843,83 @@ export default function RoundManager({
                                       {gameState.currentQuestionIndex >= roundQuestions.length - 1 && gameState.showCorrectAnswer && (
                                         <button
                                           onClick={gameHandlers.onCloseSession}
-                                          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-semibold"
+                                          className="btn-danger-solid"
+                                          title="End the game and show final leaderboard"
                                         >
                                           🏁 End Game
                                         </button>
                                       )}
+                                    </div>
+                                    
+                                    {/* Advanced Controls - Question Navigation & Round Skip */}
+                                    <div className="mt-4 pt-4 border-t border-green-500/20">
+                                      <div className="flex flex-wrap gap-4 justify-center items-center">
+                                        {/* Jump to Question */}
+                                        {gameHandlers.onJumpToQuestion && roundQuestions.length > 1 && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-400">Jump to:</span>
+                                            <div className="flex gap-1">
+                                              {roundQuestions.map((_q: Question, qIdx: number) => {
+                                                // Get the actual current question index within the round
+                                                const currentQInRound = gameState.currentQuestionIndex;
+                                                const isCurrent = qIdx === currentQInRound;
+                                                return (
+                                                  <button
+                                                    key={qIdx}
+                                                    onClick={() => gameHandlers.onJumpToQuestion!(qIdx)}
+                                                    disabled={isCurrent}
+                                                    className={`w-8 h-8 rounded text-sm font-bold transition-all ${
+                                                      isCurrent 
+                                                        ? 'bg-green-500 text-white cursor-default' 
+                                                        : 'bg-millionaire-navy hover:bg-millionaire-navy-light text-gray-300'
+                                                    }`}
+                                                    title={`Jump to Q${qIdx + 1}`}
+                                                  >
+                                                    {qIdx + 1}
+                                                  </button>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        {/* Skip to Different Round */}
+                                        {gameHandlers.onSkipToRound && rounds.length > 1 && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-400">Skip to round:</span>
+                                            <select
+                                              onChange={(e) => {
+                                                const idx = parseInt(e.target.value);
+                                                if (idx >= 0) {
+                                                  gameHandlers.onSkipToRound!(idx);
+                                                }
+                                              }}
+                                              className="bg-millionaire-navy border border-millionaire-gold/30 rounded px-2 py-1 text-sm text-white"
+                                              defaultValue=""
+                                            >
+                                              <option value="" disabled>Select round...</option>
+                                              {rounds.map((r, rIdx) => (
+                                                <option 
+                                                  key={r.id} 
+                                                  value={rIdx}
+                                                  disabled={rIdx === currentRoundIndex}
+                                                >
+                                                  {rIdx + 1}. {r.name} {rIdx === currentRoundIndex ? '(current)' : ''}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        )}
+                                        
+                                        {/* End Current Round Early */}
+                                        <button
+                                          onClick={handleEndCurrentRound}
+                                          className="btn-warning btn-sm"
+                                          title="End this round early and take a break"
+                                        >
+                                          ⏸️ End Round Early
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
@@ -995,7 +1089,7 @@ export default function RoundManager({
           <ManualQuestionModal
             onClose={() => setShowManualModal(null)}
             onSave={(questions) => handleSaveManualQuestions(questions, showManualModal)}
-            editingQuestion={null}
+            editQuestion={undefined}
           />
         )}
       </AnimatePresence>

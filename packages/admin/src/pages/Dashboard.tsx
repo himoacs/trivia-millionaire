@@ -221,8 +221,9 @@ export default function Dashboard() {
                   </h2>
                   <button
                     onClick={loadSessions}
-                    className="px-3 py-1 text-sm bg-millionaire-gold/20 hover:bg-millionaire-gold/30 text-millionaire-gold rounded-lg transition-colors"
+                    className="btn-tertiary btn-sm"
                     disabled={loadingSessions}
+                    title="Refresh sessions list"
                   >
                     {loadingSessions ? '↻' : '🔄'} Refresh
                   </button>
@@ -289,14 +290,16 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleRejoinSession(session)}
-                                className="px-4 py-2 bg-millionaire-gold hover:bg-millionaire-gold/80 text-millionaire-dark font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2"
+                                className="btn-secondary whitespace-nowrap"
+                                title={session.state === 'CLOSED' ? 'View session results' : 'Open session'}
                               >
                                 {session.state === 'CLOSED' ? '📊 View' : '▶️ Open'}
                               </button>
                               <button
                                 onClick={(e) => handleDeleteSession(session, e)}
-                                className="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300 rounded-lg transition-colors"
+                                className="btn-icon-danger btn-icon-sm"
                                 title="Delete session"
+                                aria-label="Delete session"
                               >
                                 🗑️
                               </button>

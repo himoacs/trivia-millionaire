@@ -22,7 +22,8 @@ import type {
   Round,
   RoundStartedMessage,
   RoundEndedMessage,
-  ReconnectResponse
+  ReconnectResponse,
+  Question
 } from '@trivia-millionaire/shared';
 
 // Load environment variables from root .env file
@@ -155,6 +156,40 @@ app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
       return;
     }
 
+    // Build current question data if one is active
+    let currentQuestion: QuestionMessage | undefined;
+    if (session.state === 'ACTIVE' && session.currentQuestionIndex >= 0) {
+      const question = session.questions[session.currentQuestionIndex];
+      if (question && session.currentQuestionStartTime) {
+        currentQuestion = {
+          question: {
+            id: question.id,
+            text: question.text,
+            choices: question.choices,
+            category: question.category,
+            difficulty: question.difficulty,
+            timeLimit: question.timeLimit,
+            points: question.points
+          },
+          questionNumber: session.currentQuestionIndex + 1,
+          totalQuestions: session.questions.length,
+          startTime: session.currentQuestionStartTime,
+          endTime: session.currentQuestionStartTime + (question.timeLimit * 1000),
+          roundInfo: sessionManager.getRoundInfoForQuestion(sessionId)
+        };
+      }
+    }
+
+    // Build current round info if a round is active
+    let currentRoundInfo: { name: string; number: number; totalRounds: number } | null = null;
+    if (session.currentRoundIndex >= 0 && session.rounds[session.currentRoundIndex]) {
+      currentRoundInfo = {
+        name: session.rounds[session.currentRoundIndex].name,
+        number: session.currentRoundIndex + 1,
+        totalRounds: session.rounds.length
+      };
+    }
+
     res.json({
       success: true,
       data: {
@@ -166,6 +201,8 @@ app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
         questions: session.questions.map(q => ({
           id: q.id,
           text: q.text,
+          choices: q.choices,
+          correctIndex: q.correctIndex,
           category: q.category,
           difficulty: q.difficulty,
           timeLimit: q.timeLimit,
@@ -173,6 +210,8 @@ app.get('/api/admin/session/:sessionId', (req: Request, res: Response) => {
           roundId: q.roundId
         })),
         currentQuestionIndex: session.currentQuestionIndex,
+        currentQuestion,
+        currentRoundInfo,
         createdAt: session.createdAt,
         rounds: session.rounds,
         currentRoundIndex: session.currentRoundIndex
@@ -764,7 +803,7 @@ app.post('/api/session/:sessionId/answer', (req: Request, res: Response) => {
  */
 app.post('/api/lifeline/ask-ai', async (req: Request, res: Response) => {
   try {
-    const { question, choices } = req.body;
+    const { sessionId, question, choices } = req.body;
 
     if (!question || !choices || !Array.isArray(choices) || choices.length !== 4) {
       res.status(400).json({
@@ -774,15 +813,17 @@ app.post('/api/lifeline/ask-ai', async (req: Request, res: Response) => {
       return;
     }
 
-    if (!aiGenerator.isAvailable()) {
+    // Get AI settings from session
+    const settings = sessionId ? sessionManager.getSettings(sessionId) : null;
+    if (!settings || !settings.provider || !settings.apiKey) {
       res.status(503).json({
         success: false,
-        error: 'AI service not available'
+        error: 'AI service not configured. Please configure AI settings in the admin panel.'
       } as ApiResponse);
       return;
     }
 
-    const result = await aiGenerator.answerQuestion(question, choices);
+    const result = await aiGenerator.answerQuestion(question, choices, settings);
 
     res.json({
       success: true,
@@ -1274,6 +1315,141 @@ app.post('/api/admin/session/:sessionId/rounds/start-next', (req: Request, res: 
   }
 });
 
+/**
+ * Jump to a specific question within the current round
+ */
+app.post('/api/admin/session/:sessionId/jump-to-question', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { questionIndex } = req.body;
+
+    if (typeof questionIndex !== 'number' || questionIndex < 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid question index'
+      } as ApiResponse);
+      return;
+    }
+
+    const question = sessionManager.jumpToQuestion(sessionId, questionIndex);
+
+    if (!question) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot jump to question - invalid index or session not active'
+      } as ApiResponse);
+      return;
+    }
+
+    const session = sessionManager.getSession(sessionId);
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    // Publish the question to Solace
+    const questionMessage: QuestionMessage = {
+      question: {
+        id: question.id,
+        text: question.text,
+        choices: question.choices,
+        category: question.category,
+        difficulty: question.difficulty,
+        timeLimit: question.timeLimit,
+        points: question.points
+      },
+      questionNumber: sessionManager.getCurrentQuestionIndexInRound(sessionId) + 1,
+      totalQuestions: sessionManager.getCurrentRound(sessionId)?.questionIds.length || session.questions.length,
+      startTime: session.currentQuestionStartTime!,
+      endTime: session.currentQuestionStartTime! + (question.timeLimit * 1000),
+      roundInfo: sessionManager.getRoundInfoForQuestion(sessionId)
+    };
+
+    solaceService.publish(
+      `trivia/session/${sessionId}/question/released`,
+      questionMessage
+    );
+
+    res.json({
+      success: true,
+      data: { question: questionMessage }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to jump to question'
+    } as ApiResponse);
+  }
+});
+
+/**
+ * Skip current round and optionally jump to another round
+ */
+app.post('/api/admin/session/:sessionId/skip-to-round', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { targetRoundIndex } = req.body; // -1 to just abort current round
+
+    const round = sessionManager.skipToRound(sessionId, targetRoundIndex ?? -1);
+    const session = sessionManager.getSession(sessionId);
+
+    if (round) {
+      // Publish round started event via Solace
+      const roundStartedMessage: RoundStartedMessage = {
+        roundId: round.id,
+        roundName: round.name,
+        roundNumber: (session?.currentRoundIndex ?? 0) + 1,
+        totalRounds: session?.rounds.length ?? 1,
+        questionCount: round.questionIds.length,
+        timestamp: Date.now()
+      };
+
+      solaceService.publish(
+        `trivia/session/${sessionId}/round/started`,
+        roundStartedMessage
+      );
+
+      res.json({
+        success: true,
+        data: { round, sessionState: session?.state }
+      } as ApiResponse);
+    } else {
+      // Round was aborted, session is now paused
+      // Publish round ended event
+      const currentRound = session?.rounds[(session?.currentRoundIndex ?? 0)];
+      if (currentRound) {
+        const roundEndedMessage: RoundEndedMessage = {
+          roundId: currentRound.id,
+          roundName: currentRound.name,
+          roundNumber: (session?.currentRoundIndex ?? 0) + 1,
+          totalRounds: session?.rounds.length ?? 1,
+          timestamp: Date.now(),
+          leaderboard: sessionManager.getLeaderboard(sessionId) || [],
+          nextRoundName: session?.rounds[(session?.currentRoundIndex ?? 0) + 1]?.name
+        };
+
+        solaceService.publish(
+          `trivia/session/${sessionId}/round/ended`,
+          roundEndedMessage
+        );
+      }
+
+      res.json({
+        success: true,
+        data: { round: null, sessionState: session?.state }
+      } as ApiResponse);
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to skip round'
+    } as ApiResponse);
+  }
+});
+
 // ===================
 // PLAYER RECONNECTION
 // ===================
@@ -1647,7 +1823,7 @@ app.post('/api/admin/session/:sessionId/import', (req: Request, res: Response) =
         sessionManager.addQuestions(sessionId, questions);
         
         // Update round with question IDs
-        const questionIds = questions.map(q => q.id);
+        const questionIds = questions.map((q: { id: string }) => q.id);
         sessionManager.updateRound(sessionId, round.id, { questionIds });
       }
       
@@ -1749,7 +1925,7 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
         sessionManager.addQuestions(sessionId, questions);
         
         // Update round with question IDs
-        const questionIds = questions.map(q => q.id);
+        const questionIds = questions.map((q: { id: string }) => q.id);
         sessionManager.updateRound(sessionId, round.id, { questionIds });
       }
       

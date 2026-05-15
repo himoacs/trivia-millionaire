@@ -57,7 +57,7 @@ export default function PresenterView() {
   const [breakLeaderboard, setBreakLeaderboard] = useState<SharedLeaderboardEntry[]>([]);
   const [nextRoundName, setNextRoundName] = useState<string | undefined>();
   
-  const timerRef = useRef<number>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentQuestionId = useRef<string | null>(null);
 
   const { connected, subscribe } = useSolace();
@@ -77,6 +77,42 @@ export default function PresenterView() {
           const playersArray = Array.isArray(sessionData.players) ? sessionData.players : [];
           setPlayers(playersArray);
           setTotalPlayers(playersArray.length);
+          
+          // If session is closed, fetch the leaderboard
+          if (sessionData.state === 'CLOSED') {
+            try {
+              const leaderboardResponse = await axios.get(`${API_URL}/api/session/${sessionId}/leaderboard`);
+              if (leaderboardResponse.data.success) {
+                setLeaderboard(leaderboardResponse.data.data);
+              }
+            } catch (error) {
+              console.error('Failed to fetch leaderboard:', error);
+            }
+          }
+          
+          // Load current round info if available (even if no question released yet)
+          if (sessionData.currentRoundInfo) {
+            console.log('📺 Loading current round from API:', sessionData.currentRoundInfo);
+            setCurrentRound(sessionData.currentRoundInfo);
+          }
+          
+          // Load current question if one is active
+          if (sessionData.currentQuestion) {
+            console.log('📺 Loading current question from API:', sessionData.currentQuestion);
+            setCurrentQuestion(sessionData.currentQuestion);
+            currentQuestionId.current = sessionData.currentQuestion.question.id;
+            
+            // Calculate remaining time
+            const now = Date.now();
+            const endTime = sessionData.currentQuestion.endTime;
+            const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+            setTimeLeft(remaining);
+            
+            // Also set round info from question if available
+            if (sessionData.currentQuestion.roundInfo) {
+              setCurrentRound(sessionData.currentQuestion.roundInfo);
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to load session:', error);
@@ -531,7 +567,105 @@ export default function PresenterView() {
     );
   }
 
-  // Render lobby view with QR code
+  // Render "Round Starting" view when round is active but no question yet
+  if (sessionState === 'ACTIVE' && !currentQuestion && currentRound) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">
+        {/* Top Banner */}
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
+          <div className="flex items-center justify-between">
+            <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80" />
+            <div className="flex items-center gap-3">
+              <PresenterSoundToggle />
+              <SolaceStatusIndicator />
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`p-1.5 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'}`}
+                title={showDebugPanel ? 'Hide Solace Messages' : 'Show Solace Messages'}
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-16 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
+        >
+          {isFullscreen ? '⊠' : '⛶'}
+        </button>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-4xl w-full"
+          >
+            {/* Round Starting Header */}
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-8xl mb-6 drop-shadow-[0_0_30px_rgba(34,197,94,0.5)]"
+            >
+              🎮
+            </motion.div>
+            <h1 className="text-5xl md:text-6xl font-black text-white mb-4"
+                style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8)' }}>
+              Get Ready!
+            </h1>
+            <p className="text-3xl text-green-400 mb-4 font-bold">
+              {currentRound.name}
+            </p>
+            <p className="text-xl text-gray-300 mb-8">
+              Round {currentRound.number} of {currentRound.totalRounds}
+            </p>
+
+            {/* Player count */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-millionaire-navy/50 border-2 border-green-500/50 rounded-2xl px-12 py-6 inline-block"
+            >
+              <div className="flex items-center justify-center gap-4">
+                <span className="text-5xl">👥</span>
+                <div>
+                  <p className="text-5xl font-black text-white">{players.length}</p>
+                  <p className="text-xl text-green-300">Players Ready</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+              className="mt-8 text-xl text-gray-400"
+            >
+              Waiting for host to release the first question...
+            </motion.p>
+          </motion.div>
+        </div>
+
+        {/* Solace Debug Panel */}
+        <AnimatePresence>
+          {showDebugPanel && sessionId && (
+            <div className="fixed top-0 right-0 h-screen z-50">
+              <SolaceDebugPanel
+                sessionId={sessionId}
+                onClose={() => setShowDebugPanel(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Render lobby view with QR code (only when truly in LOBBY state)
   if (sessionState === 'LOBBY' || !currentQuestion) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">

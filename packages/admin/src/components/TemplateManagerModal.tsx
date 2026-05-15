@@ -19,7 +19,7 @@ interface TemplateManagerModalProps {
 }
 
 export default function TemplateManagerModal({
-  sessionId,
+  sessionId: _sessionId,
   onClose,
   onLoadTemplate,
   onSaveAsTemplate,
@@ -147,9 +147,11 @@ export default function TemplateManagerModal({
           <h2 className="text-xl font-bold text-white">Saved Templates</h2>
           <button 
             onClick={onClose}
-            className="text-white hover:text-blue-200 transition-colors"
+            className="btn-icon-ghost btn-icon-sm text-white hover:text-blue-200"
+            title="Close template manager"
+            aria-label="Close template manager"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -260,10 +262,11 @@ export default function TemplateManagerModal({
                           e.stopPropagation();
                           handleDeleteTemplate(template.id);
                         }}
-                        className="ml-2 p-1 text-gray-500 hover:text-red-400 transition-colors"
+                        className="btn-icon-danger btn-icon-sm ml-2"
                         title="Delete template"
+                        aria-label={`Delete template ${template.name}`}
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>

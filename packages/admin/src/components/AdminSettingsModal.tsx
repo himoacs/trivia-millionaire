@@ -158,7 +158,9 @@ export default function AdminSettingsModal({ sessionId, onClose }: AdminSettings
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors text-2xl"
+            className="btn-icon-ghost"
+            title="Close settings"
+            aria-label="Close settings modal"
           >
             ✕
           </button>
@@ -297,7 +299,8 @@ export default function AdminSettingsModal({ sessionId, onClose }: AdminSettings
             <button
               onClick={handleClear}
               disabled={isSaving || !provider}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+              className="btn-danger"
+              title="Clear all AI settings"
             >
               Clear Settings
             </button>
@@ -305,14 +308,15 @@ export default function AdminSettingsModal({ sessionId, onClose }: AdminSettings
               <button
                 onClick={onClose}
                 disabled={isSaving}
-                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white font-semibold rounded-lg transition-colors"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving || !provider}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                className="btn-ai"
+                title="Save AI configuration"
               >
                 {isSaving ? (
                   <>

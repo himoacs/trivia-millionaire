@@ -10,7 +10,7 @@ interface ImportExportModalProps {
 }
 
 export default function ImportExportModal({ 
-  sessionId, 
+  sessionId: _sessionId, 
   sessionName, 
   onClose, 
   onImport, 
@@ -118,9 +118,11 @@ export default function ImportExportModal({
           <h2 className="text-xl font-bold text-white">Import / Export</h2>
           <button 
             onClick={onClose}
-            className="text-white hover:text-amber-200 transition-colors"
+            className="btn-icon-ghost btn-icon-sm text-white hover:text-amber-200"
+            title="Close import/export dialog"
+            aria-label="Close import/export dialog"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

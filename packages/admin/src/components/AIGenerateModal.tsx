@@ -110,7 +110,12 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
         {/* Header */}
         <div className="bg-gradient-to-r from-millionaire-navy-dark to-millionaire-blue p-6 flex items-center justify-between border-b-2 border-millionaire-gold">
           <h2 className="text-2xl font-bold text-white drop-shadow-lg">🤖 Generate Questions with AI</h2>
-          <button onClick={onClose} className="text-3xl text-white hover:text-millionaire-gold leading-none transition-colors">
+          <button 
+            onClick={onClose} 
+            className="btn-icon-ghost btn-icon-sm text-white hover:text-millionaire-gold"
+            title="Close"
+            aria-label="Close AI generator"
+          >
             ×
           </button>
         </div>
@@ -184,7 +189,8 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="w-full py-4 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark font-bold rounded-lg transition-colors shadow-glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full py-4 text-lg"
+                title="Generate AI questions based on your topic"
               >
                 {isGenerating ? (
                   <span className="flex items-center justify-center">
@@ -322,7 +328,9 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
                           </button>
                           <button
                             onClick={() => handleDelete(index)}
-                            className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-semibold text-sm transition-colors"
+                            className="btn-icon-danger btn-icon-sm"
+                            title="Delete this question"
+                            aria-label="Delete question"
                           >
                             🗑️
                           </button>
@@ -347,13 +355,14 @@ export default function AIGenerateModal({ onClose, onGenerate, onSave }: AIGener
           <div className="border-t border-millionaire-gold/30 p-4 flex space-x-3 bg-millionaire-navy-dark/80">
             <button
               onClick={handleSaveAll}
-              className="flex-1 py-3 text-lg bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark font-bold rounded-lg transition-colors shadow-glow-gold"
+              className="btn-primary flex-1 py-3 text-lg"
+              title="Save all generated questions to this round"
             >
               💾 Add All Questions ({generatedQuestions.length})
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition-colors"
+              className="btn-ghost"
             >
               Cancel
             </button>

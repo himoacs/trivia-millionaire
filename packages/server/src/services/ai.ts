@@ -270,7 +270,7 @@ Return ONLY the JSON object, no additional text.`;
   /**
    * Ask AI to answer a trivia question (for lifeline feature)
    */
-  async answerQuestion(question: string, choices: string[]): Promise<{ suggestedIndex: number; confidence: string }> {
+  async answerQuestion(question: string, choices: string[], settings: AdminSettings): Promise<{ suggestedIndex: number; confidence: string }> {
     const prompt = `You are playing a trivia game. Answer the following multiple choice question.
 
 Question: ${question}
@@ -289,23 +289,34 @@ Where "answer" is the letter (A, B, C, or D) of your best guess, and "confidence
     try {
       let content = '';
 
-      if (this.litellm) {
-        const completion = await this.litellm.chat.completions.create({
-          model: this.defaultModel,
+      if (settings.provider === 'litellm' && settings.baseUrl) {
+        const client = new OpenAI({
+          apiKey: settings.apiKey!,
+          baseURL: settings.baseUrl
+        });
+        const model = settings.model || 'gpt-3.5-turbo';
+        const completion = await client.chat.completions.create({
+          model,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3
         });
         content = completion.choices[0]?.message?.content || '';
-      } else if (this.openai) {
-        const completion = await this.openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+      } else if (settings.provider === 'openai') {
+        const config: any = { apiKey: settings.apiKey! };
+        if (settings.baseUrl) config.baseURL = settings.baseUrl;
+        const client = new OpenAI(config);
+        const model = settings.model || 'gpt-3.5-turbo';
+        const completion = await client.chat.completions.create({
+          model,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.3
         });
         content = completion.choices[0]?.message?.content || '';
-      } else if (this.anthropic) {
-        const message = await this.anthropic.messages.create({
-          model: 'claude-3-sonnet-20240229',
+      } else if (settings.provider === 'anthropic') {
+        const client = new Anthropic({ apiKey: settings.apiKey! });
+        const model = settings.model || 'claude-3-sonnet-20240229';
+        const message = await client.messages.create({
+          model,
           max_tokens: 100,
           messages: [{ role: 'user', content: prompt }]
         });

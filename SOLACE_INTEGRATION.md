@@ -6,21 +6,149 @@ This trivia application now uses **Solace PubSub+** for real-time event-driven a
 
 ## Architecture Overview
 
+```mermaid
+flowchart TB
+    subgraph Clients["Client Applications"]
+        Admin["🖥️ Admin Dashboard<br/>(React + Vite)<br/>:4848"]
+        Presenter["📺 Presenter View<br/>(React + Vite)<br/>:4848"]
+        Player["📱 Player Client<br/>(React + Vite)<br/>:4849"]
+    end
+
+    subgraph Server["Backend Server"]
+        API["🚀 Express.js Server<br/>REST API<br/>:4847"]
+        SessionMgr["📋 Session Manager"]
+        AIService["🤖 AI Service<br/>(OpenAI/Anthropic/LiteLLM)"]
+        DB["💾 SQLite Database"]
+    end
+
+    subgraph Solace["Solace PubSub+ Event Broker"]
+        Broker["☁️ Solace Cloud<br/>ws://...messaging.solace.cloud:80"]
+    end
+
+    Admin <-->|HTTP/REST| API
+    Player <-->|HTTP/REST| API
+    Presenter -->|HTTP/REST| API
+
+    Admin <-.->|WebSocket| Broker
+    Presenter <-.->|WebSocket| Broker
+    Player <-.->|WebSocket| Broker
+    API <-.->|WebSocket| Broker
+
+    API --> SessionMgr
+    API --> AIService
+    SessionMgr --> DB
 ```
-┌─────────────┐                    ┌─────────────┐                    ┌─────────────┐
-│    Admin    │◄──────Solace──────►│   Server    │◄──────Solace──────►│   Solace    │
-│  (Browser)  │   (WebSocket)      │  (Node.js)  │      (TCP)         │   Broker    │
-└─────────────┘                    └─────────────┘                    └─────────────┘
-       ▲                                   ▲                                  ▲
-       │                                   │                                  │
-       └──────────────Solace───────────────┴──────────────────────────────────┘
-                   (WebSocket)                                                │
-                                                                              │
-┌─────────────┐                                                               │
-│   Client    │◄──────────────────────────────────────────────────────────────┘
-│  (Browser)  │                  (WebSocket)
-└─────────────┘
+
+## Topic Taxonomy
+
+```mermaid
+flowchart LR
+    subgraph Topics["Solace Topic Taxonomy"]
+        direction TB
+        Root["trivia/"]
+        
+        subgraph Session["session/{sessionId}/"]
+            direction TB
+            
+            subgraph GameEvents["Game Lifecycle"]
+                QR["question/released"]
+                GE["game/ended"]
+            end
+            
+            subgraph RoundEvents["Round Management"]
+                RS["round/started"]
+                RE["round/ended"]
+            end
+            
+            subgraph PlayerEvents["player/{playerId}/"]
+                PJ["joined"]
+                PA["answered"]
+                PS["scored"]
+            end
+            
+            subgraph AdminEvents["Admin Controls"]
+                SD["admin/showDistribution"]
+                RA["admin/revealAnswer"]
+                CT["control"]
+            end
+            
+            subgraph Stats["Statistics"]
+                AU["stats/answersUpdated"]
+            end
+        end
+    end
+    
+    Root --> Session
 ```
+
+## Message Flow
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant S as Server
+    participant B as Solace Broker
+    participant P as Presenter
+    participant C as Player Client
+
+    Note over A,C: Player Joins Game
+    C->>S: POST /join
+    S->>B: publish player/{id}/joined
+    B-->>A: player/{id}/joined
+    B-->>P: player/{id}/joined
+
+    Note over A,C: Question Released
+    A->>S: POST /release-question
+    S->>B: publish question/released
+    B-->>P: question/released
+    B-->>C: question/released
+
+    Note over A,C: Player Answers
+    C->>B: publish player/{id}/answered
+    B-->>S: player/{id}/answered
+    S->>B: publish player/{id}/scored
+    S->>B: publish stats/answersUpdated
+    B-->>C: player/{id}/scored
+    B-->>P: stats/answersUpdated
+
+    Note over A,C: Show Results
+    A->>B: publish admin/showDistribution
+    B-->>P: admin/showDistribution
+    B-->>C: admin/showDistribution
+    A->>B: publish admin/revealAnswer
+    B-->>P: admin/revealAnswer
+    B-->>C: admin/revealAnswer
+
+    Note over A,C: Game Ends
+    A->>S: POST /close
+    S->>B: publish game/ended
+    B-->>P: game/ended
+    B-->>C: game/ended
+```
+
+## Complete Topic Reference
+
+| Topic | Publisher | Subscribers | Purpose |
+|-------|-----------|-------------|---------|
+| `trivia/session/{id}/player/{pid}/joined` | Server | Admin, Presenter | Player joined notification |
+| `trivia/session/{id}/player/{pid}/answered` | Client | Server | Player answer submission |
+| `trivia/session/{id}/player/{pid}/scored` | Server | Client | Score update for player |
+| `trivia/session/{id}/question/released` | Server | Presenter, Client | New question broadcast |
+| `trivia/session/{id}/round/started` | Server | Presenter, Client | Round begins |
+| `trivia/session/{id}/round/ended` | Server | Presenter, Client | Round ends with leaderboard |
+| `trivia/session/{id}/game/ended` | Server | Presenter, Client | Game over with final results |
+| `trivia/session/{id}/stats/answersUpdated` | Server | Presenter, Client | Live answer count updates |
+| `trivia/session/{id}/admin/showDistribution` | Admin | Presenter, Client | Show answer distribution |
+| `trivia/session/{id}/admin/revealAnswer` | Admin | Presenter, Client | Reveal correct answer |
+| `trivia/session/{id}/control` | Admin | Server | Admin control commands |
+
+### Wildcard Subscriptions
+
+| Component | Subscription Pattern | Purpose |
+|-----------|---------------------|---------|
+| Server | `trivia/session/*/player/*/answer` | Process all player answers |
+| Server | `trivia/session/*/control` | Receive admin commands |
+| Monitor | `trivia/>` | See all messages (Solace multi-level wildcard) |
 
 ## Topics Structure
 
@@ -29,19 +157,34 @@ This trivia application now uses **Solace PubSub+** for real-time event-driven a
 - `trivia/session/{sessionId}/player/{playerId}/answered` - Answer submitted event
 - `trivia/session/{sessionId}/player/{playerId}/scored` - Score updated event
 - `trivia/session/{sessionId}/question/released` - Question released event
+- `trivia/session/{sessionId}/round/started` - Round started event
+- `trivia/session/{sessionId}/round/ended` - Round ended with leaderboard
 - `trivia/session/{sessionId}/stats/answersUpdated` - Answer statistics updated
 - `trivia/session/{sessionId}/game/ended` - Game ended with leaderboard
 
-### Subscribed by Admin (SessionView)
+### Published by Admin
+- `trivia/session/{sessionId}/admin/showDistribution` - Show answer distribution
+- `trivia/session/{sessionId}/admin/revealAnswer` - Reveal correct answer
+
+### Subscribed by Presenter
 - `trivia/session/{sessionId}/player/*/joined` - Watch for players joining
-- `trivia/session/{sessionId}/player/*/answered` - Real-time answer submissions
+- `trivia/session/{sessionId}/question/released` - Receive questions
 - `trivia/session/{sessionId}/stats/answersUpdated` - Live answer statistics
+- `trivia/session/{sessionId}/admin/showDistribution` - Distribution command
+- `trivia/session/{sessionId}/admin/revealAnswer` - Reveal command
+- `trivia/session/{sessionId}/round/started` - Round started
+- `trivia/session/{sessionId}/round/ended` - Round ended
+- `trivia/session/{sessionId}/game/ended` - Game end notification
 
 ### Subscribed by Client (Game)
 - `trivia/session/{sessionId}/question/released` - Receive new questions
 - `trivia/session/{sessionId}/player/{playerId}/scored` - Receive score updates
+- `trivia/session/{sessionId}/round/started` - Round started
+- `trivia/session/{sessionId}/round/ended` - Round ended
 - `trivia/session/{sessionId}/game/ended` - Game end notification
 - `trivia/session/{sessionId}/stats/answersUpdated` - Answer progress
+- `trivia/session/{sessionId}/admin/showDistribution` - Show distribution
+- `trivia/session/{sessionId}/admin/revealAnswer` - Reveal answer
 
 ### Published by Client (Player)
 - `trivia/session/{sessionId}/player/{playerId}/answered` - Submit answer

@@ -133,7 +133,12 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
           <h2 className="text-2xl font-bold text-white drop-shadow-lg">
             {editQuestion ? '✏️ Edit Question' : '➕ Add Question(s)'}
           </h2>
-          <button onClick={onClose} className="text-3xl text-white hover:text-millionaire-gold leading-none transition-colors">
+          <button 
+            onClick={onClose} 
+            className="btn-icon-ghost btn-icon-sm text-white hover:text-millionaire-gold"
+            title="Close"
+            aria-label="Close question editor"
+          >
             ×
           </button>
         </div>
@@ -313,13 +318,13 @@ export default function ManualQuestionModal({ onClose, onSave, editQuestion }: M
         <div className="bg-millionaire-navy-dark/80 px-6 py-4 flex justify-end space-x-3 border-t border-millionaire-gold/30">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-semibold transition-colors"
+            className="btn-ghost"
           >
             Cancel
           </button>
           <button
             onClick={activeTab === 'form' ? handleSaveForm : handleSaveYaml}
-            className="px-6 py-3 bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-navy-dark rounded-lg font-bold transition-colors shadow-glow-gold"
+            className="btn-primary"
           >
             {editQuestion ? 'Save Changes' : 'Add Question'}{activeTab === 'yaml' && !editQuestion ? 's' : ''}
           </button>

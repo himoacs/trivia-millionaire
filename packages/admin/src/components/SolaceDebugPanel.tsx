@@ -158,7 +158,9 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
               </div>
               <button
                 onClick={onClose}
-                className="text-white hover:text-millionaire-gold text-2xl leading-none"
+                className="btn-icon-ghost btn-icon-sm"
+                title="Close debug panel"
+                aria-label="Close debug panel"
               >
                 ×
               </button>
@@ -179,19 +181,23 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
           <div className="flex space-x-2 mb-3">
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className="px-3 py-2 bg-millionaire-gold hover:bg-millionaire-gold-light text-millionaire-dark rounded text-sm font-semibold transition-colors"
+              className="btn-tertiary btn-sm"
+              title={isPaused ? 'Resume message stream' : 'Pause message stream'}
+              aria-pressed={isPaused}
             >
               {isPaused ? '▶️ Resume' : '⏸️ Pause'}
             </button>
             <button
               onClick={handleClear}
-              className="px-3 py-2 bg-millionaire-purple hover:bg-millionaire-purple-light text-white rounded text-sm transition-colors"
+              className="btn-ghost btn-sm"
+              title="Clear all messages"
             >
               🗑️ Clear
             </button>
             <button
               onClick={handleExport}
-              className="px-3 py-2 bg-millionaire-purple hover:bg-millionaire-purple-light text-white rounded text-sm transition-colors"
+              className="btn-ghost btn-sm"
+              title="Export messages as JSON"
             >
               💾 Export
             </button>

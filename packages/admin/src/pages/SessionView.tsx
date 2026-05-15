@@ -10,7 +10,6 @@ import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
 import ManualQuestionModal from '../components/ManualQuestionModal';
 import AIGenerateModal from '../components/AIGenerateModal';
 import AdminSettingsModal from '../components/AdminSettingsModal';
-import AnswerDistributionChart from '../components/AnswerDistributionChart';
 import RoundManager from '../components/RoundManager';
 import { useSolace } from '../hooks/useSolace';
 
@@ -32,7 +31,6 @@ export default function SessionView() {
   const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
   const [showAdminSettingsModal, setShowAdminSettingsModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<{ question: Question; index: number } | null>(null);
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
   const [showAnswerDistribution, setShowAnswerDistribution] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
@@ -40,7 +38,6 @@ export default function SessionView() {
   const [allAnswered, setAllAnswered] = useState(false);
   const [answerCounts, setAnswerCounts] = useState<Record<number, number>>({ 0: 0, 1: 0, 2: 0, 3: 0 });
   const [questionTimerEnd, setQuestionTimerEnd] = useState<number | null>(null);
-  const [hideQuestions, setHideQuestions] = useState(false);
 
   // Connect to Solace
   const { connected, subscribe, publish } = useSolace();
@@ -162,15 +159,6 @@ export default function SessionView() {
     }
   };
 
-  const handleAddManualQuestion = () => {
-    setEditingQuestion(null);
-    setShowManualQuestionModal(true);
-  };
-
-  const handleGenerateAI = () => {
-    setShowAIGenerateModal(true);
-  };
-
   const handleAIGenerate = async (topic: string, count: number, docs?: string): Promise<Question[]> => {
     try {
       const response = await axios.post(
@@ -209,27 +197,6 @@ export default function SessionView() {
       console.error('Failed to save AI questions:', error);
       alert('Failed to save questions to the server');
     }
-  };
-
-  const handleEditQuestion = (question: Question, index: number) => {
-    setEditingQuestion({ question, index });
-    setShowManualQuestionModal(true);
-  };
-
-  const handleDeleteQuestion = (index: number) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      setQuestions(questions.filter((_, i) => i !== index));
-    }
-  };
-
-  const toggleQuestionExpanded = (questionId: string) => {
-    const newExpanded = new Set(expandedQuestions);
-    if (newExpanded.has(questionId)) {
-      newExpanded.delete(questionId);
-    } else {
-      newExpanded.add(questionId);
-    }
-    setExpandedQuestions(newExpanded);
   };
 
   const handleSaveManualQuestion = async (newQuestions: Question[]) => {
@@ -321,8 +288,8 @@ export default function SessionView() {
   const handleShowResults = () => {
     setShowAnswerDistribution(true);
     
-    // Publish event to show distribution to all players
-    if (connected && sessionId && currentQuestionIndex >= 0 && questions[currentQuestionIndex]) {
+    // Publish event to show distribution to all players (including Presenter view)
+    if (connected && sessionId) {
       console.log('Publishing show distribution:', {
         questionIndex: currentQuestionIndex,
         distribution: answerCounts,
@@ -339,15 +306,31 @@ export default function SessionView() {
   const handleRevealCorrectAnswer = () => {
     setShowCorrectAnswer(true);
     
-    // Publish event to reveal correct answer to all players
-    if (connected && sessionId && currentQuestionIndex >= 0 && questions[currentQuestionIndex]) {
+    // Get current round's questions to find the correct answer
+    const currentRound = currentRoundIndex >= 0 ? rounds[currentRoundIndex] : null;
+    let correctIndex = 0;
+    
+    if (currentRound && currentQuestionIndex >= 0) {
+      // Get the question from the current round
+      const questionId = currentRound.questionIds[currentQuestionIndex];
+      const question = questions.find(q => q.id === questionId);
+      if (question) {
+        correctIndex = question.correctIndex;
+      }
+    } else if (currentQuestionIndex >= 0 && questions[currentQuestionIndex]) {
+      // Fallback for flat question list
+      correctIndex = questions[currentQuestionIndex].correctIndex;
+    }
+    
+    // Publish event to reveal correct answer to all players (including Presenter view)
+    if (connected && sessionId) {
       console.log('Publishing reveal answer:', {
         questionIndex: currentQuestionIndex,
-        correctIndex: questions[currentQuestionIndex].correctIndex
+        correctIndex
       });
       publish(`trivia/session/${sessionId}/admin/revealAnswer`, {
         questionIndex: currentQuestionIndex,
-        correctIndex: questions[currentQuestionIndex].correctIndex
+        correctIndex
       });
     }
   };
@@ -377,51 +360,128 @@ export default function SessionView() {
     }
   };
 
+  // Jump to a specific question within the current round
+  const handleJumpToQuestion = async (questionIndex: number) => {
+    const confirmed = window.confirm(`Jump to Question ${questionIndex + 1}? This will immediately release that question to all players.`);
+    if (!confirmed) return;
+    
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/session/${sessionId}/jump-to-question`, {
+        questionIndex
+      });
+      
+      if (response.data.success) {
+        setCurrentQuestionIndex(questionIndex);
+        setAnswerCounts({ 0: 0, 1: 0, 2: 0, 3: 0 });
+        setShowAnswerDistribution(false);
+        setShowCorrectAnswer(false);
+        setAnsweredCount(0);
+        setAllAnswered(false);
+        
+        // Set timer - find the question from the round's questionIds
+        const currentRound = currentRoundIndex >= 0 ? rounds[currentRoundIndex] : null;
+        if (currentRound && currentRound.questionIds[questionIndex]) {
+          const questionId = currentRound.questionIds[questionIndex];
+          const question = questions.find(q => q.id === questionId);
+          if (question) {
+            const endTime = Date.now() + (question.timeLimit * 1000);
+            setQuestionTimerEnd(endTime);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to jump to question:', error);
+      alert('Failed to jump to question.');
+    }
+  };
+
+  // Skip to a different round (abort current round and start another)
+  const handleSkipToRound = async (targetRoundIndex: number) => {
+    const targetRound = rounds[targetRoundIndex];
+    const confirmed = window.confirm(
+      `Skip to "${targetRound?.name || 'Round ' + (targetRoundIndex + 1)}"?\n\n` +
+      `This will end the current round early and start the selected round.`
+    );
+    if (!confirmed) return;
+    
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/session/${sessionId}/skip-to-round`, {
+        targetRoundIndex
+      });
+      
+      if (response.data.success) {
+        // Reset state for new round
+        setCurrentRoundIndex(targetRoundIndex);
+        setCurrentQuestionIndex(-1);
+        setAnswerCounts({ 0: 0, 1: 0, 2: 0, 3: 0 });
+        setShowAnswerDistribution(false);
+        setShowCorrectAnswer(false);
+        setAnsweredCount(0);
+        setAllAnswered(false);
+        setQuestionTimerEnd(null);
+        
+        // Reload session data
+        await loadSessionData();
+      }
+    } catch (error) {
+      console.error('Failed to skip to round:', error);
+      alert('Failed to skip to round.');
+    }
+  };
+
   const joinUrl = `${CLIENT_URL}/?code=${sessionCode}`;
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark via-millionaire-dark to-millionaire-navy-dark border-b border-millionaire-gold/30 px-6 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          {/* Left: Solace Logo + Dashboard button + Settings button */}
+      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark via-millionaire-dark to-millionaire-navy-dark border-b border-millionaire-gold/30 px-4 md:px-6 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: Logo + Navigation */}
           <div className="flex items-center gap-2">
             <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
+            <div className="btn-divider hidden md:block" />
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 px-3 py-2 bg-millionaire-gold/20 hover:bg-millionaire-gold/30 text-millionaire-gold rounded-lg transition-colors"
+              className="btn-tertiary btn-sm"
               title="Back to Dashboard"
+              aria-label="Back to Dashboard"
             >
-              <span className="hidden md:inline font-semibold">Dashboard</span>
-            </button>
-            <button
-              onClick={() => setShowAdminSettingsModal(true)}
-              className="flex items-center gap-2 px-3 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 rounded-lg transition-colors"
-              title="AI Settings"
-            >
-              <span>⚙️</span>
-              <span className="hidden md:inline font-semibold">AI Settings</span>
+              <span className="md:hidden">←</span>
+              <span className="hidden md:inline">← Dashboard</span>
             </button>
           </div>
           
-          {/* Center: Action Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.open(`/presenter/${sessionId}`, '_blank', 'width=1920,height=1080')}
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-lg transition-all font-semibold"
-              title="Open Presenter View"
-            >
-              <span>🖥️</span>
-              <span className="hidden md:inline">Presenter View</span>
-            </button>
-            <button
-              onClick={() => setShowDebugPanel(!showDebugPanel)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${showDebugPanel ? 'bg-orange-600 text-white' : 'bg-orange-600/30 hover:bg-orange-600/50 text-orange-300'}`}
-              title="Toggle Solace Messages"
-            >
-              <span>📡</span>
-              <span className="hidden md:inline">{showDebugPanel ? 'Hide' : 'Show'} Solace</span>
-            </button>
+          {/* Center: Primary Actions */}
+          <div className="flex items-center">
+            <div className="btn-group">
+              <button
+                onClick={() => window.open(`/presenter/${sessionId}`, '_blank', 'width=1920,height=1080')}
+                className="btn-success btn-sm"
+                title="Open Presenter View in new window"
+                aria-label="Open Presenter View"
+              >
+                <span>🖥️</span>
+                <span className="hidden md:inline">Presenter</span>
+              </button>
+              <button
+                onClick={() => setShowAdminSettingsModal(true)}
+                className="btn-ai btn-sm"
+                title="Configure AI settings for question generation"
+                aria-label="AI Settings"
+              >
+                <span>⚙️</span>
+                <span className="hidden md:inline">AI Settings</span>
+              </button>
+              <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                className={`btn-sm ${showDebugPanel ? 'btn-warning' : 'btn-ghost'}`}
+                title="Toggle Solace message debug panel"
+                aria-label="Toggle Solace debug panel"
+              >
+                <span>📡</span>
+                <span className="hidden md:inline">{showDebugPanel ? 'Hide' : 'Show'} Solace</span>
+              </button>
+            </div>
           </div>
           
           {/* Right: Connection Status */}
@@ -544,9 +604,17 @@ export default function SessionView() {
                   onRoundStarted={(round) => {
                     setSessionState('ACTIVE');
                     setCurrentRoundIndex(rounds.findIndex(r => r.id === round.id));
+                    // Reset game state for the new round
+                    setCurrentQuestionIndex(-1);
+                    setAnswerCounts({ 0: 0, 1: 0, 2: 0, 3: 0 });
+                    setShowAnswerDistribution(false);
+                    setShowCorrectAnswer(false);
+                    setAnsweredCount(0);
+                    setAllAnswered(false);
+                    setQuestionTimerEnd(null);
                     loadSessionData();
                   }}
-                  onRoundEnded={(round, leaderboard) => {
+                  onRoundEnded={(_round, _leaderboard) => {
                     setSessionState('PAUSED');
                     loadSessionData();
                   }}
@@ -648,9 +716,17 @@ export default function SessionView() {
                   onRoundStarted={(round) => {
                     setSessionState('ACTIVE');
                     setCurrentRoundIndex(rounds.findIndex(r => r.id === round.id));
+                    // Reset game state for the new round
+                    setCurrentQuestionIndex(-1);
+                    setAnswerCounts({ 0: 0, 1: 0, 2: 0, 3: 0 });
+                    setShowAnswerDistribution(false);
+                    setShowCorrectAnswer(false);
+                    setAnsweredCount(0);
+                    setAllAnswered(false);
+                    setQuestionTimerEnd(null);
                     loadSessionData();
                   }}
-                  onRoundEnded={(round, leaderboard) => {
+                  onRoundEnded={(_round, _leaderboard) => {
                     setSessionState('PAUSED');
                     loadSessionData();
                   }}
@@ -676,7 +752,9 @@ export default function SessionView() {
                     onRevealAnswer: handleRevealCorrectAnswer,
                     onNextQuestion: handleReleaseQuestion,
                     onSkipQuestion: handleReleaseQuestion,
-                    onCloseSession: handleCloseSession
+                    onCloseSession: handleCloseSession,
+                    onJumpToQuestion: handleJumpToQuestion,
+                    onSkipToRound: handleSkipToRound
                   }}
                 />
               )}

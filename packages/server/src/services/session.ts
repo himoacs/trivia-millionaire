@@ -474,6 +474,85 @@ export class SessionManager {
   }
 
   /**
+   * Jump to a specific question within the current round
+   */
+  jumpToQuestion(sessionId: string, questionIndexInRound: number): Question | null {
+    const session = this.sessionCache.get(sessionId);
+    if (!session || session.state !== 'ACTIVE') return null;
+
+    const currentRound = this.getCurrentRound(sessionId);
+    if (!currentRound) return null;
+
+    if (questionIndexInRound < 0 || questionIndexInRound >= currentRound.questionIds.length) {
+      console.log('Invalid question index for round');
+      return null;
+    }
+
+    const questionId = currentRound.questionIds[questionIndexInRound];
+    const questionIndex = session.questions.findIndex(q => q.id === questionId);
+    
+    if (questionIndex === -1) {
+      console.log('Question not found');
+      return null;
+    }
+
+    session.currentQuestionIndex = questionIndex;
+    session.currentQuestionStartTime = Date.now();
+    
+    this.db.updateSessionQuestionIndex(sessionId, session.currentQuestionIndex, session.currentQuestionStartTime);
+    
+    console.log(`⏭️ Jumped to question ${questionIndexInRound + 1} in round "${currentRound.name}"`);
+    return session.questions[questionIndex];
+  }
+
+  /**
+   * Get the current question index within the active round
+   */
+  getCurrentQuestionIndexInRound(sessionId: string): number {
+    const session = this.sessionCache.get(sessionId);
+    if (!session || session.currentQuestionIndex < 0) return -1;
+
+    const currentRound = this.getCurrentRound(sessionId);
+    if (!currentRound) return session.currentQuestionIndex;
+
+    const currentQuestion = session.questions[session.currentQuestionIndex];
+    if (!currentQuestion) return -1;
+
+    return currentRound.questionIds.indexOf(currentQuestion.id);
+  }
+
+  /**
+   * Skip (abort) the current round and jump to another round
+   * If targetRoundIndex is -1, just abort the current round and pause
+   */
+  skipToRound(sessionId: string, targetRoundIndex: number): Round | null {
+    const session = this.sessionCache.get(sessionId);
+    if (!session) return null;
+
+    // Mark current round as completed/skipped
+    if (session.currentRoundIndex >= 0) {
+      const currentRound = session.rounds[session.currentRoundIndex];
+      if (currentRound && currentRound.state === 'ACTIVE') {
+        currentRound.state = 'COMPLETED';
+        currentRound.completedAt = Date.now();
+        this.db.updateRoundState(currentRound.id, 'COMPLETED', currentRound.completedAt);
+        console.log(`⏭️ Skipped round "${currentRound.name}"`);
+      }
+    }
+
+    // If target is -1 or invalid, just pause the session
+    if (targetRoundIndex < 0 || targetRoundIndex >= session.rounds.length) {
+      session.state = 'PAUSED';
+      this.db.updateSessionState(sessionId, 'PAUSED');
+      return null;
+    }
+
+    // Jump to target round
+    const targetRound = session.rounds[targetRoundIndex];
+    return this.startRound(sessionId, targetRound.id);
+  }
+
+  /**
    * Auto-distribute questions into rounds
    */
   autoDistributeQuestions(sessionId: string, questionsPerRound: number = 5): Round[] {
@@ -714,6 +793,15 @@ export class SessionManager {
         ...entry,
         rank: index + 1
       }));
+  }
+
+  /**
+   * Get current leaderboard for a session (public method)
+   */
+  getLeaderboard(sessionId: string): LeaderboardEntry[] | null {
+    const session = this.sessionCache.get(sessionId);
+    if (!session) return null;
+    return this.generateLeaderboard(session);
   }
 
   /**

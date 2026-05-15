@@ -23,12 +23,14 @@ export default function PresenterSoundToggle() {
   return (
     <button
       onClick={toggleSound}
-      className={`p-2 rounded-lg text-white transition-all ${
+      className={`btn-icon ${
         enabled 
-          ? 'bg-orange-600 hover:bg-orange-500' 
-          : 'bg-gray-700 hover:bg-gray-600'
+          ? 'bg-orange-600 hover:bg-orange-500 text-white' 
+          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
       }`}
-      title={enabled ? 'Sound On' : 'Sound Off'}
+      title={enabled ? 'Sound On - Click to mute' : 'Sound Off - Click to unmute'}
+      aria-label={enabled ? 'Mute sound' : 'Unmute sound'}
+      aria-pressed={enabled}
     >
       {enabled ? '🔊' : '🔇'}
     </button>
