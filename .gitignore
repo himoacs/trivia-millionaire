@@ -11,6 +11,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# Database files (contain session data and potentially API keys)
+*.db
+*.db-shm
+*.db-wal
+packages/server/data/
+
 # Environment variables
 .env
 .env.local
