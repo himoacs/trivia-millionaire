@@ -30,6 +30,38 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     }
   }, [messages, isPaused]);
 
+  // Auto-subscribe to all session messages when connected
+  useEffect(() => {
+    if (connected && sessionId && !activeSubscription) {
+      // Auto-subscribe to all session events
+      const defaultPattern = `trivia/session/${sessionId}/>`;
+      setActiveSubscription(defaultPattern);
+      
+      const unsub = subscribe(defaultPattern, (message) => {
+        const solaceMsg: SolaceMessage = {
+          id: `msg-${Date.now()}-${Math.random()}`,
+          topic: message.topic,
+          payload: message.payload,
+          timestamp: message.timestamp,
+          messageType: getMessageTypeFromTopic(message.topic)
+        };
+        setMessages(prev => [...prev, solaceMsg]);
+      });
+
+      setUnsubscribeFn(() => unsub);
+      
+      // Add system message inline to avoid dependency issues
+      const sysMsg: SolaceMessage = {
+        id: `sys-${Date.now()}`,
+        topic: 'SYSTEM',
+        payload: { message: `✅ Auto-subscribed to: ${defaultPattern}` },
+        timestamp: Date.now(),
+        messageType: 'other'
+      };
+      setMessages(prev => [...prev, sysMsg]);
+    }
+  }, [connected, sessionId, activeSubscription, subscribe]);
+
   // Cleanup subscription on unmount
   useEffect(() => {
     return () => {

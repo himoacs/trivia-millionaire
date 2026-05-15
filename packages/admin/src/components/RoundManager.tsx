@@ -643,9 +643,13 @@ export default function RoundManager({
                                   roundQuestions.map((q: Question, qIndex: number) => {
                                     const isQuestionExpanded = expandedQuestions.has(q.id);
                                     // Determine if this is the current question being played
-                                    const currentQ = gameState?.currentQuestionIndex ?? -1;
-                                    const isCurrentQuestion = isActive && currentQ >= 0 && round.questionIds[currentQ] === q.id;
-                                    const isAnswered = isActive && currentQ >= 0 && qIndex < currentQ;
+                                    // Note: gameState.currentQuestionIndex is a GLOBAL index across all questions
+                                    // We need to find if the current global question is in THIS round
+                                    const globalCurrentQ = gameState?.currentQuestionIndex ?? -1;
+                                    const currentQuestionId = globalCurrentQ >= 0 ? questions[globalCurrentQ]?.id : null;
+                                    const currentQIndexInRound = currentQuestionId ? round.questionIds.indexOf(currentQuestionId) : -1;
+                                    const isCurrentQuestion = isActive && currentQIndexInRound >= 0 && currentQIndexInRound === qIndex;
+                                    const isAnswered = isActive && currentQIndexInRound >= 0 && qIndex < currentQIndexInRound;
                                     
                                     return (
                                       <div
@@ -764,7 +768,13 @@ export default function RoundManager({
                                 )}
                                 
                                 {/* Game Controls - Show when round is active */}
-                                {isActive && gameState && gameHandlers && (
+                                {isActive && gameState && gameHandlers && (() => {
+                                  // Calculate round-relative question index from global index
+                                  const globalCurrentQ = gameState.currentQuestionIndex;
+                                  const currentQuestionId = globalCurrentQ >= 0 ? questions[globalCurrentQ]?.id : null;
+                                  const currentQIndexInRound = currentQuestionId ? round.questionIds.indexOf(currentQuestionId) : -1;
+                                  
+                                  return (
                                   <div className="p-4 bg-gradient-to-r from-green-900/30 to-green-800/30 border-t border-green-500/30">
                                     {/* Answer Progress */}
                                     <div className="text-center mb-4">
@@ -784,7 +794,7 @@ export default function RoundManager({
                                     {/* Control Buttons */}
                                     <div className="flex flex-wrap gap-2 justify-center">
                                       {/* Start Game - Release First Question */}
-                                      {gameState.currentQuestionIndex === -1 && (
+                                      {currentQIndexInRound === -1 && (
                                         <button
                                           onClick={gameHandlers.onStartGame}
                                           className="btn-success btn-lg"
@@ -794,7 +804,7 @@ export default function RoundManager({
                                         </button>
                                       )}
                                       
-                                      {gameState.currentQuestionIndex >= 0 && !gameState.showAnswerDistribution && (() => {
+                                      {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && (() => {
                                         const canShowDistribution = timerExpired || gameState.allAnswered;
                                         return (
                                           <button
@@ -820,7 +830,7 @@ export default function RoundManager({
                                         </button>
                                       )}
                                       
-                                      {gameState.showCorrectAnswer && gameState.currentQuestionIndex < roundQuestions.length - 1 && (
+                                      {gameState.showCorrectAnswer && currentQIndexInRound < roundQuestions.length - 1 && (
                                         <button
                                           onClick={gameHandlers.onNextQuestion}
                                           className="btn-success"
@@ -830,7 +840,7 @@ export default function RoundManager({
                                         </button>
                                       )}
                                       
-                                      {gameState.currentQuestionIndex >= 0 && !gameState.showAnswerDistribution && gameState.currentQuestionIndex < roundQuestions.length - 1 && (
+                                      {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && currentQIndexInRound < roundQuestions.length - 1 && (
                                         <button
                                           onClick={gameHandlers.onSkipQuestion}
                                           className="btn-ghost btn-sm"
@@ -840,7 +850,7 @@ export default function RoundManager({
                                         </button>
                                       )}
                                       
-                                      {gameState.currentQuestionIndex >= roundQuestions.length - 1 && gameState.showCorrectAnswer && (
+                                      {currentQIndexInRound >= roundQuestions.length - 1 && gameState.showCorrectAnswer && (
                                         <button
                                           onClick={gameHandlers.onCloseSession}
                                           className="btn-danger-solid"
@@ -860,9 +870,7 @@ export default function RoundManager({
                                             <span className="text-xs text-gray-400">Jump to:</span>
                                             <div className="flex gap-1">
                                               {roundQuestions.map((_q: Question, qIdx: number) => {
-                                                // Get the actual current question index within the round
-                                                const currentQInRound = gameState.currentQuestionIndex;
-                                                const isCurrent = qIdx === currentQInRound;
+                                                const isCurrent = qIdx === currentQIndexInRound;
                                                 return (
                                                   <button
                                                     key={qIdx}
@@ -922,7 +930,8 @@ export default function RoundManager({
                                       </div>
                                     </div>
                                   </div>
-                                )}
+                                  );
+                                })()}
                               </div>
                             </motion.div>
                           )}

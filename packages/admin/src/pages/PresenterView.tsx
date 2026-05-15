@@ -665,8 +665,8 @@ export default function PresenterView() {
     );
   }
 
-  // Render lobby view with QR code (only when truly in LOBBY state)
-  if (sessionState === 'LOBBY' || !currentQuestion) {
+  // Render lobby view with QR code (only when truly in LOBBY state, not when CLOSED)
+  if ((sessionState === 'LOBBY' || !currentQuestion) && sessionState !== 'CLOSED') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">
         {/* Top Banner */}

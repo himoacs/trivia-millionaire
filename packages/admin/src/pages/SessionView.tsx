@@ -233,13 +233,21 @@ export default function SessionView() {
 
   const handleStartGame = async () => {
     try {
-      // Start the session first (changes state from LOBBY to ACTIVE)
-      await axios.post(`${API_URL}/api/admin/session/${sessionId}/start`);
+      // Only start the session if it's in LOBBY state
+      // If already ACTIVE (starting a new round), just release the question
+      if (sessionState === 'LOBBY') {
+        await axios.post(`${API_URL}/api/admin/session/${sessionId}/start`);
+      }
       
-      // Then release the first question
-      await axios.post(`${API_URL}/api/admin/session/${sessionId}/release-question`);
+      // Release the first question of the current round
+      const releaseResponse = await axios.post(`${API_URL}/api/admin/session/${sessionId}/release-question`);
       
-      setCurrentQuestionIndex(0);
+      // Get the released question info from server response
+      const releasedQuestion = releaseResponse.data.data?.question;
+      const questionNumber = releasedQuestion?.questionNumber ?? 1;
+      
+      // Set to the correct global question index (server-provided)
+      setCurrentQuestionIndex(questionNumber - 1);
       setSessionState('ACTIVE');
       
       // Reset answer distribution
@@ -250,8 +258,9 @@ export default function SessionView() {
       setAllAnswered(false);
       
       // Set timer to show distribution when question ends
-      if (questions[0]) {
-        const endTime = Date.now() + (questions[0].timeLimit * 1000);
+      const currentQ = questions[questionNumber - 1];
+      if (currentQ) {
+        const endTime = Date.now() + (currentQ.timeLimit * 1000);
         setQuestionTimerEnd(endTime);
       }
     } catch (error) {

@@ -24,6 +24,8 @@ export default function Game() {
   const [totalMoney, setTotalMoney] = useState(0);
   const [questionResults, setQuestionResults] = useState<Record<number, boolean>>({});
   const pendingQuestionResult = useRef<{ questionNumber: number; correct: boolean } | null>(null);
+  // Pending score update - applied only when admin reveals answer (to keep result a mystery)
+  const pendingScoreUpdate = useRef<{ totalMoney: number; correct: boolean } | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [waiting, setWaiting] = useState(true);
@@ -244,9 +246,15 @@ export default function Game() {
 
     const unsubscribe = subscribe(`trivia/session/${sessionId}/player/${playerId}/scored`, (message) => {
       const scoreUpdate = message.payload as ScoreUpdate;
-      console.log('💯 Player scored:', scoreUpdate);
-      // Update money from server (includes speed bonus)
-      setTotalMoney(scoreUpdate.totalMoney);
+      console.log('💯 Player scored (pending until reveal):', scoreUpdate);
+      
+      // Store the score update as pending - will be applied when admin reveals answer
+      // This keeps the result a mystery until the reveal
+      pendingScoreUpdate.current = {
+        totalMoney: scoreUpdate.totalMoney,
+        correct: scoreUpdate.correct
+      };
+      
       // Store this question's result as pending (will show on ladder when next question starts)
       if (currentQuestion) {
         pendingQuestionResult.current = {
@@ -254,15 +262,9 @@ export default function Game() {
           correct: scoreUpdate.correct
         };
       }
-      // Update correct answers count
-      if (scoreUpdate.correct) {
-        setCorrectAnswers(prev => prev + 1);
-        // Play correct answer sound
-        playSound('correct');
-      } else {
-        // Play wrong answer sound
-        playSound('wrong');
-      }
+      
+      // NOTE: We intentionally don't update money, correctAnswers count, or play sounds here
+      // to keep the result a mystery until the admin reveals the correct answer
     });
 
     return unsubscribe;
@@ -284,6 +286,9 @@ export default function Game() {
           [result.questionNumber]: result.correct
         }));
       }
+      
+      // Clear pending score update - final scores come from leaderboard
+      pendingScoreUpdate.current = null;
       
       setSessionState('CLOSED');
       setWaiting(true);
@@ -359,6 +364,20 @@ export default function Game() {
       // Store the revealed correct answer index if provided
       if (data && typeof data.correctIndex === 'number') {
         setRevealedCorrectIndex(data.correctIndex);
+      }
+      
+      // NOW apply the pending score update and play sounds
+      // This is the moment the result is revealed to the player
+      if (pendingScoreUpdate.current) {
+        const { totalMoney: newMoney, correct } = pendingScoreUpdate.current;
+        setTotalMoney(newMoney);
+        if (correct) {
+          setCorrectAnswers(prev => prev + 1);
+          playSound('correct');
+        } else {
+          playSound('wrong');
+        }
+        pendingScoreUpdate.current = null;
       }
     });
 
@@ -463,7 +482,7 @@ export default function Game() {
   const handleTimeout = () => {
     if (!isAnswered) {
       setIsAnswered(true);
-      playSound('wrong');
+      // Don't play wrong sound on timeout - wait for reveal to keep mystery
     }
   };
 
