@@ -13,7 +13,6 @@ type SoundType =
   | 'countdown';
 
 class SoundManager {
-  private sounds: Map<SoundType, HTMLAudioElement> = new Map();
   private enabled: boolean = true;
 
   constructor() {
