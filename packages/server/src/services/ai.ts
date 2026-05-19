@@ -252,22 +252,6 @@ Return ONLY the JSON object, no additional text.`;
   }
 
   /**
-   * Detect which provider to use based on configuration
-   */
-  private detectProvider(): 'openai' | 'anthropic' | 'litellm' {
-    if (this.defaultModel.startsWith('claude')) {
-      return 'anthropic';
-    } else if (this.defaultModel.startsWith('gpt')) {
-      return 'openai';
-    } else if (this.openai) {
-      return 'openai';
-    } else if (this.anthropic) {
-      return 'anthropic';
-    }
-    return 'litellm';
-  }
-
-  /**
    * Ask AI to answer a trivia question (for lifeline feature)
    */
   async answerQuestion(question: string, choices: string[], settings: AdminSettings): Promise<{ suggestedIndex: number; confidence: string }> {
@@ -360,9 +344,9 @@ Where "answer" is the letter (A, B, C, or D) of your best guess, and "confidence
   }
 
   /**
-   * Check if AI is available
+   * Check if AI is available (always true - settings are passed per-request)
    */
   isAvailable(): boolean {
-    return !!(this.litellm || this.openai || this.anthropic);
+    return true;
   }
 }

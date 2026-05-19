@@ -12,7 +12,7 @@ export type MessageHandler = (topic: string, message: any) => void;
 
 export class SolaceService {
   private session: solace.Session | null = null;
-  private sessionProps: solace.SessionProperties;
+  private sessionProps: any;
   private messageHandlers: Map<string, MessageHandler[]> = new Map();
   private connected: boolean = false;
 
@@ -23,11 +23,12 @@ export class SolaceService {
     solace.SolclientFactory.init(factoryProps);
 
     // Set up session properties
-    this.sessionProps = new solace.SessionProperties();
-    this.sessionProps.url = config.url;
-    this.sessionProps.vpnName = config.vpnName;
-    this.sessionProps.userName = config.username;
-    this.sessionProps.password = config.password;
+    this.sessionProps = {
+      url: config.url,
+      vpnName: config.vpnName,
+      userName: config.username,
+      password: config.password
+    };
   }
 
   /**
@@ -164,7 +165,10 @@ export class SolaceService {
   private handleMessage(message: solace.Message): void {
     try {
       const topic = message.getDestination()?.getName() || '';
-      const payloadStr = message.getBinaryAttachment();
+      const binaryAttachment = message.getBinaryAttachment();
+      const payloadStr = binaryAttachment instanceof Uint8Array 
+        ? new TextDecoder().decode(binaryAttachment) 
+        : binaryAttachment;
       const payload = payloadStr ? JSON.parse(payloadStr) : null;
 
       console.log(`📨 Received from ${topic}:`, payload);
