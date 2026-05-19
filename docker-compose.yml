@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Backend API Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    container_name: trivia-server
+    restart: unless-stopped
+    ports:
+      - "4847:4847"
+    environment:
+      - NODE_ENV=production
+      - PORT=4847
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:4849,http://localhost:4848}
+      - SOLACE_BROKER_URL=${SOLACE_BROKER_URL}
+      - SOLACE_VPN_NAME=${SOLACE_VPN_NAME}
+      - SOLACE_USERNAME=${SOLACE_USERNAME}
+      - SOLACE_PASSWORD=${SOLACE_PASSWORD}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+    volumes:
+      - trivia-data:/app/packages/server/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4847/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx for Admin + Client static files
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:4847}
+        - VITE_CLIENT_URL=${VITE_CLIENT_URL:-http://localhost:4849}
+        - VITE_ADMIN_URL=${VITE_ADMIN_URL:-http://localhost:4848}
+        - VITE_SOLACE_BROKER_URL=${VITE_SOLACE_BROKER_URL}
+        - VITE_SOLACE_VPN_NAME=${VITE_SOLACE_VPN_NAME}
+        - VITE_SOLACE_USERNAME=${VITE_SOLACE_USERNAME}
+        - VITE_SOLACE_PASSWORD=${VITE_SOLACE_PASSWORD}
+    container_name: trivia-nginx
+    restart: unless-stopped
+    ports:
+      - "4848:4848"  # Admin UI
+      - "4849:4849"  # Client UI
+    depends_on:
+      - server
+
+volumes:
+  trivia-data:
+    driver: local
