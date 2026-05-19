@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSolace } from '../hooks/useSolace';
 
 export default function SolaceStatusIndicator() {
-  const { connected } = useSolace();
+  const { connected, config } = useSolace();
   const [showDetails, setShowDetails] = useState(false);
   const [lastConnected, setLastConnected] = useState<Date | null>(null);
   const [lastDisconnected, setLastDisconnected] = useState<Date | null>(null);
@@ -96,12 +96,12 @@ export default function SolaceStatusIndicator() {
             
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Broker</span>
-              <span className="text-gray-200 font-mono text-xs">ws://localhost:8008</span>
+              <span className="text-gray-200 font-mono text-xs">{config?.url || 'Not configured'}</span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-gray-400">VPN</span>
-              <span className="text-gray-200 font-semibold">default</span>
+              <span className="text-gray-200 font-semibold">{config?.vpnName || 'Not configured'}</span>
             </div>
             
             {lastConnected && (

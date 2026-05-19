@@ -202,7 +202,8 @@ export function useSolace(config?: SolaceConfig) {
   return {
     connected,
     subscribe,
-    publish
+    publish,
+    config: solaceConfig
   };
 }
 
