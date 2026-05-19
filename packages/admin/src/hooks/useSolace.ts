@@ -23,8 +23,8 @@ export function useSolace(config?: SolaceConfig) {
   const initRef = useRef(false);
 
   const defaultConfig: SolaceConfig = {
-    url: import.meta.env.VITE_SOLACE_URL || 'ws://localhost:8008',
-    vpnName: import.meta.env.VITE_SOLACE_VPN || 'default',
+    url: import.meta.env.VITE_SOLACE_BROKER_URL || 'ws://localhost:8008',
+    vpnName: import.meta.env.VITE_SOLACE_VPN_NAME || 'default',
     username: import.meta.env.VITE_SOLACE_USERNAME || 'default',
     password: import.meta.env.VITE_SOLACE_PASSWORD || 'default'
   };
