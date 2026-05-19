@@ -1,0 +1,2971 @@
+rounds:
+  - name: Solace Trivia Questions
+    questions:
+      # SOLACE OVERVIEW
+      - text: What is Solace primarily used for?
+        choices:
+          - Database management
+          - Event-driven messaging and streaming
+          - Web hosting
+          - File storage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What messaging pattern does Solace support?
+        choices:
+          - Only point-to-point
+          - Only publish-subscribe
+          - Publish-subscribe, point-to-point, and request/reply
+          - Neither
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is a Message VPN in Solace?
+        choices:
+          - A virtual private network for security
+          - An isolated messaging domain within a broker
+          - A backup message storage
+          - A type of encryption protocol
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: Which of these is NOT a Solace deployment option?
+        choices:
+          - Software broker
+          - Hardware appliance
+          - Cloud service (Solace Cloud)
+          - Browser plugin
+        correctIndex: 3
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the main benefit of event-driven architecture?
+        choices:
+          - Tighter coupling between services
+          - Loose coupling and real-time data flow
+          - Slower data processing
+          - Reduced scalability
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is Solace PubSub+ Cloud?
+        choices:
+          - A desktop application
+          - A fully managed event broker service
+          - A hardware appliance
+          - A database service
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: In Solace, what role does a producer play?
+        choices:
+          - Receives messages from topics
+          - Publishes messages to topics or queues
+          - Manages broker configuration
+          - Stores messages permanently
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the role of a consumer in Solace messaging?
+        choices:
+          - Creates topics and queues
+          - Receives and processes messages
+          - Configures the broker
+          - Monitors network traffic
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is event mesh?
+        choices:
+          - A single event broker
+          - A network of interconnected event brokers
+          - A type of message format
+          - A security protocol
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the primary function of an event broker?
+        choices:
+          - Store data permanently
+          - Route messages between producers and consumers
+          - Generate random events
+          - Compress network traffic
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: Solace event broker is designed for which use case?
+        choices:
+          - Only batch processing
+          - Only web applications
+          - Real-time event streaming and messaging
+          - Only mobile apps
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is a key advantage of using Solace over traditional messaging?
+        choices:
+          - Only supports one protocol
+          - Multi-protocol support and high performance
+          - Requires manual message routing
+          - Limited scalability
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What type of applications benefit most from Solace?
+        choices:
+          - Static websites
+          - Real-time, event-driven applications
+          - Offline-only applications
+          - Simple calculators
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is a best practice for designing topic hierarchies?
+        choices:
+          - Use random strings
+          - Organize hierarchically from general to specific (e.g., region/country/city)
+          - Use only single-level topics
+          - Always use wildcards
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: overview
+
+      - text: What is the benefit of using an event broker like Solace?
+        choices:
+          - Direct database access
+          - Decoupling producers and consumers
+          - Faster CPU processing
+          - Reduced disk storage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What does "fan-out" mean in messaging?
+        choices:
+          - Sending a message to a single consumer
+          - Distributing a message to multiple consumers simultaneously
+          - Compressing messages
+          - Encrypting messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is a subscription in Solace?
+        choices:
+          - A payment plan
+          - A declaration of interest in receiving messages on certain topics
+          - A type of network connection
+          - A security certificate
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the difference between a topic and a queue in messaging?
+        choices:
+          - Topics are faster than queues
+          - Topics broadcast to all subscribers; queues deliver to one consumer
+          - Queues are only for cloud deployments
+          - There is no difference
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the purpose of a Message VPN in Solace?
+        choices:
+          - Encrypt network traffic
+          - Provide logical separation of messaging resources
+          - Speed up message delivery
+          - Compress messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What type of architecture does Solace support for cloud deployments?
+        choices:
+          - Only on-premises
+          - Only single cloud
+          - Hybrid and multi-cloud
+          - Only private cloud
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the main benefit of asynchronous messaging?
+        choices:
+          - Guaranteed immediate response
+          - Decoupling of sender and receiver timing
+          - Lower memory usage
+          - Faster encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What does "real-time" mean in the context of event-driven systems?
+        choices:
+          - Processing happens at a fixed schedule
+          - Events are processed as soon as they occur with minimal delay
+          - All processing happens at midnight
+          - Events are batched weekly
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: Why would you choose Solace over simple HTTP APIs for communication?
+        choices:
+          - HTTP is always faster
+          - Solace enables async, decoupled communication with persistence and reliability
+          - HTTP cannot transfer data
+          - Solace is always free
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the Solace Event Portal used for?
+        choices:
+          - Monitoring server hardware
+          - Designing, documenting, and discovering events and applications
+          - Compressing message payloads
+          - Encrypting data at rest
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: overview
+
+      - text: What is the difference between event-driven choreography and orchestration?
+        choices:
+          - They are the same
+          - Choreography is decentralized (services react to events); orchestration is centralized (controller directs)
+          - Choreography is slower
+          - Orchestration uses topics, choreography uses queues
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What is the recommended hub-and-spoke event mesh topology?
+        choices:
+          - All brokers connect to all others
+          - Regional brokers connect to a central hub broker for cross-region traffic
+          - Single broker only
+          - Each application has its own broker
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What is Message VPN segmentation used for?
+        choices:
+          - Improving performance only
+          - "Logical multi-tenancy: isolating different applications, teams, or customers"
+          - Message compression
+          - Load balancing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What determines the maximum number of client connections per Message VPN?
+        choices:
+          - Always unlimited
+          - Configurable limits based on broker resources and licensing
+          - Fixed at 1000 connections
+          - Fixed at 100 connections
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What is the purpose of client username and client profile separation in Solace?
+        choices:
+          - They are the same thing
+          - Usernames authenticate identity; profiles define authorization and resource limits
+          - Profiles are only for administrators
+          - Usernames set message priority
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What are event mesh data governance policies used for?
+        choices:
+          - Improving message speed
+          - Enforcing rules about which events can flow between domains and regions
+          - Compressing messages
+          - Only for billing purposes
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What is the Solace Event Portal runtime governance feature?
+        choices:
+          - Code compilation
+          - Comparing actual runtime message flows against designed event architecture
+          - Database management
+          - Network monitoring only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      - text: What is the recommended topic namespace strategy for enterprise-scale deployments?
+        choices:
+          - Single flat namespace
+          - Hierarchical with domain/application/object/action/version structure
+          - Random topic names
+          - Numeric IDs only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: overview
+
+      # MESSAGE DELIVERY
+      - text: What are the two main message delivery modes in Solace?
+        choices:
+          - Fast and Slow
+          - Direct and Guaranteed
+          - Sync and Async
+          - Push and Pull
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: delivery
+
+      - text: What are the two acknowledgment modes for Guaranteed messaging flows?
+        choices:
+          - Sync and Async
+          - Auto-acknowledgment and Client acknowledgment
+          - Direct and Guaranteed
+          - Persistent and Non-persistent
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What happens to a Direct message if no subscriber is available?
+        choices:
+          - It is queued for later
+          - It is discarded
+          - It is sent to a dead letter queue
+          - It triggers an error
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: Which delivery mode has lower latency?
+        choices:
+          - Guaranteed messaging
+          - Direct messaging
+          - Both have the same latency
+          - It depends on message size only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: In Guaranteed messaging, where are messages stored?
+        choices:
+          - Only in client memory
+          - In broker queues or endpoints
+          - In external databases
+          - In temporary files
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is an acknowledgment (ACK) in Guaranteed messaging?
+        choices:
+          - A message priority indicator
+          - Confirmation that a message was received
+          - A message encryption method
+          - A topic subscription
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: When should you use Direct messaging?
+        choices:
+          - For critical financial transactions
+          - For high-throughput, loss-tolerant data like market ticks
+          - When messages must never be lost
+          - For audit logging
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is message spooling in Solace?
+        choices:
+          - Compressing messages
+          - Storing messages on disk for Guaranteed delivery
+          - Encrypting messages
+          - Routing messages to multiple topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: Does Solace support message priority?
+        choices:
+          - No, all messages are equal priority
+          - Yes, messages can have priority levels 0-9
+          - Only for Direct messages
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: In Guaranteed messaging, what happens if a consumer disconnects?
+        choices:
+          - Messages are lost
+          - Messages remain in the queue for redelivery
+          - The broker discards the queue
+          - All publishers are notified
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the default message delivery mode for topic subscriptions?
+        choices:
+          - Guaranteed delivery
+          - Direct delivery
+          - Transacted delivery
+          - No default exists
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: How does Solace achieve Guaranteed messaging?
+        choices:
+          - By using topics only
+          - By using queues and persistent storage
+          - By sending messages multiple times
+          - By using encrypted connections
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is publisher acknowledgment?
+        choices:
+          - Consumer confirming receipt
+          - Broker confirming message was spooled
+          - Topic creation confirmation
+          - VPN setup confirmation
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: Which delivery mode is best for IoT sensor data that arrives frequently?
+        choices:
+          - Guaranteed - every reading must be saved
+          - Direct - high volume, latest data matters most
+          - Neither mode works for IoT
+          - Only batch mode
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What happens when a Guaranteed message expires?
+        choices:
+          - It is sent to all subscribers
+          - It may be moved to a Dead Message Queue
+          - It is automatically resent
+          - The broker restarts
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the ingress flow in Solace?
+        choices:
+          - Messages going out from the broker
+          - Messages coming into the broker from publishers
+          - Internal broker processing
+          - Management API calls
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: delivery
+
+      - text: What is the difference between transacted and non-transacted sessions?
+        choices:
+          - Transacted sessions are faster
+          - Transacted sessions group operations for atomic commit/rollback
+          - Non-transacted sessions use more memory
+          - There is no difference
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      - text: What happens when a queue reaches its maximum spool usage?
+        choices:
+          - New messages are automatically compressed
+          - The broker restarts
+          - New messages may be rejected based on reject policy
+          - Messages are encrypted
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the purpose of message eliding?
+        choices:
+          - Compress large messages
+          - Drop outdated messages when newer ones arrive for same topic
+          - Encrypt sensitive data
+          - Route messages to backup queues
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      - text: What is a Solace flow?
+        choices:
+          - Network traffic path
+          - A session binding to a topic endpoint or queue for consuming messages
+          - Message routing diagram
+          - Performance monitoring tool
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the purpose of the redelivery flag on a message?
+        choices:
+          - To indicate message priority
+          - To indicate the message has been delivered before but not acknowledged
+          - To compress the message
+          - To encrypt the message
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What does "at-most-once" delivery guarantee mean?
+        choices:
+          - Message is delivered exactly once
+          - Message may be lost but never duplicated
+          - Message is delivered multiple times
+          - Message is always delivered
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the purpose of consumer acknowledgment modes?
+        choices:
+          - To speed up delivery
+          - To control when messages are removed from the queue
+          - To compress messages
+          - To encrypt acknowledgments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is windowed acknowledgment?
+        choices:
+          - Acknowledging messages through a GUI
+          - Acknowledging multiple messages in batches for efficiency
+          - Acknowledging to a window service
+          - Visual confirmation of delivery
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      - text: What is the egress flow in Solace?
+        choices:
+          - Messages going into the broker
+          - Messages going out from the broker to consumers
+          - Internal broker processing
+          - Management traffic
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: delivery
+
+      - text: How is message TTL (Time To Live) configured?
+        choices:
+          - Only at broker level
+          - Per-message, per-queue, or globally on broker
+          - Only by the consuming client
+          - TTL cannot be configured
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      - text: What is backpressure in messaging systems?
+        choices:
+          - Network latency
+          - A mechanism to slow producers when consumers cannot keep up
+          - Data compression
+          - Message encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: delivery
+
+      - text: What is the publisher flow control window in guaranteed messaging?
+        choices:
+          - Window size has no effect
+          - Limits outstanding unacknowledged published messages before blocking publisher
+          - Controls message size
+          - Only for Direct messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      - text: What is the primary latency difference between Direct and Guaranteed messaging?
+        choices:
+          - Direct is always slower
+          - Direct has lower latency as messages stay in memory; Guaranteed writes to disk
+          - Both have identical latency
+          - Guaranteed is faster due to batching
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: delivery
+
+      # PROTOCOLS & APIS
+      - text: Which messaging protocol is Solace's native high-performance protocol?
+        choices:
+          - MQTT
+          - AMQP
+          - SMF (Solace Message Format)
+          - HTTP
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is a key feature of AMQP support in Solace?
+        choices:
+          - AMQP only works with queues
+          - Full protocol support including transactions and message routing
+          - AMQP is not supported
+          - AMQP requires protocol conversion
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Does Solace support the AMQP protocol?
+        choices:
+          - No, only proprietary protocols
+          - Yes, including AMQP 1.0
+          - Only AMQP 0.9
+          - Only for cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which protocol enables web browsers to connect to Solace?
+        choices:
+          - SMF only
+          - WebSocket
+          - TCP only
+          - UDP only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is a key benefit of Solace's multi-protocol support?
+        choices:
+          - Slower performance
+          - Applications using different protocols can communicate
+          - More complex configuration
+          - Reduced security
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which API does Solace provide for Java developers?
+        choices:
+          - Only JMS
+          - JCSMP and JMS
+          - Only REST
+          - No Java support
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Can REST clients send and receive messages via Solace?
+        choices:
+          - No, REST is not supported
+          - Yes, via REST messaging
+          - Only for admin operations
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What does JMS stand for in the context of Solace APIs?
+        choices:
+          - Java Message Service
+          - JSON Message System
+          - Java Messaging Standard
+          - Just Message Sending
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: easy
+        category: protocols
+
+      - text: Which language-specific APIs does Solace offer?
+        choices:
+          - Only Java
+          - Java, C, .NET, JavaScript, Python, Go, and more
+          - Only Python
+          - Only JavaScript
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the advantage of using SMF over other protocols?
+        choices:
+          - It's simpler to implement
+          - Lower latency and higher throughput
+          - It works offline
+          - It requires no configuration
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Can an MQTT client receive messages from a JMS publisher through Solace?
+        choices:
+          - No, protocols cannot interoperate
+          - Yes, Solace handles protocol translation
+          - Only with special middleware
+          - Only for Direct messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which protocol is most suitable for resource-constrained IoT devices?
+        choices:
+          - JMS
+          - AMQP 1.0
+          - MQTT
+          - SOAP
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is SEMP in Solace?
+        choices:
+          - A messaging protocol
+          - Solace Element Management Protocol for administration
+          - A security encryption method
+          - A message format
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which transport protocol underlies most Solace messaging protocols?
+        choices:
+          - UDP only
+          - TCP
+          - FTP
+          - SMTP
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the advantage of using WebSocket for messaging?
+        choices:
+          - Higher latency
+          - Works through firewalls and enables browser-based messaging
+          - Requires special hardware
+          - Only works on localhost
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which protocol is commonly used for IoT devices with Solace?
+        choices:
+          - SOAP
+          - MQTT
+          - FTP
+          - SMTP
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: protocols
+
+      - text: What is the Solace REST Messaging API used for?
+        choices:
+          - Database queries
+          - Publishing and subscribing to messages using HTTP
+          - File transfers
+          - Video streaming
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: protocols
+
+      - text: What is QoS 2 in MQTT?
+        choices:
+          - Fire and forget
+          - At least once delivery
+          - Exactly once delivery
+          - Best effort delivery
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What AMQP feature maps to Solace queues?
+        choices:
+          - Exchanges
+          - AMQP queues
+          - Virtual hosts
+          - Channels
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the benefit of protocol translation in Solace?
+        choices:
+          - Faster message compression
+          - Applications using different protocols can communicate via the broker
+          - Lower network latency
+          - Reduced storage requirements
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: protocols
+
+      - text: What port does MQTT over TLS typically use with Solace?
+        choices:
+          - "1883"
+          - "8883"
+          - "443"
+          - "80"
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the JMS Session in Solace JMS API?
+        choices:
+          - A database connection
+          - A single-threaded context for producing and consuming messages
+          - A network socket
+          - A file handle
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the difference between SEMP v1 and SEMP v2?
+        choices:
+          - v1 is faster than v2
+          - v2 uses REST/JSON while v1 uses SOAP/XML
+          - They are identical
+          - v1 is for cloud only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: Which Solace API provides the highest performance?
+        choices:
+          - REST API
+          - JMS
+          - Native SMF API
+          - MQTT
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is the default port for Solace SMF (Solace Message Format)?
+        choices:
+          - "55555"
+          - "8080"
+          - "443"
+          - "1883"
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: medium
+        category: protocols
+
+      - text: What is message compression in SMF and when should it be used?
+        choices:
+          - Automatic compression of all messages
+          - Publisher can request payload compression to reduce bandwidth at CPU cost
+          - Only works with guaranteed messages
+          - Compression is always disabled
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What is the maximum Guaranteed message size supported by Solace event brokers?
+        choices:
+          - 100 KB
+          - 1 MB
+          - 10 MB
+          - 30 MB
+        correctIndex: 3
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What is the recommended API client connection retry strategy?
+        choices:
+          - Retry immediately without delay
+          - Exponential backoff with jitter to avoid thundering herd
+          - Never retry automatically
+          - Fixed 1-second interval retries
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What is the purpose of session keepalive in client connections?
+        choices:
+          - Increases message throughput
+          - Detects broken connections and prevents idle session timeout
+          - Encrypts the connection
+          - Enables compression
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What is WebSocket subprotocol negotiation in Solace?
+        choices:
+          - HTTP basic authentication
+          - Client and broker agree on messaging protocol (SMF, MQTT) over WebSocket
+          - TLS handshake
+          - Topic subscription
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What happens when AMQP and SMF clients publish to the same queue?
+        choices:
+          - Messages are rejected
+          - Protocol translation occurs seamlessly; consumers receive messages regardless of publisher protocol
+          - Only AMQP messages are stored
+          - Requires manual conversion
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: What is the benefit of using native APIs (JCSMP, C, .NET) over JMS?
+        choices:
+          - JMS is always faster
+          - Native APIs expose all Solace features and offer better performance
+          - Native APIs only work on-premises
+          - JMS has more features
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      - text: How does Solace handle REST messaging when the broker is overwhelmed?
+        choices:
+          - REST clients are never slowed down
+          - Returns HTTP 503 Service Unavailable to signal backpressure
+          - REST always uses guaranteed delivery
+          - Messages are automatically compressed
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: protocols
+
+      # TOPICS & WILDCARDS
+      - text: What character is used to separate levels in a Solace topic?
+        choices:
+          - Dot (.)
+          - Forward slash (/)
+          - Backslash (\)
+          - Colon (:)
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: topics
+
+      - text: What does the * wildcard match in a Solace topic subscription?
+        choices:
+          - Zero or more levels
+          - Exactly one level
+          - Any number of characters in one level
+          - Nothing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What does the > wildcard match in a Solace topic subscription?
+        choices:
+          - Exactly one level
+          - One or more levels at the end of a topic
+          - Only numeric values
+          - A single character
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: Which subscription would match "orders/us/new"?
+        choices:
+          - orders/*/new
+          - orders/us
+          - orders/new/*
+          - "*/*/old"
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is the maximum allowed topic length in Solace?
+        choices:
+          - 64 bytes
+          - 250 bytes
+          - 1 KB
+          - 10 KB
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: Can a topic name contain spaces?
+        choices:
+          - Yes, spaces are allowed
+          - No, spaces are not allowed
+          - Only at the end
+          - Only if escaped
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is topic dispatching?
+        choices:
+          - Sending topics to subscribers
+          - Routing messages to queues based on topic subscriptions
+          - Creating new topics
+          - Deleting old topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: Which subscription matches "sensor/temp/room1" AND "sensor/humidity/room1"?
+        choices:
+          - sensor/temp/>
+          - sensor/*/room1
+          - sensor/room1/*
+          - "*/room1"
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is a recommended practice for topic naming?
+        choices:
+          - Use special characters and spaces freely
+          - Use lowercase, forward slashes for hierarchy, avoid wildcards in names
+          - Use wildcards in topic names
+          - Keep topics as short as possible (single word)
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is a shared subscription in Solace?
+        choices:
+          - Multiple clients sharing the same session
+          - Load-balanced topic subscription where one client in group receives each message
+          - Broadcasting to multiple topics
+          - Sharing queue access
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: What happens when multiple subscribers match the same topic?
+        choices:
+          - Only one receives the message
+          - All matching subscribers receive the message
+          - An error occurs
+          - The message is duplicated in storage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: topics
+
+      - text: What happens if you include > in the middle of a topic subscription?
+        choices:
+          - It matches zero or more levels from that point
+          - The subscription is rejected as invalid
+          - It matches exactly one level
+          - It is treated as a literal character
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: What is a topic endpoint in Solace?
+        choices:
+          - The end of a topic string
+          - A durable object that attracts messages matching topic subscriptions
+          - A REST API endpoint
+          - A management interface
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: Does the subscription "a/*" match the topic "a"?
+        choices:
+          - "Yes"
+          - No, * requires at least one level
+          - Only for Direct messages
+          - Depends on broker configuration
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: What is hierarchical topic addressing useful for?
+        choices:
+          - Reducing message size
+          - Organizing messages and enabling flexible subscriptions
+          - Encrypting data
+          - Compressing topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is the maximum recommended topic level depth in Solace?
+        choices:
+          - 5 levels
+          - 10 levels
+          - 128 levels
+          - Unlimited
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: What characters are NOT allowed in Solace topic names?
+        choices:
+          - Alphanumeric characters
+          - Forward slashes
+          - Null characters and certain control characters
+          - Underscores
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is the benefit of using descriptive topic hierarchies?
+        choices:
+          - Faster message delivery
+          - Enables meaningful filtering and easier debugging
+          - Reduces message size
+          - Improves encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: How do topic subscriptions differ from queue bindings?
+        choices:
+          - They are identical
+          - Topics support wildcards while queue bindings are exact
+          - Queues support wildcards while topics do not
+          - Neither supports wildcards
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: What is the purpose of a topic dispatch in Solace?
+        choices:
+          - To compress topics
+          - To route messages to specific callbacks based on topic
+          - To encrypt topic names
+          - To log topic usage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: Can multiple * wildcards be used in a single Solace subscription?
+        choices:
+          - No, only one wildcard allowed per subscription
+          - Yes, multiple * wildcards can appear in different positions
+          - Only if they are consecutive
+          - Only in guaranteed messaging
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: Can a single message be published to multiple topics simultaneously?
+        choices:
+          - Yes, using topic lists
+          - No, only one topic per message
+          - Only with guaranteed messaging
+          - Only with direct messaging
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: topics
+
+      - text: What is topic-to-queue mapping?
+        choices:
+          - Converting topic names to queue names
+          - Subscribing a queue to topics so messages are spooled
+          - Encrypting topics
+          - Compressing topic data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: topics
+
+      - text: What is a shared subscription?
+        choices:
+          - A subscription owned by multiple brokers
+          - A subscription where multiple consumers share message load
+          - A subscription with encryption
+          - A subscription with compression
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      - text: Are topic names case-sensitive in Solace?
+        choices:
+          - No, they are case-insensitive
+          - Yes, they are case-sensitive
+          - Only the first level is case-sensitive
+          - Depends on configuration
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: topics
+
+      - text: Which Solace feature allows filtering messages on the broker using topic patterns?
+        choices:
+          - Message compression
+          - Topic subscriptions with wildcards
+          - SSL encryption
+          - Load balancing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: topics
+
+      # QUEUES & ENDPOINTS
+      - text: What is the primary purpose of a queue in Solace?
+        choices:
+          - To broadcast messages to all subscribers
+          - To store messages for guaranteed delivery
+          - To compress messages
+          - To encrypt messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: What is the difference between an exclusive and non-exclusive queue?
+        choices:
+          - Exclusive queues are faster
+          - Exclusive queues allow only one consumer; non-exclusive allow multiple
+          - Non-exclusive queues are deprecated
+          - There is no difference
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What happens when a message is acknowledged by a queue consumer?
+        choices:
+          - It is sent to other consumers
+          - It is removed from the queue
+          - It is archived
+          - It is resent
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is a Dead Message Queue (DMQ)?
+        choices:
+          - A queue for deleted messages
+          - A queue for messages that couldn't be delivered
+          - A queue that is not active
+          - A queue with no consumers
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is message TTL (Time To Live)?
+        choices:
+          - How long a connection stays open
+          - How long a message remains in a queue before expiring
+          - How long the broker runs
+          - The message transmission time
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is queue depth?
+        choices:
+          - The physical size of the queue
+          - The number of messages currently in the queue
+          - The priority of the queue
+          - The number of consumers
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: Can a queue have topic subscriptions in Solace?
+        choices:
+          - No, queues and topics are separate
+          - Yes, queues can attract messages via topic subscriptions
+          - Only for Direct messages
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the access type that allows multiple consumers to share queue work?
+        choices:
+          - Exclusive
+          - Non-exclusive
+          - Shared
+          - Distributed
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is Negative Acknowledgment (NACK)?
+        choices:
+          - Accepting a message
+          - Rejecting a message, requesting redelivery or discard
+          - Ignoring a message
+          - Forwarding a message
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is message redelivery?
+        choices:
+          - Sending a message to multiple queues
+          - Resending an unacknowledged message to a consumer
+          - Copying a message
+          - Archiving a message
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the max-redelivery-count setting?
+        choices:
+          - Maximum message size
+          - Maximum times a message can be redelivered before DMQ
+          - Maximum consumers
+          - Maximum queue depth
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: What is a durable queue?
+        choices:
+          - A queue that survives broker restart
+          - A queue made of strong materials
+          - A temporary queue
+          - A queue in memory only
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the purpose of queue quotas?
+        choices:
+          - To limit message content
+          - To limit queue capacity (messages or bytes)
+          - To limit consumers
+          - To limit topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is a temporary queue?
+        choices:
+          - A queue that persists forever
+          - A queue that exists only for the client session
+          - A queue for temporary data
+          - A queue in testing environments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the primary way to ensure message ordering in Solace?
+        choices:
+          - Use multiple queues with load balancing
+          - Use an exclusive queue with a single consumer
+          - Use Direct messaging only
+          - Ordering requires special license
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: What is the access type "exclusive" for a queue?
+        choices:
+          - Multiple consumers can connect and share messages
+          - Only one consumer can bind at a time, with optional backup consumers
+          - No consumers can bind
+          - All consumers get all messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the purpose of a queue quota?
+        choices:
+          - To limit message size
+          - To limit the amount of spool storage a queue can use
+          - To limit connection count
+          - To limit topic subscriptions
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What is the ingress rate limit on a queue?
+        choices:
+          - Consumer message rate limit
+          - Publisher message rate limit into the queue
+          - Network bandwidth limit
+          - CPU usage limit
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What are temporary queues used for?
+        choices:
+          - Permanent storage
+          - Request-reply patterns and short-lived messaging needs
+          - Backup storage
+          - Configuration storage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: What is selector-based message filtering on a queue?
+        choices:
+          - Filtering by message size
+          - Filtering messages using SQL-like expressions on message properties
+          - Filtering by sender IP
+          - Filtering by timestamp only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: What is the consumer flow state "Active"?
+        choices:
+          - Consumer is disconnected
+          - Consumer is actively receiving messages
+          - Consumer is paused
+          - Consumer is in error state
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: What happens when max-delivered-unacked-msgs limit is reached?
+        choices:
+          - New messages are published
+          - The consumer stops receiving new messages until it acknowledges some
+          - The queue is deleted
+          - All messages are dropped
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: What is queue browsing?
+        choices:
+          - Deleting queue messages
+          - Reading messages without removing them from the queue
+          - Creating new queues
+          - Monitoring queue performance
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: What is the purpose of egress window size?
+        choices:
+          - To control message size
+          - To control how many messages can be outstanding before needing acknowledgment
+          - To set display resolution
+          - To configure encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: Can a queue have both topic subscriptions and direct queue bindings?
+        choices:
+          - No, only one type allowed
+          - Yes, a queue can receive messages from multiple sources
+          - Only with guaranteed messaging
+          - Only with direct messaging
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: Are anonymous queues durable or non-durable?
+        choices:
+          - Durable
+          - Non-durable
+          - Depends on configuration
+          - Only durable in HA mode
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: Does an exclusive queue guarantee message order?
+        choices:
+          - No, messages can be out of order
+          - Yes, messages are always delivered in the order received
+          - Only for Direct messages
+          - Only with partitioning enabled
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: Which queue types support queue browsing?
+        choices:
+          - All queue types
+          - Exclusive and non-exclusive non-partitioned queues
+          - Only partitioned queues
+          - Only anonymous queues
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: queues
+
+      - text: How does the event broker assign messages to partitions in a partitioned queue?
+        choices:
+          - Round-robin distribution
+          - Hash of partition key MOD partition count
+          - Based on message size
+          - Random assignment
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: How do you configure a queue as a last value queue?
+        choices:
+          - Set queue priority to maximum
+          - Set max-spool-usage (or Messages Queued Quota) to 0
+          - Enable exclusive access mode
+          - Disable message persistence
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What happens when a message moved to a DMQ becomes dead again?
+        choices:
+          - Moved to a secondary DMQ
+          - It is deleted (no DMQ chaining)
+          - Sent back to original queue
+          - Stored permanently
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: queues
+
+      - text: What triggers partition rebalancing in a partitioned queue?
+        choices:
+          - Message rate exceeds threshold
+          - Number of consumers (bound flows) changes
+          - Queue reaches capacity
+          - Broker restart
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: Do partitioned queues support queue browsing?
+        choices:
+          - Yes, for all partitions
+          - No, queue browsing is not supported for partitioned queues
+          - Only for the parent queue
+          - Only with admin privileges
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      - text: What is the difference between key-to-partition mapping and partition-to-flow mapping?
+        choices:
+          - They are the same thing
+          - Key-to-partition maps messages to partitions; partition-to-flow maps partitions to consumers
+          - One is for Direct, one is for Guaranteed
+          - One is for HA, one is for DR
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: queues
+
+      # MESSAGE REPLAY
+      - text: What is Solace Message Replay?
+        choices:
+          - Playing voice messages
+          - Re-delivering previously sent messages from a replay log
+          - Recording video streams
+          - Duplicating messages in real-time
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: replay
+
+      - text: What must be enabled to use Message Replay?
+        choices:
+          - Only guaranteed messaging
+          - Replay log on the queue or topic endpoint
+          - Only Direct messaging
+          - External storage
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What types of messages can be replayed?
+        choices:
+          - Only Direct messages
+          - Only Guaranteed messages that were logged
+          - All messages automatically
+          - Only encrypted messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: How can you start a replay in Solace?
+        choices:
+          - Only through SEMP commands
+          - By message ID, timestamp, or "beginning"
+          - Only through code
+          - Replay starts automatically
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is the replay log trimming?
+        choices:
+          - Formatting log files
+          - Removing old messages based on size or time limits
+          - Encrypting the log
+          - Compressing the log
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: Can multiple consumers replay from the same log simultaneously?
+        choices:
+          - No, only one consumer at a time
+          - Yes, each consumer can have independent replay position
+          - Only with special license
+          - Only for Direct messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What determines replay log size?
+        choices:
+          - Number of consumers
+          - Maximum memory/disk and time-based limits
+          - Message priority
+          - Queue depth
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is a use case for Message Replay?
+        choices:
+          - Reducing broker memory
+          - Recovering from consumer failures or onboarding new consumers
+          - Speeding up message delivery
+          - Compressing messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: Where are replay logs stored?
+        choices:
+          - Only in RAM
+          - On persistent storage (disk)
+          - In the cloud only
+          - On client devices
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is the difference between replay and redelivery?
+        choices:
+          - They are the same thing
+          - Replay is from logs; redelivery is for unacknowledged messages
+          - Redelivery is faster
+          - Replay is only for topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: Can you replay messages based on a date/time range?
+        choices:
+          - No, only from the beginning
+          - Yes, using timestamp-based replay
+          - Only for the last hour
+          - Only with external tools
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What happens when the replay log is full?
+        choices:
+          - The broker crashes
+          - Oldest messages are trimmed to make space
+          - All messages are deleted
+          - Replay is disabled
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: Is replay available for Direct messages?
+        choices:
+          - Yes, all messages are replayed
+          - No, only Guaranteed messages in replay logs
+          - Only if configured
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is the replay log capacity typically limited by?
+        choices:
+          - Number of consumers
+          - Disk space and configured limits
+          - Network bandwidth
+          - CPU speed
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: Can you cancel an ongoing replay?
+        choices:
+          - No, it must complete
+          - Yes, replay can be cancelled at any time
+          - Only by restarting the broker
+          - Only by disconnecting the client
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: Can replay be triggered programmatically?
+        choices:
+          - No, only through CLI
+          - Yes, through API calls
+          - Only through the web console
+          - Only through SEMP
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What happens to new messages during a replay?
+        choices:
+          - They are discarded
+          - They are delivered after replay completes or interleaved
+          - They cause errors
+          - They are compressed
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is the purpose of replay with time-based start?
+        choices:
+          - To replay all messages
+          - To start replay from a specific point in time
+          - To speed up replay
+          - To encrypt replay data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: replay
+
+      - text: Can replay log span across broker restarts?
+        choices:
+          - No, it is cleared on restart
+          - Yes, replay log is persisted to disk
+          - Only with special hardware
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: replay
+
+      - text: What is the typical use case for message replay?
+        choices:
+          - Load testing only
+          - Recovering from errors, onboarding new consumers, or debugging
+          - Reducing storage costs
+          - Encrypting data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: replay
+
+      - text: How is the maximum replay log size configured?
+        choices:
+          - Always fixed at 1 GB
+          - Configured using max-spool-usage parameter, limited by available disk
+          - Unlimited storage
+          - Fixed at 100 MB
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: How does replay log trimming work when the log is full?
+        choices:
+          - All messages are deleted
+          - Oldest messages are removed first (FIFO) to make space for new messages
+          - Newest messages are deleted
+          - Replay is disabled
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: How is replay log data migrated during broker upgrades?
+        choices:
+          - Replay logs must be manually exported
+          - Replay logs are preserved as part of message spool and migrate automatically
+          - Replay logs are always deleted during upgrades
+          - Migration requires service interruption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: What happens to the replay log during HA failover?
+        choices:
+          - Replay log is lost
+          - Replay log is synchronized to backup and available after failover
+          - Replay must be reconfigured
+          - Replay is disabled permanently
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: How is replay performance optimized for high message rates?
+        choices:
+          - Replay always uses maximum speed
+          - Sequential disk reads and optional rate limiting are used
+          - Replay requires message compression
+          - Performance cannot be controlled
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      - text: What is time-based retention for replay logs?
+        choices:
+          - Messages cannot have age limits
+          - Messages older than a configured age threshold are automatically trimmed
+          - Only applies to new messages
+          - Time retention is always 24 hours
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: replay
+
+      # VPN BRIDGES
+      - text: What is a Message VPN Bridge in Solace?
+        choices:
+          - A security tunnel
+          - A connection that moves messages between Message VPNs
+          - A backup VPN
+          - A virtual network interface
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is the direction of message flow in a VPN bridge?
+        choices:
+          - Always bidirectional
+          - Unidirectional from local to remote
+          - Random
+          - Depends on message size
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is needed for Guaranteed messages to flow over a bridge?
+        choices:
+          - No special configuration
+          - A queue subscription on the bridge
+          - Direct messaging enabled
+          - TLS encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: bridges
+
+      - text: Can bridges connect VPNs on the same broker?
+        choices:
+          - No, only different brokers
+          - Yes, bridges can connect VPNs on the same broker
+          - Only in cloud
+          - Only for Direct messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What happens if the remote broker in a bridge is unavailable?
+        choices:
+          - Messages are lost immediately
+          - Messages are queued locally until connection restores
+          - The local broker crashes
+          - All bridges stop
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What authentication methods can bridges use?
+        choices:
+          - Only anonymous
+          - Basic auth, client certificate, or OAuth
+          - Only biometric
+          - No authentication possible
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: bridges
+
+      - text: What is bridge throughput?
+        choices:
+          - The number of bridges configured
+          - The rate of messages flowing across the bridge
+          - The bridge creation time
+          - The bridge storage capacity
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: Can bridges use TLS encryption?
+        choices:
+          - No, bridges are internal only
+          - Yes, TLS can secure bridge connections
+          - Only for cloud bridges
+          - Only for Guaranteed messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: How are topic subscriptions applied to bridges?
+        choices:
+          - All topics are bridged automatically
+          - Specific topic subscriptions filter what messages are bridged
+          - Topics cannot be used with bridges
+          - Only wildcard topics work
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: bridges
+
+      - text: What is a bridge's remote message VPN?
+        choices:
+          - The backup VPN
+          - The destination VPN where messages are delivered
+          - A VPN for remote users
+          - A temporary VPN
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: Can you have multiple bridges from one VPN?
+        choices:
+          - No, only one bridge per VPN
+          - Yes, multiple bridges to different destinations
+          - Only two bridges
+          - Only in enterprise edition
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is bridge connection retry?
+        choices:
+          - Manual reconnection
+          - Automatic attempts to reconnect after connection failure
+          - Bridge deletion
+          - Password reset
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: How does a bridge handle message ordering?
+        choices:
+          - Messages are randomized
+          - Order is preserved within a single bridge
+          - Order is always lost
+          - Order depends on message size
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: bridges
+
+      - text: What is the purpose of bridging between cloud and on-premise?
+        choices:
+          - Just for testing
+          - Hybrid deployment enabling event flow between environments
+          - Reducing costs
+          - Improving security only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is a remote message VPN?
+        choices:
+          - A VPN on the local broker
+          - A message VPN on a different broker connected via bridge
+          - A virtual network
+          - An encrypted tunnel
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is bridge queue depth?
+        choices:
+          - Physical depth of hardware
+          - Number of messages queued for transmission over the bridge
+          - Network cable length
+          - Configuration complexity
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: Can bridges be used between cloud and on-premises brokers?
+        choices:
+          - No, only same environment
+          - Yes, bridges work across any network-connected brokers
+          - Only with special licensing
+          - Only with hardware brokers
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: bridges
+
+      - text: What happens to messages when a bridge connection fails?
+        choices:
+          - Messages are lost
+          - Messages are spooled until the bridge reconnects
+          - Messages are returned to sender
+          - The broker shuts down
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: What is the default bridge behavior for message routing?
+        choices:
+          - Round-robin only
+          - Based on topic subscriptions configured on the bridge
+          - Random distribution
+          - Priority-based only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      - text: Can bridges support both TCP and TLS connections?
+        choices:
+          - Only TCP
+          - Only TLS
+          - Yes, both TCP and TLS
+          - Neither
+        correctIndex: 2
+        timeLimit: 30
+        difficulty: easy
+        category: bridges
+
+      - text: What is a bridge trust relationship?
+        choices:
+          - Legal contract between brokers
+          - Authentication and authorization configuration between bridged brokers
+          - Physical cable connection
+          - Encryption algorithm
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: bridges
+
+      - text: What is the purpose of bridge operational state?
+        choices:
+          - To show physical location
+          - To indicate if the bridge is up, down, or in error
+          - To show message count
+          - To display configuration changes
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: bridges
+
+      # DMR (Dynamic Message Routing)
+      - text: What is required to form a DMR cluster?
+        choices:
+          - Only one broker
+          - Multiple brokers with DMR enabled and cluster links configured
+          - Special cloud license
+          - External load balancer
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is the main purpose of DMR?
+        choices:
+          - Message compression
+          - Creating a dynamic event mesh across brokers
+          - Message encryption
+          - Database replication
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: How does DMR differ from VPN bridges?
+        choices:
+          - DMR is manual, bridges are automatic
+          - DMR automatically discovers and routes based on subscriptions
+          - They are the same
+          - DMR only works in cloud
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: What is a DMR cluster?
+        choices:
+          - A single broker
+          - A group of interconnected brokers using DMR
+          - A backup system
+          - A monitoring tool
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What type of topology does DMR support?
+        choices:
+          - Only star topology
+          - Various topologies including mesh and hierarchy
+          - Only ring topology
+          - No topology support
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: How does DMR know where to route messages?
+        choices:
+          - Manual configuration only
+          - By propagating subscription information between brokers
+          - Random routing
+          - Based on message size
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: What is the DMR internal link?
+        choices:
+          - A hardware cable
+          - A logical connection between brokers in a DMR cluster
+          - A security policy
+          - A message type
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: Can DMR connect brokers across different data centers?
+        choices:
+          - No, only within one data center
+          - Yes, using external links
+          - Only with VPN bridges
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is subscription aggregation in DMR?
+        choices:
+          - Combining subscriptions from multiple consumers into efficient routing
+          - Counting subscriptions
+          - Removing subscriptions
+          - Encrypting subscriptions
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: What happens to messages in DMR if no subscriber exists?
+        choices:
+          - Messages are stored forever
+          - Direct messages are not forwarded to brokers without subscribers
+          - Messages are duplicated
+          - All brokers receive all messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: How is DMR cluster membership managed?
+        choices:
+          - Automatically discovered
+          - Configured on each broker with cluster name
+          - Through DNS
+          - Via external service
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is the benefit of DMR for global applications?
+        choices:
+          - Slower message delivery
+          - Seamless event sharing across geographies
+          - Reduced reliability
+          - Limited scalability
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: Does DMR support both Direct and Guaranteed messages?
+        choices:
+          - Only Direct messages
+          - Yes, both Direct and Guaranteed
+          - Only Guaranteed messages
+          - Neither
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is loop prevention in DMR?
+        choices:
+          - Preventing circular references in code
+          - Preventing messages from routing in circles across brokers
+          - Preventing connection loops
+          - Preventing subscription loops
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: Can DMR work with different Message VPNs?
+        choices:
+          - No, all brokers must use the same VPN name
+          - Yes, DMR can route between different VPNs
+          - Only with special configuration
+          - Only in cloud deployments
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: What is subscription propagation in DMR?
+        choices:
+          - Copying configuration files
+          - Automatically sharing subscription information across the mesh
+          - Encrypting subscriptions
+          - Compressing subscription data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What happens to messages in DMR when a node fails?
+        choices:
+          - All messages are lost
+          - Messages are automatically rerouted to available nodes
+          - The entire mesh shuts down
+          - Manual intervention is always required
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is a DMR external link?
+        choices:
+          - A link to external databases
+          - A connection between DMR clusters in different networks
+          - A link to the internet
+          - A monitoring connection
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      - text: Does DMR support message transformation?
+        choices:
+          - Yes, messages are automatically transformed
+          - No, messages pass through unchanged
+          - Only for JSON messages
+          - Only with plugins
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: What is the DMR internal link?
+        choices:
+          - A link between different clouds
+          - A connection between brokers within the same DMR cluster
+          - An internal database connection
+          - A link to monitoring systems
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: Can DMR clusters span multiple cloud providers?
+        choices:
+          - No, single cloud only
+          - Yes, DMR supports multi-cloud deployments
+          - Only AWS and Azure
+          - Only with hardware brokers
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dmr
+
+      - text: How does DMR handle duplicate messages?
+        choices:
+          - It cannot handle duplicates
+          - Built-in deduplication prevents loops and duplicates
+          - Manual deduplication required
+          - Messages are always duplicated
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dmr
+
+      # HIGH AVAILABILITY
+      - text: What is an HA pair in Solace?
+        choices:
+          - Two users
+          - Active and standby broker pair
+          - Two Message VPNs
+          - Two topics
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What triggers automatic failover in Solace HA?
+        choices:
+          - Manual command only
+          - Active broker failure detected by standby
+          - Scheduled maintenance
+          - High message volume
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the role of the monitoring node in HA?
+        choices:
+          - Processing messages
+          - Arbitrating split-brain scenarios
+          - Storing messages
+          - Load balancing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      - text: What data is synchronized between active and standby brokers?
+        choices:
+          - Only configuration
+          - Configuration and persisted messages
+          - Nothing
+          - Only Direct messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is "split brain" in HA?
+        choices:
+          - A performance optimization
+          - When both brokers think they are active
+          - Normal failover
+          - A monitoring feature
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      - text: How do clients reconnect after failover?
+        choices:
+          - Manual reconnection required
+          - Automatic reconnection to the new active broker
+          - Clients must restart
+          - No reconnection possible
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the purpose of heartbeat messages in HA?
+        choices:
+          - Sending user data
+          - Monitoring health between active and standby
+          - Compressing messages
+          - Encrypting data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What happens to in-flight Direct messages during failover?
+        choices:
+          - They are preserved
+          - They may be lost
+          - They are duplicated
+          - They are archived
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      - text: Can HA be configured with different broker types?
+        choices:
+          - Yes, any mix works
+          - No, HA pairs must be the same type and version
+          - Only in cloud
+          - Only for testing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the typical failover time in Solace HA?
+        choices:
+          - Minutes
+          - Seconds
+          - Hours
+          - Days
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is redundancy mode in Solace?
+        choices:
+          - A backup mode
+          - Configuration for how HA pair behaves
+          - A testing mode
+          - A security setting
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: Can you manually trigger failover?
+        choices:
+          - No, only automatic
+          - Yes, for planned maintenance
+          - Only in emergencies
+          - Only through CLI
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the purpose of the HA heartbeat?
+        choices:
+          - Load balancing
+          - Detecting if the peer broker is alive
+          - Message compression
+          - Data encryption
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: ha
+
+      - text: What is AD (Assured Delivery) in HA context?
+        choices:
+          - A marketing term
+          - Synchronous replication ensuring messages survive failover
+          - Asynchronous delivery
+          - Automatic deletion
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: Can HA pairs handle planned maintenance without downtime?
+        choices:
+          - No, always requires downtime
+          - Yes, through graceful failover during maintenance windows
+          - Only with hardware appliances
+          - Only during off-hours
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the purpose of HA mate link?
+        choices:
+          - User authentication
+          - Synchronizing data between primary and backup brokers
+          - Network monitoring
+          - Client load balancing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What happens to client connections during HA failover?
+        choices:
+          - Clients must manually reconnect
+          - Clients automatically reconnect to the new primary
+          - All connections are permanently lost
+          - Only new connections work
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the monitoring node role in HA?
+        choices:
+          - It processes messages
+          - It provides quorum and tie-breaking for split-brain scenarios
+          - It stores backups
+          - It handles client connections
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      - text: Can HA be configured after initial broker deployment?
+        choices:
+          - No, only at installation
+          - Yes, HA can be enabled on existing brokers
+          - Only with factory reset
+          - Only by Solace support
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the recommended HA setup for zero message loss?
+        choices:
+          - Single broker only
+          - Synchronous HA with AD enabled
+          - Direct messaging only
+          - No replication needed
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is the purpose of HA redundancy mode configuration?
+        choices:
+          - Setting message priority
+          - Defining primary/backup relationships and failover behavior
+          - Configuring encryption
+          - Setting storage limits
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: ha
+
+      - text: What is Assured Delivery (AD) mode in HA?
+        choices:
+          - Asynchronous replication
+          - Synchronous replication ensuring messages are replicated to backup before publisher acknowledgment
+          - Direct messages only
+          - Manual replication
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      - text: What configuration is synchronized between HA pair brokers?
+        choices:
+          - Only VPN names
+          - All Message VPN, client, queue, and topic endpoint configurations
+          - Only queue subscriptions
+          - Nothing is synchronized
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: ha
+
+      # DISASTER RECOVERY
+      - text: What is Disaster Recovery (DR) in the context of Solace?
+        choices:
+          - Backing up configuration files
+          - Replicating data to a remote site for catastrophic failure recovery
+          - Restarting brokers
+          - Message compression
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: dr
+
+      - text: What is the difference between HA and DR?
+        choices:
+          - They are the same
+          - HA is local redundancy; DR is remote site replication
+          - DR is faster than HA
+          - HA requires more hardware
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is replication in Solace DR?
+        choices:
+          - Copying files manually
+          - Synchronizing messages and config to a remote site
+          - Duplicating brokers locally
+          - Creating topic copies
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is an active-standby DR configuration?
+        choices:
+          - Both sites process messages
+          - Primary site is active; DR site is standby until needed
+          - Both sites are standby
+          - No DR configuration
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is RPO (Recovery Point Objective)?
+        choices:
+          - Recovery speed
+          - Maximum acceptable data loss measured in time
+          - Number of recovery points
+          - Processing objective
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What is RTO (Recovery Time Objective)?
+        choices:
+          - Data loss limit
+          - Maximum acceptable downtime during recovery
+          - Replication time
+          - Timeout setting
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What types of replication does Solace support?
+        choices:
+          - Only synchronous
+          - Synchronous and asynchronous
+          - Only asynchronous
+          - No replication support
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is synchronous replication?
+        choices:
+          - Replication happens eventually
+          - Message is confirmed only after replicated to DR site
+          - Replication happens once per day
+          - Manual replication
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What is the tradeoff of synchronous vs asynchronous replication?
+        choices:
+          - No tradeoff
+          - Synchronous has higher latency but zero data loss
+          - Asynchronous is more reliable
+          - Synchronous is always faster
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What is a DR failover?
+        choices:
+          - Routine maintenance
+          - Switching operations to the DR site after primary failure
+          - Testing the DR site
+          - Backing up data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is failback in DR?
+        choices:
+          - Failing again
+          - Returning operations to the primary site after recovery
+          - Backing up to multiple sites
+          - A failure condition
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: Can DR be combined with HA in Solace?
+        choices:
+          - No, choose one or the other
+          - Yes, HA at each site plus DR between sites
+          - Only in cloud
+          - Only with hardware appliances
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What happens to client connections during DR failover?
+        choices:
+          - They continue uninterrupted
+          - Clients must reconnect to the DR site
+          - Connections are automatically migrated
+          - All clients are permanently disconnected
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What is the purpose of DR testing?
+        choices:
+          - To break the system
+          - To validate recovery procedures before an actual disaster
+          - To slow down replication
+          - To increase costs
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is the recommended maximum distance between DR sites?
+        choices:
+          - Same building only
+          - No hard limit, but network latency affects RPO
+          - Within 10 miles
+          - Same rack only
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: Can DR replication work over the public internet?
+        choices:
+          - No, requires private network
+          - Yes, with TLS encryption for security
+          - Only with hardware appliances
+          - Only for small messages
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: dr
+
+      - text: What is DR queue synchronization?
+        choices:
+          - Copying queue configuration only
+          - Replicating queue messages and state to the DR site
+          - Deleting old queues
+          - Compressing queue data
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is the role of DR in compliance requirements?
+        choices:
+          - None
+          - Meeting regulatory requirements for business continuity
+          - Only for encryption compliance
+          - Only for audit logging
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: What is controlled switchover in DR?
+        choices:
+          - Random site selection
+          - Planned transition of traffic to DR site for maintenance or testing
+          - Automatic failover
+          - Load balancing
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: medium
+        category: dr
+
+      - text: Can DR sites be in different cloud regions?
+        choices:
+          - No, same region only
+          - Yes, for geographic redundancy
+          - Only across AWS regions
+          - Only with special hardware
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: dr
+
+      - text: What is the standard Solace DR replication topology?
+        choices:
+          - One primary site replicating to one DR site
+          - Automatic replication to all cloud regions
+          - Mesh replication between all sites
+          - No predefined topology
+        correctIndex: 0
+        timeLimit: 30
+        difficulty: hard
+        category: dr
+
+      - text: What is DR failback?
+        choices:
+          - Permanent migration to DR
+          - Returning operations to the primary site after it is restored
+          - Disabling DR
+          - Data deletion
+        correctIndex: 1
+        timeLimit: 30
+        difficulty: easy
+        category: dr
