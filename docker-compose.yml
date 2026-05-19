@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Backend API Server
   server:
@@ -7,6 +5,14 @@ services:
       context: .
       dockerfile: Dockerfile
       target: server
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:4847}
+        - VITE_CLIENT_URL=${VITE_CLIENT_URL:-http://localhost:4849}
+        - VITE_ADMIN_URL=${VITE_ADMIN_URL:-http://localhost:4848}
+        - VITE_SOLACE_BROKER_URL=${VITE_SOLACE_BROKER_URL}
+        - VITE_SOLACE_VPN_NAME=${VITE_SOLACE_VPN_NAME}
+        - VITE_SOLACE_USERNAME=${VITE_SOLACE_USERNAME}
+        - VITE_SOLACE_PASSWORD=${VITE_SOLACE_PASSWORD}
     container_name: trivia-server
     restart: unless-stopped
     ports:
