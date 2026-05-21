@@ -25,7 +25,7 @@ interface LeaderboardEntry {
   totalMoney: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
 const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:4849';
 
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];

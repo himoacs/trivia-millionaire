@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
 
 interface LeaderboardEntry {
   playerId: string;

@@ -7,7 +7,7 @@ import { AVATAR_EMOJIS } from '@trivia-millionaire/shared';
 import { useSound } from '../utils/sound';
 import SoundToggle from '../components/SoundToggle';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
 
 const AVATARS: { emoji: string; name: PlayerAvatar }[] = Object.entries(AVATAR_EMOJIS).map(
   ([name, emoji]) => ({ emoji, name: name as PlayerAvatar })

@@ -13,7 +13,7 @@ import SoundToggle from '../components/SoundToggle';
 // Answer letters A, B, C, D
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
 
 export default function Game() {
   const { sessionId } = useParams<{ sessionId: string }>();

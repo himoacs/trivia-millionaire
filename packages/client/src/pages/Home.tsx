@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import SoundToggle from '../components/SoundToggle';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
 
 export default function Home() {
   const [code, setCode] = useState('');
