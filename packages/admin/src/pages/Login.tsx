@@ -31,17 +31,19 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 pb-16 relative z-10">
+    <div className="min-h-screen flex flex-col relative z-10">
       {/* Solace Logo - Top Left */}
       <div className="fixed top-4 left-4 z-50">
         <img src="/solace-logo.svg" alt="Solace" className="h-8 md:h-10 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card max-w-md w-full"
-      >
+      {/* Centered Content Area */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card max-w-md w-full"
+        >
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
             Trivia Millionaire
@@ -98,9 +100,10 @@ export default function Login() {
           </button>
         </form>
       </motion.div>
+      </div>
 
       {/* Footer Credit Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20">
+      <div className="mt-auto w-full bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20 flex-shrink-0">
         <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
           <span>Created by Himanshu Gupta</span>
           <a 

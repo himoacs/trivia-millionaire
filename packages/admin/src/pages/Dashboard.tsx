@@ -138,7 +138,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen relative pb-20">
+    <div className="min-h-screen flex flex-col relative">
       {/* Top Banner */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 via-black/50 to-transparent backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 py-4">
@@ -317,7 +317,7 @@ export default function Dashboard() {
       </div>
 
       {/* Footer Credit Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20">
+      <div className="mt-auto w-full bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20 flex-shrink-0">
         <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
           <span>Created by Himanshu Gupta</span>
           <a 

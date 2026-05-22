@@ -499,7 +499,7 @@ export default function SessionView() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 pb-16">
+      <div className="flex flex-1">
         {/* Main Content */}
         <div className={`flex-1 p-6 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto">
@@ -819,7 +819,7 @@ export default function SessionView() {
       </AnimatePresence>
 
       {/* Footer Credit Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20">
+      <div className="mt-auto w-full bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20 flex-shrink-0">
         <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
           <span>Created by Himanshu Gupta</span>
           <a 
@@ -833,7 +833,6 @@ export default function SessionView() {
             </svg>
           </a>
         </div>
-      </div>
       </div>
     </div>
   );
