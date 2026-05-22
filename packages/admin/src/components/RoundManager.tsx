@@ -316,6 +316,10 @@ export default function RoundManager({
       throw new Error(response.data.error || 'Failed to load template');
     }
     await loadRounds();
+    // Notify parent to refresh questions
+    if (onQuestionsChanged) {
+      onQuestionsChanged();
+    }
   };
 
   const handleSaveAsTemplate = async (name: string, description: string): Promise<void> => {
