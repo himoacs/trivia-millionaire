@@ -31,7 +31,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <div className="min-h-screen flex items-center justify-center p-4 pb-16 relative z-10">
       {/* Solace Logo - Top Left */}
       <div className="fixed top-4 left-4 z-50">
         <img src="/solace-logo.svg" alt="Solace" className="h-8 md:h-10 opacity-80 hover:opacity-100 transition-opacity" />

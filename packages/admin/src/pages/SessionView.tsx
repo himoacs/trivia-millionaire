@@ -499,7 +499,7 @@ export default function SessionView() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 pb-16">
         {/* Main Content */}
         <div className={`flex-1 p-6 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto">
