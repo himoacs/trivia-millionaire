@@ -224,22 +224,44 @@ export default function RoundManager({
     if (!showAssignModal) return;
 
     try {
+      // First, find questions that need to be removed from other rounds
+      const questionsToReassign = selectedQuestionIds.filter(qId => {
+        // Check if this question is in another round
+        return rounds.some(r => r.id !== showAssignModal.id && r.questionIds.includes(qId));
+      });
+
+      // Remove reassigned questions from their current rounds
+      const updatedRounds = rounds.map(r => {
+        if (r.id === showAssignModal.id) {
+          // This is the target round - will be updated separately
+          return r;
+        }
+        // Remove any reassigned questions from other rounds
+        const newQuestionIds = r.questionIds.filter(qId => !questionsToReassign.includes(qId));
+        if (newQuestionIds.length !== r.questionIds.length) {
+          // Update this round on the server
+          axios.put(
+            `${API_URL}/api/admin/session/${sessionId}/rounds/${r.id}`,
+            { questionIds: newQuestionIds }
+          ).catch(err => console.error('Failed to update round:', err));
+        }
+        return { ...r, questionIds: newQuestionIds };
+      });
+
+      // Now update the target round
       const response = await axios.put(
         `${API_URL}/api/admin/session/${sessionId}/rounds/${showAssignModal.id}`,
         { questionIds: selectedQuestionIds }
       );
 
       if (response.data.success) {
-        setRounds(prev => prev.map(r => 
+        const finalRounds = updatedRounds.map(r => 
           r.id === showAssignModal.id 
             ? { ...r, questionIds: selectedQuestionIds }
             : r
-        ));
-        onRoundsChanged(rounds.map(r => 
-          r.id === showAssignModal.id 
-            ? { ...r, questionIds: selectedQuestionIds }
-            : r
-        ));
+        );
+        setRounds(finalRounds);
+        onRoundsChanged(finalRounds);
         setShowAssignModal(null);
       }
     } catch (error) {
@@ -1005,20 +1027,25 @@ export default function RoundManager({
                 Assign Questions to "{showAssignModal.name}"
               </h3>
               
+              <p className="text-sm text-gray-400 mb-4">
+                Click questions to select/deselect. Questions from other rounds will be moved here.
+              </p>
+              
               <div className="flex-1 overflow-y-auto space-y-2 mb-4">
                 {questions.map((q, index) => {
                   const isSelected = selectedQuestionIds.includes(q.id);
                   const isAssignedElsewhere = !isSelected && assignedQuestionIds.has(q.id);
+                  const currentRound = isAssignedElsewhere ? rounds.find(r => r.questionIds.includes(q.id)) : null;
                   
                   return (
                     <div
                       key={q.id}
-                      onClick={() => !isAssignedElsewhere && toggleQuestionSelection(q.id)}
+                      onClick={() => toggleQuestionSelection(q.id)}
                       className={`p-3 rounded-lg cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-green-600/30 border-2 border-green-500'
                           : isAssignedElsewhere
-                          ? 'bg-gray-600/30 border border-gray-600 cursor-not-allowed opacity-50'
+                          ? 'bg-yellow-600/20 border border-yellow-500/50 hover:border-yellow-500'
                           : 'bg-millionaire-navy-dark border border-millionaire-gold/30 hover:border-millionaire-gold'
                       }`}
                     >
@@ -1026,14 +1053,13 @@ export default function RoundManager({
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          disabled={isAssignedElsewhere}
                           onChange={() => {}}
                           className="w-5 h-5"
                         />
                         <span className="font-semibold text-white">Q{index + 1}:</span>
                         <span className="text-gray-300 flex-1 truncate">{q.text}</span>
-                        {isAssignedElsewhere && (
-                          <span className="text-xs text-gray-500">(assigned to another round)</span>
+                        {isAssignedElsewhere && currentRound && (
+                          <span className="text-xs text-yellow-400">(in {currentRound.name})</span>
                         )}
                       </div>
                     </div>

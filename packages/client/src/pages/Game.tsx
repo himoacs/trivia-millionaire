@@ -527,7 +527,7 @@ export default function Game() {
     // Show break screen between rounds
     if (isOnBreak && sessionState === 'PAUSED') {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-20 relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -612,7 +612,7 @@ export default function Game() {
 
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-20 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -674,7 +674,7 @@ export default function Game() {
     const percentage = totalPlayers > 0 ? Math.round((answeredCount / totalPlayers) * 100) : 0;
     
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-20 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -745,7 +745,7 @@ export default function Game() {
     }));
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 pb-20 relative z-10">
         <div className="max-w-4xl w-full">
           <AnswerDistributionChart
             questionText={currentQuestion.question.text}
@@ -777,7 +777,7 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative z-10" style={{ overscrollBehaviorY: 'contain' }}>
+    <div className="min-h-screen flex flex-col relative z-10 pb-20" style={{ overscrollBehaviorY: 'contain' }}>
       {/* Sticky Header - Solace Logo, Score, Timer, Sound Toggle */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#0D1B2A] via-[#0D1B2A] to-[#0D1B2A]/95 backdrop-blur-sm">
         {/* Sound Toggle - positioned in sticky header */}
