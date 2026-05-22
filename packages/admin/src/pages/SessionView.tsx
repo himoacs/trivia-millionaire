@@ -807,6 +807,7 @@ export default function SessionView() {
         </AnimatePresence>
       </div>
       </div>
+      </div>
 
       {/* Solace Debug Panel - Side Panel */}
       <AnimatePresence>
