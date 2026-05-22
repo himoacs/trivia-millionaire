@@ -745,7 +745,7 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative z-10">
+    <div className="min-h-screen flex flex-col relative z-10" style={{ overscrollBehaviorY: 'contain' }}>
       {/* Sticky Header - Solace Logo, Score, Timer, Sound Toggle */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#0D1B2A] via-[#0D1B2A] to-[#0D1B2A]/95 backdrop-blur-sm">
         {/* Sound Toggle - positioned in sticky header */}
@@ -1085,7 +1085,7 @@ export default function Game() {
                      }}
                 />
                 
-                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white text-center relative z-10 leading-snug"
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white text-center relative z-10 leading-snug"
                     style={{ textShadow: '0 3px 8px rgba(0,0,0,0.6), 0 0 20px rgba(59,130,246,0.3)' }}>
                   {currentQuestion.question.text}
                 </h2>

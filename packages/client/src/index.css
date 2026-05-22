@@ -84,7 +84,7 @@ body::after {
 @layer components {
   /* Premium WWTBAM hexagonal answer buttons - GOLD BORDERS with extending lines */
   .btn-answer {
-    @apply relative w-full py-3 px-6 md:py-4 md:px-8 text-base md:text-lg lg:text-xl font-black transform text-white;
+    @apply relative w-full py-4 px-6 md:py-4 md:px-8 text-base md:text-lg lg:text-xl font-black transform text-white;
     /* Hexagonal shape with very pronounced angled edges like authentic WWTBAM (5%) */
     clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
     background: linear-gradient(90deg, #0a1e33 0%, #1a3652 50%, #0a1e33 100%);
@@ -95,8 +95,12 @@ body::after {
       0 0 15px rgba(247, 148, 29, 0.25),
       inset 0 2px 0 rgba(255, 255, 255, 0.1),
       inset 0 -2px 0 rgba(0, 0, 0, 0.4);
-    transition: all 0.3s ease;
-    min-height: 60px;
+    transition: all 0.15s ease;
+    min-height: 70px;
+    /* Prevent text selection on touch */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Extending lines OUTSIDE the hexagon - left and right */
@@ -166,8 +170,16 @@ body::after {
     }
   }
 
+  /* Active/touch state for mobile - provides visual feedback on tap */
   .btn-answer:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(0.97);
+    background: linear-gradient(90deg, #1a3a5c 0%, #2d5a8c 45%, #3d6a9c 55%, #2d5a8c 100%);
+    border-color: #FFB81C;
+    box-shadow: 
+      0 0 30px rgba(247, 148, 29, 0.6),
+      0 2px 8px rgba(0, 0, 0, 0.5),
+      inset 0 2px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.3);
   }
 
   /* Bright orange/yellow selection state like authentic WWTBAM */
@@ -277,6 +289,27 @@ body::after {
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
     letter-spacing: 0.5px;
   }
+}
+
+/* Reduced motion support - respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none !important;
+  }
+  
+  .btn-answer,
+  .btn-answer.selected {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* Disable Framer Motion animations via CSS where possible */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
   .btn-answer .answer-letter::before {
     content: '◆';
