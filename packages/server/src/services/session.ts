@@ -660,34 +660,61 @@ export class SessionManager {
 
     const currentRound = this.getCurrentRound(sessionId);
     
-    session.currentQuestionIndex++;
-    
-    // If using rounds, check if we've exceeded round's questions
+    // If using rounds, find next question in current or subsequent rounds
     if (currentRound) {
-      const roundQuestionIds = currentRound.questionIds;
-      const currentQuestion = session.questions[session.currentQuestionIndex];
+      // Find the next question that belongs to any round starting from current
+      let foundQuestion: Question | null = null;
+      let questionIndex = session.currentQuestionIndex + 1;
       
-      // If current question is not in this round, we've finished the round
-      if (!currentQuestion || !roundQuestionIds.includes(currentQuestion.id)) {
-        session.currentQuestionIndex--; // Revert
-        console.log('No more questions in this round');
-        return null;
+      // Try to find next question in current round first
+      while (questionIndex < session.questions.length) {
+        const candidate = session.questions[questionIndex];
+        if (currentRound.questionIds.includes(candidate.id)) {
+          foundQuestion = candidate;
+          session.currentQuestionIndex = questionIndex;
+          break;
+        }
+        questionIndex++;
       }
+      
+      // If no more questions in current round, check if there's a next round
+      if (!foundQuestion) {
+        const nextRoundIndex = session.currentRoundIndex + 1;
+        if (nextRoundIndex < session.rounds.length) {
+          const nextRound = session.rounds[nextRoundIndex];
+          console.log(`🏁 Round "${currentRound.name}" completed. Need to start next round: "${nextRound.name}"`);
+          // Don't auto-advance, return null so admin can start next round manually
+          return null;
+        } else {
+          console.log('No more questions - all rounds completed');
+          return null;
+        }
+      }
+      
+      const question = foundQuestion;
+      session.currentQuestionStartTime = Date.now();
+      
+      this.db.updateSessionQuestionIndex(sessionId, session.currentQuestionIndex, session.currentQuestionStartTime);
+      
+      console.log(`❓ Released question ${session.currentQuestionIndex + 1} (Round: ${currentRound.name})`);
+      return question;
     } else {
       // Legacy mode - check total questions
+      session.currentQuestionIndex++;
       if (session.currentQuestionIndex >= session.questions.length) {
+        session.currentQuestionIndex--; // Revert
         console.log('No more questions');
         return null;
       }
+      
+      const question = session.questions[session.currentQuestionIndex];
+      session.currentQuestionStartTime = Date.now();
+      
+      this.db.updateSessionQuestionIndex(sessionId, session.currentQuestionIndex, session.currentQuestionStartTime);
+      
+      console.log(`❓ Released question ${session.currentQuestionIndex + 1} of ${session.questions.length}`);
+      return question;
     }
-
-    const question = session.questions[session.currentQuestionIndex];
-    session.currentQuestionStartTime = Date.now();
-    
-    this.db.updateSessionQuestionIndex(sessionId, session.currentQuestionIndex, session.currentQuestionStartTime);
-    
-    console.log(`❓ Released question ${session.currentQuestionIndex + 1} of ${session.questions.length}`);
-    return question;
   }
 
   /**
