@@ -559,7 +559,7 @@ export default function SessionView() {
                 </div>
                 <p className="mt-4 text-sm text-gray-400">
                   Or visit: <br />
-                  <code className="text-millionaire-gold">{CLIENT_URL}</code>
+                  <code className="text-millionaire-gold break-all text-xs">{CLIENT_URL}</code>
                 </p>
               </motion.div>
 
@@ -658,7 +658,7 @@ export default function SessionView() {
                 </div>
                 <p className="mt-4 text-sm text-gray-400">
                   Or visit: <br />
-                  <code className="text-millionaire-gold">{CLIENT_URL}</code>
+                  <code className="text-millionaire-gold break-all text-xs">{CLIENT_URL}</code>
                 </p>
               </motion.div>
 
