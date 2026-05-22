@@ -31,19 +31,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative z-10">
+    <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
       {/* Solace Logo - Top Left */}
       <div className="fixed top-4 left-4 z-50">
         <img src="/solace-logo.svg" alt="Solace" className="h-8 md:h-10 opacity-80 hover:opacity-100 transition-opacity" />
       </div>
 
-      {/* Centered Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card max-w-md w-full"
-        >
+      {/* Centered Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card max-w-md w-full"
+      >
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
             Trivia Millionaire
@@ -100,23 +99,20 @@ export default function Login() {
           </button>
         </form>
       </motion.div>
-      </div>
 
-      {/* Footer Credit Bar */}
-      <div className="mt-auto w-full bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20 flex-shrink-0">
-        <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
-          <span>Created by Himanshu Gupta</span>
-          <a 
-            href="https://www.linkedin.com/in/guptahim/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition-opacity"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF">
-              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-            </svg>
-          </a>
-        </div>
+      {/* Footer Credit Badge */}
+      <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2 text-[#2DD4BF] text-sm bg-millionaire-navy-dark/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-millionaire-gold/20">
+        <span>Created by Himanshu Gupta</span>
+        <a 
+          href="https://www.linkedin.com/in/guptahim/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:opacity-80 transition-opacity"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF">
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+          </svg>
+        </a>
       </div>
     </div>
   );
