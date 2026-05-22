@@ -8,7 +8,7 @@ import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 import { useSound } from '../utils/sound';
 import SoundToggle from '../components/SoundToggle';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 interface LeaderboardEntry {
   playerId: string;
