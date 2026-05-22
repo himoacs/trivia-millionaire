@@ -77,22 +77,22 @@ code {
 
   /* Secondary: Outlined blue - important secondary actions */
   .btn-secondary {
-    @apply btn btn-md bg-millionaire-blue/10 hover:bg-millionaire-blue/20
-           text-millionaire-blue border border-millionaire-blue/50 hover:border-millionaire-blue
+    @apply btn btn-md bg-millionaire-blue/20 hover:bg-millionaire-blue/30
+           text-millionaire-blue-light border border-millionaire-blue-light/70 hover:border-millionaire-blue-light
            focus:ring-millionaire-blue/30;
   }
 
   /* Tertiary: Outlined gold - tertiary actions */
   .btn-tertiary {
     @apply btn btn-md bg-transparent hover:bg-millionaire-gold/10
-           text-millionaire-gold border border-millionaire-gold/40 hover:border-millionaire-gold/60
+           text-millionaire-gold-light border border-millionaire-gold/60 hover:border-millionaire-gold
            focus:ring-millionaire-gold/30;
   }
 
   /* Ghost: Minimal - inline actions, toggles */
   .btn-ghost {
     @apply btn btn-md bg-transparent hover:bg-white/10 
-           text-gray-300 hover:text-white focus:ring-white/20;
+           text-gray-200 hover:text-white focus:ring-white/20;
   }
 
   /* Success: Solid green - positive actions */
@@ -105,7 +105,7 @@ code {
   /* Danger: Outlined red - destructive actions */
   .btn-danger {
     @apply btn btn-md bg-transparent hover:bg-red-500/10
-           text-red-400 border border-red-500/50 hover:border-red-400
+           text-red-300 border border-red-500/60 hover:border-red-400
            focus:ring-red-500/30;
   }
   .btn-danger-solid {
@@ -123,8 +123,8 @@ code {
 
   /* AI/Special: Outlined purple - AI features */
   .btn-ai {
-    @apply btn btn-md bg-purple-600/10 hover:bg-purple-600/20
-           text-purple-400 border border-purple-500/50 hover:border-purple-400
+    @apply btn btn-md bg-purple-600/20 hover:bg-purple-600/30
+           text-purple-300 border border-purple-400/70 hover:border-purple-300
            focus:ring-purple-500/30;
   }
 
@@ -143,16 +143,16 @@ code {
 
   /* Icon button variants */
   .btn-icon-ghost {
-    @apply btn-icon bg-transparent hover:bg-white/10 text-gray-400 hover:text-white;
+    @apply btn-icon bg-transparent hover:bg-white/10 text-gray-300 hover:text-white;
   }
   .btn-icon-subtle {
-    @apply btn-icon bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white;
+    @apply btn-icon bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white;
   }
   .btn-icon-danger {
-    @apply btn-icon bg-transparent hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-transparent hover:border-red-500/30;
+    @apply btn-icon bg-transparent hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-transparent hover:border-red-500/30;
   }
   .btn-icon-success {
-    @apply btn-icon bg-transparent hover:bg-green-500/20 text-green-400 hover:text-green-300 border border-transparent hover:border-green-500/30;
+    @apply btn-icon bg-transparent hover:bg-green-500/20 text-green-300 hover:text-green-200 border border-transparent hover:border-green-500/30;
   }
 
   /* Active/Toggle state modifier */
