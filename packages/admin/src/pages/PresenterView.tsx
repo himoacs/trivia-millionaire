@@ -63,7 +63,7 @@ export default function PresenterView() {
   const { connected, subscribe } = useSolace();
   const { play, startTicking, stopTicking } = usePresenterSound();
 
-  const joinUrl = `${CLIENT_URL}/?code=${sessionCode}`;
+  const joinUrl = `${CLIENT_URL}/join/${sessionCode}`;
 
   // Load session data initially
   useEffect(() => {
