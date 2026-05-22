@@ -25,7 +25,7 @@ interface LeaderboardEntry {
   totalMoney: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:4849';
 
 const ANSWER_LETTERS = ['A', 'B', 'C', 'D'];
@@ -741,7 +741,7 @@ export default function PresenterView() {
           {/* Session Code */}
           <div className="mb-8">
             <p className="text-xl text-gray-300 mb-2">Scan the QR code or visit</p>
-            <p className="text-2xl font-mono text-orange-400 mb-4">{CLIENT_URL}</p>
+            <p className="text-xl md:text-2xl font-mono text-orange-400 mb-4 break-all">{CLIENT_URL}</p>
             <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-4 rounded-xl">
               <p className="text-lg font-semibold mb-1">Session Code</p>
               <p className="text-4xl font-black tracking-widest">{sessionCode}</p>
