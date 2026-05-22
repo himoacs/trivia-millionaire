@@ -1982,16 +1982,18 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
       unassignedQuestionsCount = unassignedQuestions.length;
     }
     
-    // Create rounds and questions from template
+    // Create rounds from template (questions loaded as unassigned for manual assignment)
     if (hasRounds) {
       for (const roundData of parsed.rounds) {
         if (!roundData.name) {
           continue;
         }
         
+        // Create empty round - questions will be assigned manually
         const round = sessionManager.createRound(sessionId, roundData.name, []);
         if (!round) continue;
         
+        // Load questions as UNASSIGNED (no roundId) so user can assign them manually
         if (roundData.questions && Array.isArray(roundData.questions)) {
           const questions = roundData.questions.map((q: any, idx: number) => ({
             id: `q${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
@@ -2002,14 +2004,11 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
             points: 1000,
             difficulty: q.difficulty || 'medium',
             category: q.category,
-            roundId: round.id
+            roundId: undefined // Unassigned - user assigns manually
           }));
           
           sessionManager.addQuestions(sessionId, questions);
-          
-          // Update round with question IDs
-          const questionIds = questions.map((q: { id: string }) => q.id);
-          sessionManager.updateRound(sessionId, round.id, { questionIds });
+          unassignedQuestionsCount += questions.length;
         }
         
         const allRounds = sessionManager.getRounds(sessionId);
