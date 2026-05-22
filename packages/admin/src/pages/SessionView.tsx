@@ -809,16 +809,6 @@ export default function SessionView() {
       </div>
       </div>
 
-      {/* Solace Debug Panel - Side Panel */}
-      <AnimatePresence>
-        {showDebugPanel && (
-          <SolaceDebugPanel 
-            sessionId={sessionId!} 
-            onClose={() => setShowDebugPanel(false)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Footer Credit Bar */}
       <div className="mt-auto w-full bg-millionaire-navy-dark/90 backdrop-blur-sm border-t border-millionaire-gold/20 flex-shrink-0">
         <div className="flex items-center justify-end gap-2 py-2 pr-4 text-[#2DD4BF] text-sm">
@@ -835,6 +825,18 @@ export default function SessionView() {
           </a>
         </div>
       </div>
+
+      {/* Solace Debug Panel - Fixed Overlay on Right */}
+      <AnimatePresence>
+        {showDebugPanel && (
+          <div className="fixed top-0 right-0 z-50 h-screen">
+            <SolaceDebugPanel 
+              sessionId={sessionId!} 
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
