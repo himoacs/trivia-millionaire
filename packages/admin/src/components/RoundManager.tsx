@@ -8,7 +8,7 @@ import ManualQuestionModal from './ManualQuestionModal';
 import AIGenerateModal from './AIGenerateModal';
 import AnswerDistributionChart from './AnswerDistributionChart';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 
 interface GameControlState {
   currentQuestionIndex: number;

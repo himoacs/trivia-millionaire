@@ -13,7 +13,7 @@ import AdminSettingsModal from '../components/AdminSettingsModal';
 import RoundManager from '../components/RoundManager';
 import { useSolace } from '../hooks/useSolace';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4847';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4847';
 const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || 'http://localhost:4849';
 
 export default function SessionView() {
