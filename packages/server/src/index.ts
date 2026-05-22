@@ -1690,6 +1690,65 @@ app.delete('/api/admin/templates/:templateId', (req: Request, res: Response) => 
   }
 });
 
+/**
+ * Update a template's content (convert rounds to unassigned questions)
+ */
+app.put('/api/admin/templates/:templateId/convert-to-unassigned', (req: Request, res: Response) => {
+  try {
+    const { templateId } = req.params;
+    const db = getDatabase();
+    const template = db.getTemplate(templateId);
+    
+    if (!template) {
+      res.status(404).json({
+        success: false,
+        error: 'Template not found'
+      } as ApiResponse);
+      return;
+    }
+    
+    // Parse existing content
+    const parsed = yaml.load(template.content) as any;
+    
+    // Extract all questions from all rounds
+    const allQuestions: any[] = [];
+    if (parsed.rounds && Array.isArray(parsed.rounds)) {
+      for (const round of parsed.rounds) {
+        if (round.questions && Array.isArray(round.questions)) {
+          allQuestions.push(...round.questions);
+        }
+      }
+    }
+    
+    // Create new content with just questions (no rounds)
+    const newContent = yaml.dump({
+      name: parsed.name || template.name,
+      questions: allQuestions
+    });
+    
+    // Update template
+    db.saveTemplate({
+      id: templateId,
+      name: template.name,
+      description: template.description,
+      content: newContent
+    });
+    
+    res.json({
+      success: true,
+      data: { 
+        questionsCount: allQuestions.length,
+        message: 'Template converted to unassigned questions format'
+      }
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert template'
+    } as ApiResponse);
+  }
+});
+
 // ===================
 // IMPORT/EXPORT OPERATIONS
 // ===================
@@ -1882,10 +1941,14 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
     // Parse template YAML
     const parsed = yaml.load(template.content) as any;
     
-    if (!parsed.rounds || !Array.isArray(parsed.rounds)) {
+    // Template can have 'rounds' array, 'questions' array (unassigned), or both
+    const hasRounds = parsed.rounds && Array.isArray(parsed.rounds);
+    const hasQuestions = parsed.questions && Array.isArray(parsed.questions);
+    
+    if (!hasRounds && !hasQuestions) {
       res.status(400).json({
         success: false,
-        error: 'Template must contain a "rounds" array'
+        error: 'Template must contain a "rounds" or "questions" array'
       } as ApiResponse);
       return;
     }
@@ -1899,40 +1962,61 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
     }
     
     const createdRounds: Round[] = [];
+    let unassignedQuestionsCount = 0;
+    
+    // Load unassigned questions (top-level questions array)
+    if (hasQuestions) {
+      const unassignedQuestions = parsed.questions.map((q: any, idx: number) => ({
+        id: `q${Date.now()}-unassigned-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+        text: q.text,
+        choices: q.choices || [],
+        correctIndex: q.correctIndex ?? 0,
+        timeLimit: q.timeLimit || 30,
+        points: 1000,
+        difficulty: q.difficulty || 'medium',
+        category: q.category,
+        roundId: undefined // No round assignment - these go to question pool
+      }));
+      
+      sessionManager.addQuestions(sessionId, unassignedQuestions);
+      unassignedQuestionsCount = unassignedQuestions.length;
+    }
     
     // Create rounds and questions from template
-    for (const roundData of parsed.rounds) {
-      if (!roundData.name) {
-        continue;
-      }
-      
-      const round = sessionManager.createRound(sessionId, roundData.name, []);
-      if (!round) continue;
-      
-      if (roundData.questions && Array.isArray(roundData.questions)) {
-        const questions = roundData.questions.map((q: any, idx: number) => ({
-          id: `q${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
-          text: q.text,
-          choices: q.choices || [],
-          correctIndex: q.correctIndex ?? 0,
-          timeLimit: q.timeLimit || 30,
-          points: 1000,
-          difficulty: q.difficulty || 'medium',
-          category: q.category,
-          roundId: round.id
-        }));
+    if (hasRounds) {
+      for (const roundData of parsed.rounds) {
+        if (!roundData.name) {
+          continue;
+        }
         
-        sessionManager.addQuestions(sessionId, questions);
+        const round = sessionManager.createRound(sessionId, roundData.name, []);
+        if (!round) continue;
         
-        // Update round with question IDs
-        const questionIds = questions.map((q: { id: string }) => q.id);
-        sessionManager.updateRound(sessionId, round.id, { questionIds });
-      }
-      
-      const allRounds = sessionManager.getRounds(sessionId);
-      const updatedRound = allRounds.find(r => r.id === round.id);
-      if (updatedRound) {
-        createdRounds.push(updatedRound);
+        if (roundData.questions && Array.isArray(roundData.questions)) {
+          const questions = roundData.questions.map((q: any, idx: number) => ({
+            id: `q${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+            text: q.text,
+            choices: q.choices || [],
+            correctIndex: q.correctIndex ?? 0,
+            timeLimit: q.timeLimit || 30,
+            points: 1000,
+            difficulty: q.difficulty || 'medium',
+            category: q.category,
+            roundId: round.id
+          }));
+          
+          sessionManager.addQuestions(sessionId, questions);
+          
+          // Update round with question IDs
+          const questionIds = questions.map((q: { id: string }) => q.id);
+          sessionManager.updateRound(sessionId, round.id, { questionIds });
+        }
+        
+        const allRounds = sessionManager.getRounds(sessionId);
+        const updatedRound = allRounds.find(r => r.id === round.id);
+        if (updatedRound) {
+          createdRounds.push(updatedRound);
+        }
       }
     }
     
@@ -1941,6 +2025,7 @@ app.post('/api/admin/session/:sessionId/load-template/:templateId', (req: Reques
       data: { 
         templateName: template.name,
         roundsCreated: createdRounds.length,
+        unassignedQuestions: unassignedQuestionsCount,
         rounds: createdRounds 
       }
     } as ApiResponse);
