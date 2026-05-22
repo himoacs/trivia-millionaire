@@ -14,11 +14,41 @@ type SoundType =
 
 class SoundManager {
   private enabled: boolean = true;
+  private audioContext: AudioContext | null = null;
+  private initialized: boolean = false;
 
   constructor() {
-    // Initialize sounds
-    // In a real app, you'd load actual audio files
-    // For now, we'll use the Web Audio API to generate simple tones
+    // Initialize on first user interaction
+  }
+
+  /**
+   * Initialize AudioContext - must be called from user gesture
+   */
+  initialize(): void {
+    if (this.initialized) return;
+    
+    try {
+      this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      this.initialized = true;
+      
+      // Resume if suspended (required for mobile)
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+      
+      console.log('🔊 Audio initialized');
+    } catch (error) {
+      console.warn('Audio not supported:', error);
+    }
+  }
+
+  /**
+   * Resume audio context - call on any user interaction
+   */
+  resume(): void {
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
   }
 
   /**
@@ -26,6 +56,14 @@ class SoundManager {
    */
   play(sound: SoundType): void {
     if (!this.enabled) return;
+    
+    // Auto-initialize on first play attempt
+    if (!this.initialized) {
+      this.initialize();
+    }
+    
+    // Resume if needed
+    this.resume();
 
     switch (sound) {
       case 'join':
@@ -57,6 +95,10 @@ class SoundManager {
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
+    // Initialize when enabling (user gesture)
+    if (enabled && !this.initialized) {
+      this.initialize();
+    }
   }
 
   /**
@@ -74,24 +116,29 @@ class SoundManager {
     duration: number,
     type: OscillatorType = 'sine'
   ): void {
-    const audioContext = new AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    if (!this.audioContext) return;
+    
+    try {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
 
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.01,
-      audioContext.currentTime + duration
-    );
+      gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        this.audioContext.currentTime + duration
+      );
 
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration);
+      oscillator.start(this.audioContext.currentTime);
+      oscillator.stop(this.audioContext.currentTime + duration);
+    } catch (error) {
+      console.warn('Error playing tone:', error);
+    }
   }
 
   /**
@@ -132,5 +179,7 @@ export function useSound() {
     play: (sound: SoundType) => soundManager.play(sound),
     setEnabled: (enabled: boolean) => soundManager.setEnabled(enabled),
     isEnabled: () => soundManager.isEnabled(),
+    initialize: () => soundManager.initialize(),
+    resume: () => soundManager.resume(),
   };
 }

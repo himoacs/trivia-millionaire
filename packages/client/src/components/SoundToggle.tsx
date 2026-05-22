@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import { useSound } from '../utils/sound';
 
 export default function SoundToggle() {
-  const { isEnabled, setEnabled } = useSound();
+  const { isEnabled, setEnabled, initialize, resume } = useSound();
   const [soundOn, setSoundOn] = useState(isEnabled());
 
   const toggleSound = () => {
+    // Initialize/resume audio context on user interaction (required for mobile)
+    initialize();
+    resume();
+    
     const newState = !soundOn;
     setSoundOn(newState);
     setEnabled(newState);
