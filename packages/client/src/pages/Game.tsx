@@ -746,26 +746,25 @@ export default function Game() {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10">
-      {/* Sound Toggle */}
-      <SoundToggle />
-      
-      {/* Solace Logo Banner */}
-      <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
-        <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80 hover:opacity-100 transition-opacity" />
-      </div>
+      {/* Sticky Header - Solace Logo, Score, Timer, Sound Toggle */}
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#0D1B2A] via-[#0D1B2A] to-[#0D1B2A]/95 backdrop-blur-sm">
+        {/* Sound Toggle - positioned in sticky header */}
+        <SoundToggle />
+        
+        {/* Solace Logo Banner */}
+        <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
+          <img src="/solace-logo.svg" alt="Solace" className="h-5 md:h-6 opacity-80 hover:opacity-100 transition-opacity" />
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex p-4 pb-safe">
-      <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
         {/* Header - Score & Timer */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-4"
+          className="flex justify-between items-center p-4 pb-2"
         >
           <div className="relative">
-            <div className="absolute inset-0 bg-orange-500/20 blur-2xl rounded-full"></div>
-            <div className="relative px-4 md:px-8 py-2 md:py-4">
+            <div className="absolute inset-0 bg-orange-500/20 blur-xl rounded-full"></div>
+            <div className="relative px-2 md:px-6 py-1 md:py-3">
               <div className="text-xs md:text-sm text-orange-400 font-bold uppercase tracking-wider mb-1">Current Winnings</div>
               <div className="text-3xl md:text-5xl lg:text-6xl font-black bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-transparent bg-clip-text"
                    style={{ 
@@ -826,7 +825,12 @@ export default function Game() {
             </motion.div>
           </div>
         </motion.div>
+      </div>
+      {/* End Sticky Header */}
 
+      {/* Main Content */}
+      <div className="flex-1 flex p-4 pb-20">
+      <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
         {/* Lifelines - Premium WWTBAM Style */}
         {currentQuestion && !isAnswered && (
           <motion.div
@@ -1158,7 +1162,7 @@ export default function Game() {
     </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 

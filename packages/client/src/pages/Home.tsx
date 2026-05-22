@@ -142,7 +142,7 @@ export default function Home() {
       </div>
 
       {/* Footer Credit */}
-      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm">
+      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
         <span>Created by Himanshu Gupta</span>
         <a 
           href="https://www.linkedin.com/in/guptahim/" 
