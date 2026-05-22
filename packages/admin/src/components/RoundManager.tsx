@@ -255,6 +255,7 @@ export default function RoundManager({
       );
 
       if (response.data.success) {
+        // Update local state immediately for instant feedback
         const finalRounds = updatedRounds.map(r => 
           r.id === showAssignModal.id 
             ? { ...r, questionIds: selectedQuestionIds }
@@ -262,7 +263,16 @@ export default function RoundManager({
         );
         setRounds(finalRounds);
         onRoundsChanged(finalRounds);
+        
+        // Close modal
         setShowAssignModal(null);
+        
+        // Refresh from server in background to ensure data consistency
+        loadRounds().then(() => {
+          if (onQuestionsChanged) {
+            onQuestionsChanged();
+          }
+        });
       }
     } catch (error) {
       console.error('Failed to update round:', error);
