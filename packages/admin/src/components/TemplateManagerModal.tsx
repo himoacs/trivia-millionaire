@@ -15,6 +15,7 @@ interface TemplateManagerModalProps {
   onLoadTemplate: (templateId: string, replaceExisting: boolean) => Promise<void>;
   onSaveAsTemplate: (name: string, description: string) => Promise<void>;
   onDeleteTemplate: (templateId: string) => Promise<void>;
+  onConvertTemplate?: (templateId: string) => Promise<void>;
   fetchTemplates: () => Promise<Template[]>;
 }
 
@@ -24,6 +25,7 @@ export default function TemplateManagerModal({
   onLoadTemplate,
   onSaveAsTemplate,
   onDeleteTemplate,
+  onConvertTemplate,
   fetchTemplates
 }: TemplateManagerModalProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -111,6 +113,21 @@ export default function TemplateManagerModal({
       }
     } catch (err: any) {
       setError(err.message || 'Failed to delete template');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConvertTemplate = async (templateId: string) => {
+    if (!onConvertTemplate) return;
+    if (!confirm('Convert this template to use unassigned questions? Questions will no longer be pre-assigned to rounds.')) return;
+    setIsProcessing(true);
+    setError('');
+    try {
+      await onConvertTemplate(templateId);
+      setSuccess('Template converted! Questions are now unassigned.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to convert template');
     } finally {
       setIsProcessing(false);
     }
@@ -257,19 +274,36 @@ export default function TemplateManagerModal({
                           {formatDate(template.createdAt)}
                         </div>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTemplate(template.id);
-                        }}
-                        className="btn-icon-danger btn-icon-sm ml-2"
-                        title="Delete template"
-                        aria-label={`Delete template ${template.name}`}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-1 ml-2">
+                        {onConvertTemplate && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleConvertTemplate(template.id);
+                            }}
+                            className="btn-icon-warning btn-icon-sm"
+                            title="Convert to unassigned questions"
+                            aria-label={`Convert template ${template.name} to unassigned`}
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTemplate(template.id);
+                          }}
+                          className="btn-icon-danger btn-icon-sm"
+                          title="Delete template"
+                          aria-label={`Delete template ${template.name}`}
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

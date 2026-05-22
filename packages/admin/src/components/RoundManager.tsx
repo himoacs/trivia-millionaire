@@ -340,6 +340,13 @@ export default function RoundManager({
     }
   };
 
+  const handleConvertTemplate = async (templateId: string): Promise<void> => {
+    const response = await axios.put(`${API_URL}/api/admin/templates/${templateId}/convert-to-unassigned`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to convert template');
+    }
+  };
+
   // Handle AI question generation for a specific round
   const handleAIGenerate = async (topic: string, count: number, docs?: string): Promise<Question[]> => {
     const response = await axios.post(
@@ -1117,6 +1124,7 @@ export default function RoundManager({
             onLoadTemplate={handleLoadTemplate}
             onSaveAsTemplate={handleSaveAsTemplate}
             onDeleteTemplate={handleDeleteTemplate}
+            onConvertTemplate={handleConvertTemplate}
             fetchTemplates={fetchTemplates}
           />
         )}
