@@ -289,27 +289,6 @@ body::after {
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
     letter-spacing: 0.5px;
   }
-}
-
-/* Reduced motion support - respect user preference */
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none !important;
-  }
-  
-  .btn-answer,
-  .btn-answer.selected {
-    transition: none !important;
-    animation: none !important;
-  }
-  
-  /* Disable Framer Motion animations via CSS where possible */
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
 
   .btn-answer .answer-letter::before {
     content: '◆';
@@ -337,6 +316,26 @@ body::after {
 
   .score-card {
     @apply bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 rounded-3xl shadow-2xl p-8 border-2 border-orange-500;
+  }
+}
+
+/* Reduced motion support - respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none !important;
+  }
+  
+  .btn-answer,
+  .btn-answer.selected {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* Disable Framer Motion animations via CSS where possible */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
