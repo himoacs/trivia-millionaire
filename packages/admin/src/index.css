@@ -45,100 +45,100 @@ code {
 
 @layer components {
   /* ============================================
-     BUTTON SYSTEM
+     BUTTON SYSTEM - Clean & Professional
      Hierarchy: Primary > Secondary > Tertiary > Ghost
-     Special: Danger, Success, Icon-only
+     Special: Danger, Success, Warning
      ============================================ */
 
   /* Shared button base styles */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:brightness-100
-           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-millionaire-navy-dark;
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent;
   }
 
   /* Size variants */
   .btn-sm {
-    @apply py-1.5 px-3 text-sm;
+    @apply py-1.5 px-3 text-xs;
   }
   .btn-md {
-    @apply py-2.5 px-4 text-sm;
+    @apply py-2 px-4 text-sm;
   }
   .btn-lg {
-    @apply py-3 px-6 text-base;
+    @apply py-2.5 px-5 text-base;
   }
 
-  /* Primary: Gold gradient - main CTAs (Start Game, Create Session) */
+  /* Primary: Solid gold - main CTAs */
   .btn-primary {
-    @apply btn btn-lg bg-gradient-to-r from-millionaire-gold to-millionaire-orange 
-           hover:from-millionaire-gold-light hover:to-millionaire-gold 
-           text-white font-bold shadow-glow-gold
-           hover:scale-105 active:scale-95 focus:ring-millionaire-gold;
+    @apply btn btn-lg bg-millionaire-gold hover:bg-millionaire-gold-light
+           text-millionaire-navy font-semibold
+           focus:ring-millionaire-gold/50;
   }
 
-  /* Secondary: Blue gradient - important but not primary (Presenter View, Templates) */
+  /* Secondary: Outlined blue - important secondary actions */
   .btn-secondary {
-    @apply btn btn-md bg-gradient-to-r from-millionaire-blue to-millionaire-blue-dark 
-           hover:from-millionaire-blue-light hover:to-millionaire-blue 
-           text-white shadow-glow-blue focus:ring-millionaire-blue;
+    @apply btn btn-md bg-millionaire-blue/10 hover:bg-millionaire-blue/20
+           text-millionaire-blue border border-millionaire-blue/50 hover:border-millionaire-blue
+           focus:ring-millionaire-blue/30;
   }
 
-  /* Tertiary: Subtle background - navigation, less important actions */
+  /* Tertiary: Outlined gold - tertiary actions */
   .btn-tertiary {
-    @apply btn btn-md bg-millionaire-gold/20 hover:bg-millionaire-gold/30 
-           text-millionaire-gold border border-millionaire-gold/30 
-           hover:border-millionaire-gold/50 focus:ring-millionaire-gold/50;
+    @apply btn btn-md bg-transparent hover:bg-millionaire-gold/10
+           text-millionaire-gold border border-millionaire-gold/40 hover:border-millionaire-gold/60
+           focus:ring-millionaire-gold/30;
   }
 
   /* Ghost: Minimal - inline actions, toggles */
   .btn-ghost {
     @apply btn btn-md bg-transparent hover:bg-white/10 
-           text-gray-300 hover:text-white focus:ring-white/30;
+           text-gray-300 hover:text-white focus:ring-white/20;
   }
 
-  /* Success: Green gradient - positive actions (Start Round, Next Question) */
+  /* Success: Solid green - positive actions */
   .btn-success {
-    @apply btn btn-md bg-gradient-to-r from-green-600 to-green-700 
-           hover:from-green-500 hover:to-green-600 
-           text-white focus:ring-green-500;
+    @apply btn btn-md bg-green-600 hover:bg-green-500
+           text-white font-semibold
+           focus:ring-green-500/30;
   }
 
-  /* Danger: Red - destructive actions (Delete, End Game) */
+  /* Danger: Outlined red - destructive actions */
   .btn-danger {
-    @apply btn btn-md bg-red-600/20 hover:bg-red-600 
-           text-red-400 hover:text-white border border-red-500/30 
-           hover:border-red-500 focus:ring-red-500;
+    @apply btn btn-md bg-transparent hover:bg-red-500/10
+           text-red-400 border border-red-500/50 hover:border-red-400
+           focus:ring-red-500/30;
   }
   .btn-danger-solid {
-    @apply btn btn-md bg-red-600 hover:bg-red-500 
-           text-white focus:ring-red-500;
+    @apply btn btn-md bg-red-600 hover:bg-red-500
+           text-white font-semibold
+           focus:ring-red-500/30;
   }
 
-  /* Warning: Amber/Orange - import/export, caution actions */
+  /* Warning: Solid amber - caution actions */
   .btn-warning {
-    @apply btn btn-md bg-gradient-to-r from-amber-600 to-amber-700 
-           hover:from-amber-500 hover:to-amber-600 
-           text-white focus:ring-amber-500;
+    @apply btn btn-md bg-amber-600 hover:bg-amber-500
+           text-white font-semibold
+           focus:ring-amber-500/30;
   }
 
-  /* AI/Special: Purple gradient - AI features */
+  /* AI/Special: Outlined purple - AI features */
   .btn-ai {
-    @apply btn btn-md bg-gradient-to-r from-purple-600 to-purple-700 
-           hover:from-purple-500 hover:to-purple-600 
-           text-white focus:ring-purple-500;
+    @apply btn btn-md bg-purple-600/10 hover:bg-purple-600/20
+           text-purple-400 border border-purple-500/50 hover:border-purple-400
+           focus:ring-purple-500/30;
   }
 
   /* Icon-only button: For toggles, close buttons */
   .btn-icon {
-    @apply inline-flex items-center justify-center w-10 h-10 rounded-lg 
-           transition-all duration-200 focus:outline-none focus:ring-2 
-           focus:ring-offset-2 focus:ring-offset-millionaire-navy-dark;
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-lg 
+           transition-all duration-150 focus:outline-none focus:ring-2 
+           focus:ring-offset-2 focus:ring-offset-transparent;
   }
   .btn-icon-sm {
-    @apply w-8 h-8 text-sm;
+    @apply w-7 h-7 text-xs;
   }
   .btn-icon-lg {
-    @apply w-12 h-12 text-lg;
+    @apply w-11 h-11 text-base;
   }
 
   /* Icon button variants */
@@ -146,18 +146,18 @@ code {
     @apply btn-icon bg-transparent hover:bg-white/10 text-gray-400 hover:text-white;
   }
   .btn-icon-subtle {
-    @apply btn-icon bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 text-white;
+    @apply btn-icon bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white;
   }
   .btn-icon-danger {
-    @apply btn-icon bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white;
+    @apply btn-icon bg-transparent hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-transparent hover:border-red-500/30;
   }
   .btn-icon-success {
-    @apply btn-icon bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white;
+    @apply btn-icon bg-transparent hover:bg-green-500/20 text-green-400 hover:text-green-300 border border-transparent hover:border-green-500/30;
   }
 
   /* Active/Toggle state modifier */
   .btn-active {
-    @apply ring-2 ring-millionaire-gold bg-millionaire-gold/30;
+    @apply ring-2 ring-millionaire-gold bg-millionaire-gold/20;
   }
 
   /* ============================================
