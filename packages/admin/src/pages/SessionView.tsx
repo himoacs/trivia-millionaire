@@ -315,28 +315,26 @@ export default function SessionView() {
   const handleRevealCorrectAnswer = () => {
     setShowCorrectAnswer(true);
     
-    // Get current round's questions to find the correct answer
-    const currentRound = currentRoundIndex >= 0 ? rounds[currentRoundIndex] : null;
+    // currentQuestionIndex is a global index into the questions array
+    // Use it directly - server maintains this correctly
     let correctIndex = 0;
     
-    if (currentRound && currentQuestionIndex >= 0) {
-      // Get the question from the current round
-      const questionId = currentRound.questionIds[currentQuestionIndex];
-      const question = questions.find(q => q.id === questionId);
-      if (question) {
-        correctIndex = question.correctIndex;
-      }
-    } else if (currentQuestionIndex >= 0 && questions[currentQuestionIndex]) {
-      // Fallback for flat question list
-      correctIndex = questions[currentQuestionIndex].correctIndex;
+    if (currentQuestionIndex >= 0 && currentQuestionIndex < questions.length) {
+      const question = questions[currentQuestionIndex];
+      correctIndex = question.correctIndex;
+      
+      console.log('🎯 Revealing answer for question:', {
+        questionIndex: currentQuestionIndex,
+        questionText: question.text,
+        correctIndex,
+        correctAnswer: question.choices[correctIndex]
+      });
+    } else {
+      console.error('❌ Invalid currentQuestionIndex:', currentQuestionIndex, 'questions.length:', questions.length);
     }
     
     // Publish event to reveal correct answer to all players (including Presenter view)
     if (connected && sessionId) {
-      console.log('Publishing reveal answer:', {
-        questionIndex: currentQuestionIndex,
-        correctIndex
-      });
       publish(`trivia/session/${sessionId}/admin/revealAnswer`, {
         questionIndex: currentQuestionIndex,
         correctIndex
