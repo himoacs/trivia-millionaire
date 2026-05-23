@@ -158,7 +158,7 @@ export default function SunburstVisualization({
       })
       .on('click', (event, d) => {
         event.stopPropagation();
-        if (!d.data.isOthers && d.children && d.children.length > 0) {
+        if (!d.data.isOthers && d.children && d.children.length > 0 && d.data.uniqueTopics > 1) {
           onNodeClick?.(d.data.fullPath);
         }
       });

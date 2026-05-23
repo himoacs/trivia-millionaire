@@ -97,7 +97,7 @@ export function useSunburstData(options: UseSunburstDataOptions = {}): UseSunbur
     const payloadSize = JSON.stringify(message.payload).length;
     
     // Update tree (mutates in place for performance)
-    const updatedTree = addMessageToTopicTree(
+    addMessageToTopicTree(
       treeRef.current,
       message.topic,
       payloadSize,
@@ -108,8 +108,8 @@ export function useSunburstData(options: UseSunburstDataOptions = {}): UseSunbur
     messageCountRef.current++;
     messagesSinceLastCalcRef.current++;
     
-    // Update state (batch with RAF for performance)
-    setTopicTree({ ...updatedTree });
+    // Force re-render by creating new object reference
+    // Note: We don't deep-clone for performance; the refresh interval will pick up changes
   }, []);
   
   // Refresh D3 hierarchy periodically
@@ -250,6 +250,7 @@ export function useSunburstData(options: UseSunburstDataOptions = {}): UseSunbur
         unsubscribeRef.current();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSubscribe, connected]);
   
   return {

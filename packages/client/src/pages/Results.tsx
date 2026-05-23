@@ -156,10 +156,9 @@ export default function Results() {
       
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
-        <img src="/solace-logo.svg" alt="Solace" cla2 bg-gradient-to-r from-orange-400 to-amber-500 text-transparent bg-clip-text">
-                Trivia Millionaire
-              </h2>
-              <p className="text-xl text-gray-400 mb-2">Session: {sessionName}</p
+        <img src="/solace-logo.svg" alt="Solace" className="h-8" />
+      </div>
+      
       <div className="flex-1 p-4 md:p-6 flex flex-col items-center">
       {/* Hidden Scorecard for Download */}
       <div className="fixed -left-[9999px] -top-[9999px]">
@@ -182,7 +181,7 @@ export default function Results() {
                 {formatMoney(myTotalMoney)}
               </div>
               <div className="flex space-x-16 text-center">
-                <div> px-12
+                <div>
                   <div className="text-5xl font-black text-white">#{myRank}</div>
                   <div className="text-xl text-orange-400 font-bold mt-1">Rank</div>
                 </div>
