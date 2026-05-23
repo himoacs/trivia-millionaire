@@ -839,7 +839,7 @@ export default function Game() {
               <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             </div>
           </div>
-        </motion.div>
+        </div>
         
         {/* Footer Credit Banner */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
@@ -1269,6 +1269,7 @@ export default function Game() {
           />
         </div>
       )}
+      </div>
       
       {/* Footer Credit Banner */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
