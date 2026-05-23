@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { PRESET_SUBSCRIPTIONS, SolaceMessage, getMessageTypeFromTopic, replaceTopicPlaceholder, SUNBURST_COLORS } from '@trivia-millionaire/shared';
+import { PRESET_SUBSCRIPTIONS, SolaceMessage, getMessageTypeFromTopic, replaceTopicPlaceholder } from '@trivia-millionaire/shared';
 import { useSolace } from '../hooks/useSolace';
 import { useSunburstData } from '../hooks/useSunburstData';
 import SunburstVisualization from './SunburstVisualization';

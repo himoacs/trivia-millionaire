@@ -195,8 +195,6 @@ export function useSunburstData(options: UseSunburstDataOptions = {}): UseSunbur
   
   // Clear data
   const clear = useCallback(() => {
-    const wasScanning = isScanning;
-    
     // Stop scanning
     stopScanning();
     

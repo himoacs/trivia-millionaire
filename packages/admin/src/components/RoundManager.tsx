@@ -607,11 +607,21 @@ export default function RoundManager({
                             <span className="px-2 py-1 bg-millionaire-dark rounded text-xs text-gray-400">
                               {round.questionIds.length} questions
                             </span>
-                            {isActive && (
-                              <span className="px-2 py-1 bg-green-600 rounded text-xs text-white font-semibold">
-                                IN PROGRESS
-                              </span>
-                            )}
+                            {isActive && (() => {
+                              // Calculate current question for progress indicator
+                              const globalCurrentQ = gameState?.currentQuestionIndex ?? -1;
+                              const currentQuestionId = globalCurrentQ >= 0 ? questions[globalCurrentQ]?.id : null;
+                              const currentQIndexInRound = currentQuestionId ? round.questionIds.indexOf(currentQuestionId) : -1;
+                              const progressText = currentQIndexInRound >= 0 
+                                ? `Q${currentQIndexInRound + 1}/${round.questionIds.length}` 
+                                : 'Starting...';
+                              
+                              return (
+                                <span className="px-2 py-1 bg-green-600 rounded text-xs text-white font-semibold">
+                                  ▶ {progressText}
+                                </span>
+                              );
+                            })()}
                             {isCompleted && (
                               <span className="px-2 py-1 bg-gray-600 rounded text-xs text-white">
                                 COMPLETED
@@ -864,10 +874,10 @@ export default function RoundManager({
                                           {isAnswered && (
                                             <span className="px-2 py-0.5 bg-gray-500 text-white text-xs rounded">
                                               ✓ Done
-                                            </span>
-                                          )}
-                                          <p className="text-white text-sm flex-1 truncate">{q.text}</p>
-                                          {/* Skip to Question Button */}
+                                            </span> whitespace-nowrap"
+                                              title={`Skip to question ${qIndex + 1}`}
+                                            >
+                                              ⏭️estion Button */}
                                           {isActive && gameHandlers?.onJumpToQuestion && !isCurrentQuestion && (
                                             <button
                                               onClick={(e) => {

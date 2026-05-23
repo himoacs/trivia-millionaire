@@ -120,7 +120,7 @@ export default function SunburstVisualization({
       .attr('transform', `translate(${width / 2}, ${height / 2})`);
     
     // Add arcs
-    const arcs = g.selectAll('path')
+    g.selectAll('path')
       .data(partitioned.descendants().filter(d => d.depth > 0))
       .enter()
       .append('path')

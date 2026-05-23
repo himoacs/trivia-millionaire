@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useSunburstData } from '../hooks/useSunburstData';
 import SunburstVisualization from './SunburstVisualization';
-import { SUNBURST_COLORS, formatBytes } from '@trivia-millionaire/shared';
+import { SUNBURST_COLORS } from '@trivia-millionaire/shared';
 
 interface SolaceSunburstPanelProps {
   sessionId: string;
