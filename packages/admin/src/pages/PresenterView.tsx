@@ -471,7 +471,7 @@ export default function PresenterView() {
             animate={{ x: 0 }}
             exit={{ x: 500 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
           >
             <SolaceDebugPanel
               sessionId={sessionId}
@@ -587,7 +587,7 @@ export default function PresenterView() {
             animate={{ x: 0 }}
             exit={{ x: 500 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
           >
             <SolaceDebugPanel
               sessionId={sessionId}
@@ -702,7 +702,7 @@ export default function PresenterView() {
             animate={{ x: 0 }}
             exit={{ x: 500 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
           >
             <SolaceDebugPanel
               sessionId={sessionId}
@@ -905,7 +905,7 @@ export default function PresenterView() {
                 animate={{ x: 0 }}
                 exit={{ x: 500 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+                className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
               >
                 <SolaceDebugPanel
                   sessionId={sessionId}
@@ -1119,7 +1119,7 @@ export default function PresenterView() {
             animate={{ x: 0 }}
             exit={{ x: 500 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
           >
             <SolaceDebugPanel
               sessionId={sessionId}
@@ -1401,7 +1401,7 @@ export default function PresenterView() {
           animate={{ x: 0 }}
           exit={{ x: 500 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
         >
           <SolaceDebugPanel
             sessionId={sessionId}
