@@ -372,12 +372,21 @@ export default function PresenterView() {
           {isFullscreen ? '⊠' : '⛶'}
         </button>
 
-        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+        {/* Flex Container for Main Content + Sliding Debug Panel */}
+        <div className="flex flex-1 overflow-hidden">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center max-w-4xl w-full"
+            animate={{ 
+              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex flex-col overflow-hidden"
           >
+            <div className="flex-1 p-6 flex flex-col items-center justify-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center max-w-4xl w-full"
+              >
             {/* Break header */}
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
@@ -452,18 +461,26 @@ export default function PresenterView() {
             </motion.p>
           </motion.div>
         </div>
+      </motion.div>
 
-        {/* Solace Debug Panel - Fixed Overlay */}
-        <AnimatePresence>
-          {showDebugPanel && sessionId && (
-            <div className="fixed top-0 right-0 h-screen z-50">
-              <SolaceDebugPanel
-                sessionId={sessionId}
-                onClose={() => setShowDebugPanel(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+      {/* Sliding Debug Panel */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <motion.div
+            initial={{ x: 500 }}
+            animate={{ x: 0 }}
+            exit={{ x: 500 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          >
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
       </div>
     );
   }
@@ -502,25 +519,34 @@ export default function PresenterView() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-          {/* Fullscreen button */}
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors"
+        {/* Flex Container for Main Content + Sliding Debug Panel */}
+        <div className="flex flex-1 overflow-hidden">
+          <motion.div
+            animate={{ 
+              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex flex-col overflow-hidden"
           >
-            {isFullscreen ? '⊠' : '⛶'}
-          </button>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+              {/* Fullscreen button */}
+              <button
+                onClick={toggleFullscreen}
+                className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors"
+              >
+                {isFullscreen ? '⊠' : '⛶'}
+              </button>
 
-          {/* QR Code toggle button */}
-          <button
-            onClick={() => setShowQROverlay(!showQROverlay)}
-            className={`absolute top-4 right-16 p-2 rounded-lg text-white transition-colors ${
-              showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'
-            }`}
-            title={showQROverlay ? 'Hide QR Code' : 'Show QR Code for late joiners'}
-          >
-            📱
-          </button>
+              {/* QR Code toggle button */}
+              <button
+                onClick={() => setShowQROverlay(!showQROverlay)}
+                className={`absolute top-4 right-16 p-2 rounded-lg text-white transition-colors ${
+                  showQROverlay ? 'bg-orange-600 hover:bg-orange-500' : 'bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50'
+                }`}
+                title={showQROverlay ? 'Hide QR Code' : 'Show QR Code for late joiners'}
+              >
+                📱
+              </button>
 
           <div className="max-w-5xl w-full">
             <AnswerDistributionChart
@@ -551,18 +577,26 @@ export default function PresenterView() {
             )}
           </AnimatePresence>
         </div>
+      </motion.div>
 
-        {/* Solace Debug Panel - Fixed Overlay */}
-        <AnimatePresence>
-          {showDebugPanel && sessionId && (
-            <div className="fixed top-0 right-0 h-screen z-50">
-              <SolaceDebugPanel
-                sessionId={sessionId}
-                onClose={() => setShowDebugPanel(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+      {/* Sliding Debug Panel */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <motion.div
+            initial={{ x: 500 }}
+            animate={{ x: 0 }}
+            exit={{ x: 500 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          >
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
       </div>
     );
   }
@@ -598,13 +632,22 @@ export default function PresenterView() {
           {isFullscreen ? '⊠' : '⛶'}
         </button>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+        {/* Flex Container for Main Content + Sliding Debug Panel */}
+        <div className="flex flex-1 overflow-hidden">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center max-w-4xl w-full"
+            animate={{ 
+              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex flex-col overflow-hidden"
           >
-            {/* Round Starting Header */}
+            <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center max-w-4xl w-full"
+              >
+                {/* Round Starting Header */}
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -649,18 +692,26 @@ export default function PresenterView() {
             </motion.p>
           </motion.div>
         </div>
+      </motion.div>
 
-        {/* Solace Debug Panel */}
-        <AnimatePresence>
-          {showDebugPanel && sessionId && (
-            <div className="fixed top-0 right-0 h-screen z-50">
-              <SolaceDebugPanel
-                sessionId={sessionId}
-                onClose={() => setShowDebugPanel(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+      {/* Sliding Debug Panel */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <motion.div
+            initial={{ x: 500 }}
+            animate={{ x: 0 }}
+            exit={{ x: 500 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          >
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
       </div>
     );
   }
@@ -692,108 +743,178 @@ export default function PresenterView() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-          {/* Background decorative elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-          </div>
-
-          {/* Fullscreen button */}
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
-          >
-            {isFullscreen ? '⊠' : '⛶'}
-          </button>
-
-        {/* Main content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 flex flex-col items-center text-center"
-        >
-          {/* Title with Solace branding */}
-          <div className="mb-8">
-            <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text mb-4"
-                style={{ 
-                  filter: 'drop-shadow(0 0 30px rgba(255,149,0,0.5))',
-                  WebkitTextStroke: '1px rgba(255,149,0,0.2)'
-                }}>
-              💎 TRIVIA MILLIONAIRE
-            </h1>
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-gray-400 text-lg">powered by</span>
-              <img src="/solace-logo.svg" alt="Solace" className="h-8 opacity-90" />
-            </div>
-          </div>
-
-          {/* QR Code */}
+        {/* Flex Container for Main Content + Sliding Debug Panel */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main Content Area - Slides left when debug panel opens */}
           <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white p-6 rounded-2xl shadow-2xl shadow-orange-500/20 mb-6"
+            animate={{ 
+              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex flex-col overflow-hidden"
           >
-            <QRCodeSVG value={joinUrl} size={320} />
-          </motion.div>
-
-          {/* Session Code */}
-          <div className="mb-8">
-            <p className="text-xl text-gray-300 mb-2">Scan the QR code or visit</p>
-            <p className="text-xl md:text-2xl font-mono text-orange-400 mb-4 break-all">{CLIENT_URL}</p>
-            <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-4 rounded-xl">
-              <p className="text-lg font-semibold mb-1">Session Code</p>
-              <p className="text-4xl font-black tracking-widest">{sessionCode}</p>
-            </div>
-          </div>
-
-          {/* Player Count */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-millionaire-navy/50 border-2 border-millionaire-blue/50 rounded-2xl px-12 py-6"
-          >
-            <motion.div
-              key={players.length}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              className="flex items-center justify-center gap-4"
-            >
-              <span className="text-5xl">👥</span>
-              <div>
-                <p className="text-6xl font-black text-white">{players.length}</p>
-                <p className="text-xl text-purple-300">
-                  {players.length === 1 ? 'Player' : 'Players'} Joined
-                </p>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+              {/* Background decorative elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
               </div>
-            </motion.div>
+
+              {/* Fullscreen button */}
+              <button
+                onClick={toggleFullscreen}
+                className="absolute top-4 right-4 p-2 bg-millionaire-navy/50 hover:bg-millionaire-navy-light/50 rounded-lg text-white transition-colors z-10"
+              >
+                {isFullscreen ? '⊠' : '⛶'}
+              </button>
+
+              {/* Three-Column Layout */}
+              <div className="relative z-10 w-full max-w-7xl mx-auto">
+                {/* Title with Solace branding */}
+                <div className="mb-8 text-center">
+                  <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text mb-4"
+                      style={{ 
+                        filter: 'drop-shadow(0 0 30px rgba(255,149,0,0.5))',
+                        WebkitTextStroke: '1px rgba(255,149,0,0.2)'
+                      }}>
+                    💎 TRIVIA MILLIONAIRE
+                  </h1>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-gray-400 text-lg">powered by</span>
+                    <img src="/solace-logo.svg" alt="Solace" className="h-8 opacity-90" />
+                  </div>
+                </div>
+
+                {/* Three Columns Grid */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="grid grid-cols-3 gap-8"
+                >
+                  {/* Column 1: QR Code + Session Info */}
+                  <div className="flex flex-col items-center">
+                    {/* QR Code */}
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-white p-4 rounded-2xl shadow-2xl shadow-orange-500/20 mb-4"
+                    >
+                      <QRCodeSVG value={joinUrl} size={240} />
+                    </motion.div>
+
+                    {/* Session Code */}
+                    <div className="w-full text-center">
+                      <p className="text-sm text-gray-300 mb-2">Scan QR or visit</p>
+                      <p className="text-md font-mono text-orange-400 mb-3 break-all px-2">{CLIENT_URL}</p>
+                      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl">
+                        <p className="text-sm font-semibold mb-1">Session Code</p>
+                        <p className="text-3xl font-black tracking-widest">{sessionCode}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2: How to Play Instructions */}
+                  <div className="flex flex-col">
+                    <div className="bg-gradient-to-br from-millionaire-blue/20 to-millionaire-navy/20 rounded-xl p-6 border border-millionaire-blue/40 backdrop-blur-sm h-full">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-3xl">📋</span>
+                        <h3 className="text-2xl font-bold text-orange-400">How to Play</h3>
+                      </div>
+                      <ul className="text-left text-base text-gray-300 space-y-3">
+                        <li className="flex items-start gap-2">
+                          <span className="text-orange-400 font-bold text-xl mt-0.5">1.</span>
+                          <span>Answer trivia questions correctly to climb the money ladder</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-orange-400 font-bold text-xl mt-0.5">2.</span>
+                          <span>You have limited time to submit your answer - choose wisely!</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-orange-400 font-bold text-xl mt-0.5">3.</span>
+                          <span>Each correct answer increases your winnings</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-orange-400 font-bold text-xl mt-0.5">4.</span>
+                          <span>Compete with other players for the top spot on the leaderboard</span>
+                        </li>
+                      </ul>
+                      <div className="mt-6 pt-4 border-t border-millionaire-blue/30 text-center">
+                        <p className="text-sm text-orange-300 font-semibold">🎯 Good luck, and may the best trivia master win!</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Player List */}
+                  <div className="flex flex-col">
+                    <div className="bg-millionaire-navy/50 border-2 border-millionaire-blue/50 rounded-2xl p-6 h-full flex flex-col">
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-3xl">👥</span>
+                        <div>
+                          <p className="text-4xl font-black text-white">{players.length}</p>
+                          <p className="text-lg text-purple-300">
+                            {players.length === 1 ? 'Player' : 'Players'} Joined
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Player List */}
+                      <div className="flex-1 overflow-y-auto space-y-2 max-h-[400px]">
+                        <AnimatePresence>
+                          {players.length === 0 ? (
+                            <p className="text-gray-400 text-center py-4">Waiting for players to join...</p>
+                          ) : (
+                            players.map((player, index) => (
+                              <motion.div
+                                key={player.id}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="flex items-center gap-3 bg-millionaire-navy-dark/50 rounded-lg p-3 border border-millionaire-blue/30"
+                              >
+                                <span className="text-2xl">{getAvatarEmoji(player.avatar)}</span>
+                                <span className="text-white font-medium">{player.nickname}</span>
+                              </motion.div>
+                            ))
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Waiting message */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="mt-6 text-xl text-gray-400 text-center"
+                >
+                  Waiting for the game to start...
+                </motion.p>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Waiting message */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="mt-8 text-xl text-gray-400"
-          >
-            Waiting for the game to start...
-          </motion.p>
-        </motion.div>
+          {/* Sliding Debug Panel */}
+          <AnimatePresence>
+            {showDebugPanel && sessionId && (
+              <motion.div
+                initial={{ x: 500 }}
+                animate={{ x: 0 }}
+                exit={{ x: 500 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+              >
+                <SolaceDebugPanel
+                  sessionId={sessionId}
+                  onClose={() => setShowDebugPanel(false)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Solace Debug Panel - Fixed Overlay */}
-        <AnimatePresence>
-          {showDebugPanel && sessionId && (
-            <div className="fixed top-0 right-0 h-screen z-50">
-              <SolaceDebugPanel
-                sessionId={sessionId}
-                onClose={() => setShowDebugPanel(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
       </div>
     );
   }
@@ -833,8 +954,17 @@ export default function PresenterView() {
           {isFullscreen ? '⊠' : '⛶'}
         </button>
 
-        <div className="flex-1 p-6 flex flex-col items-center">
+        {/* Flex Container for Main Content + Sliding Debug Panel */}
+        <div className="flex flex-1 overflow-hidden">
           <motion.div
+            animate={{ 
+              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex flex-col overflow-auto"
+          >
+            <div className="flex-1 p-6 flex flex-col items-center">
+              <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="max-w-4xl w-full"
@@ -979,18 +1109,26 @@ export default function PresenterView() {
             </div>
           </motion.div>
         </div>
+      </motion.div>
 
-        {/* Solace Debug Panel - Fixed Overlay */}
-        <AnimatePresence>
-          {showDebugPanel && sessionId && (
-            <div className="fixed top-0 right-0 h-screen z-50">
-              <SolaceDebugPanel
-                sessionId={sessionId}
-                onClose={() => setShowDebugPanel(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
+      {/* Sliding Debug Panel */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <motion.div
+            initial={{ x: 500 }}
+            animate={{ x: 0 }}
+            exit={{ x: 500 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          >
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
       </div>
     );
   }
@@ -1058,8 +1196,17 @@ export default function PresenterView() {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
-      <div className="flex-1 flex p-4">
+      {/* Flex Container for Main Content + Sliding Debug Panel */}
+      <div className="flex flex-1 overflow-hidden">
+        <motion.div
+          animate={{ 
+            width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+          }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="flex flex-col overflow-hidden"
+        >
+          {/* Main Content */}
+          <div className="flex-1 flex p-4">
         <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
           {/* Header - Timer & Stats */}
           <motion.div
@@ -1244,18 +1391,26 @@ export default function PresenterView() {
           </div>
         )}
       </div>
+    </motion.div>
 
-      {/* Solace Debug Panel - Fixed Overlay */}
-      <AnimatePresence>
-        {showDebugPanel && sessionId && (
-          <div className="fixed top-0 right-0 h-screen z-50">
-            <SolaceDebugPanel
-              sessionId={sessionId}
-              onClose={() => setShowDebugPanel(false)}
-            />
-          </div>
-        )}
-      </AnimatePresence>
+    {/* Sliding Debug Panel */}
+    <AnimatePresence>
+      {showDebugPanel && sessionId && (
+        <motion.div
+          initial={{ x: 500 }}
+          animate={{ x: 0 }}
+          exit={{ x: 500 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="w-[500px] flex-shrink-0 h-full border-l border-millionaire-gold/30"
+        >
+          <SolaceDebugPanel
+            sessionId={sessionId}
+            onClose={() => setShowDebugPanel(false)}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
 
       {/* Footer Credit Banner */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-millionaire-navy-dark/95 backdrop-blur-sm border-t border-millionaire-gold/30">
