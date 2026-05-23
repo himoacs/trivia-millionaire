@@ -128,6 +128,19 @@ code {
            focus:ring-purple-500/30;
   }
 
+  /* Solace: Teal/cyan - Solace messaging features */
+  .btn-solace {
+    @apply btn btn-md bg-[#2DD4BF]/20 hover:bg-[#2DD4BF]/30
+           text-[#2DD4BF] border border-[#2DD4BF]/70 hover:border-[#2DD4BF]
+           focus:ring-[#2DD4BF]/30;
+  }
+
+  .btn-solace-active {
+    @apply btn btn-md bg-[#2DD4BF]/40 hover:bg-[#2DD4BF]/50
+           text-white border border-[#2DD4BF] hover:border-[#2DD4BF]
+           focus:ring-[#2DD4BF]/30;
+  }
+
   /* Icon-only button: For toggles, close buttons */
   .btn-icon {
     @apply inline-flex items-center justify-center w-9 h-9 rounded-lg 
@@ -174,7 +187,7 @@ code {
 
   /* Button group for related actions */
   .btn-group {
-    @apply inline-flex items-center gap-1 p-1 bg-millionaire-navy-dark/50 rounded-lg;
+    @apply inline-flex items-center gap-3 p-1 bg-millionaire-navy-dark/50 rounded-lg;
   }
 
   /* Divider for button groups */

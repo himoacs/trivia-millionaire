@@ -485,7 +485,7 @@ export default function SessionView() {
               </button>
               <button
                 onClick={() => setShowDebugPanel(!showDebugPanel)}
-                className={`btn-sm ${showDebugPanel ? 'btn-warning' : 'btn-ghost'}`}
+                className={`btn-sm ${showDebugPanel ? 'btn-solace-active' : 'btn-solace'}`}
                 title="Toggle Solace message debug panel"
                 aria-label="Toggle Solace debug panel"
               >
