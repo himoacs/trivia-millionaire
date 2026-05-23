@@ -874,20 +874,20 @@ export default function RoundManager({
                                           {isAnswered && (
                                             <span className="px-2 py-0.5 bg-gray-500 text-white text-xs rounded">
                                               ✓ Done
-                                            </span> whitespace-nowrap"
-                                              title={`Skip to question ${qIndex + 1}`}
-                                            >
-                                              ⏭️estion Button */}
+                                            </span>
+                                          )}
+                                          <p className="text-white text-sm flex-1 truncate">{q.text}</p>
+                                          {/* Skip to Question Button */}
                                           {isActive && gameHandlers?.onJumpToQuestion && !isCurrentQuestion && (
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 gameHandlers.onJumpToQuestion!(qIndex);
                                               }}
-                                              className="btn-ghost btn-sm text-xs px-2 py-1"
-                                              title={`Skip to this question`}
+                                              className="btn-ghost btn-sm text-xs px-2 py-1 whitespace-nowrap"
+                                              title={`Skip to question ${qIndex + 1}`}
                                             >
-                                              ⏭️ Skip to Q{qIndex + 1}
+                                              ⏭️ Q{qIndex + 1}
                                             </button>
                                           )}
                                           <div className="flex items-center gap-2 text-xs text-gray-500">
