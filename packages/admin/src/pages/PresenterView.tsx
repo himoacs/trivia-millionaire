@@ -341,9 +341,11 @@ export default function PresenterView() {
     }
   };
 
-  // Render break screen between rounds
-  if (isOnBreak && sessionState === 'PAUSED') {
-    return (
+  // Helper function to render main content based on current game state
+  const renderMainContent = () => {
+    // Render break screen between rounds
+    if (isOnBreak && sessionState === 'PAUSED') {
+      return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-auto">
         {/* Top Banner */}
         <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
@@ -372,21 +374,13 @@ export default function PresenterView() {
           {isFullscreen ? '⊠' : '⛶'}
         </button>
 
-        {/* Flex Container for Main Content + Sliding Debug Panel */}
-        <div className="flex flex-1 overflow-hidden">
+        {/* Break screen content */}
+        <div className="flex-1 p-6 flex flex-col items-center justify-center overflow-auto">
           <motion.div
-            animate={{ 
-              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
-            }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="flex flex-col overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-4xl w-full"
           >
-            <div className="flex-1 p-6 flex flex-col items-center justify-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center max-w-4xl w-full"
-              >
             {/* Break header */}
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
@@ -461,32 +455,12 @@ export default function PresenterView() {
             </motion.p>
           </motion.div>
         </div>
-      </motion.div>
-
-      {/* Sliding Debug Panel */}
-      <AnimatePresence>
-        {showDebugPanel && sessionId && (
-          <motion.div
-            initial={{ x: 500 }}
-            animate={{ x: 0 }}
-            exit={{ x: 500 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-          >
-            <SolaceDebugPanel
-              sessionId={sessionId}
-              onClose={() => setShowDebugPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
       </div>
-    );
-  }
+      );
+    }
 
-  // Render distribution view
-  if (showDistribution && currentQuestion) {
+    // Render distribution view
+    if (showDistribution && currentQuestion) {
     const totalAnswers = Object.values(answerDistribution).reduce((a, b) => a + b, 0);
     const stats = [0, 1, 2, 3].map((choiceIndex) => ({
       choiceIndex,
@@ -598,12 +572,12 @@ export default function PresenterView() {
       </AnimatePresence>
     </div>
       </div>
-    );
-  }
+      );
+    }
 
-  // Render "Round Starting" view when round is active but no question yet
-  if (sessionState === 'ACTIVE' && !currentQuestion && currentRound) {
-    return (
+    // Render "Round Starting" view when round is active but no question yet
+    if (sessionState === 'ACTIVE' && !currentQuestion && currentRound) {
+      return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">
         {/* Top Banner */}
         <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
@@ -713,12 +687,12 @@ export default function PresenterView() {
       </AnimatePresence>
     </div>
       </div>
-    );
-  }
+      );
+    }
 
-  // Render lobby view with QR code (only when truly in LOBBY state, not when CLOSED)
-  if ((sessionState === 'LOBBY' || !currentQuestion) && sessionState !== 'CLOSED') {
-    return (
+    // Render lobby view with QR code (only when truly in LOBBY state, not when CLOSED)
+    if ((sessionState === 'LOBBY' || !currentQuestion) && sessionState !== 'CLOSED') {
+      return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-hidden">
         {/* Top Banner */}
         <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
@@ -916,12 +890,12 @@ export default function PresenterView() {
           </AnimatePresence>
         </div>
       </div>
-    );
-  }
+      );
+    }
 
-  // Render game ended view with leaderboard
-  if (sessionState === 'CLOSED') {
-    return (
+    // Render game ended view with leaderboard
+    if (sessionState === 'CLOSED') {
+      return (
       <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative overflow-auto">
         {/* Top Banner */}
         <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0 z-20">
@@ -1130,11 +1104,11 @@ export default function PresenterView() {
       </AnimatePresence>
     </div>
       </div>
-    );
-  }
+      );
+    }
 
-  // Render question view
-  return (
+    // Render question view (default)
+    return (
     <div className="min-h-screen bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy to-millionaire-navy-dark flex flex-col relative">
       {/* Top Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-2 flex-shrink-0">
@@ -1428,6 +1402,35 @@ export default function PresenterView() {
           </a>
         </div>
       </div>
+    </div>
+    );
+  };
+
+  // Single persistent return that keeps the debug panel mounted across all state changes
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Main content area - changes based on game state */}
+      <div className="flex-1 overflow-hidden">
+        {renderMainContent()}
+      </div>
+
+      {/* Debug panel - always mounted at this level, just shown/hidden */}
+      <AnimatePresence>
+        {showDebugPanel && sessionId && (
+          <motion.div
+            initial={{ x: 500 }}
+            animate={{ x: 0 }}
+            exit={{ x: 500 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
+          >
+            <SolaceDebugPanel
+              sessionId={sessionId}
+              onClose={() => setShowDebugPanel(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
