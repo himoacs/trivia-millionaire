@@ -7,6 +7,7 @@ import type { Player, Question, Answer, Round } from '@trivia-millionaire/shared
 import { getAvatarEmoji } from '@trivia-millionaire/shared';
 import SolaceDebugPanel from '../components/SolaceDebugPanel';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
+import LandscapePrompt from '../components/LandscapePrompt';
 import ManualQuestionModal from '../components/ManualQuestionModal';
 import AIGenerateModal from '../components/AIGenerateModal';
 import AdminSettingsModal from '../components/AdminSettingsModal';
@@ -440,6 +441,9 @@ export default function SessionView() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Landscape Prompt for Mobile */}
+      <LandscapePrompt />
+      
       {/* Top Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-navy-dark via-millionaire-dark to-millionaire-navy-dark border-b border-millionaire-gold/30 px-4 md:px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between gap-2">

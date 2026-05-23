@@ -28,6 +28,7 @@ export default function Results() {
   const [myTotalAnswers, setMyTotalAnswers] = useState(0);
   const [myTotalMoney, setMyTotalMoney] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
+  const [sessionName, setSessionName] = useState('');
   const scoreCardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -40,11 +41,24 @@ export default function Results() {
   const { play: playSound } = useSound();
 
   useEffect(() => {
+    fetchSessionName();
     fetchLeaderboard();
     
     // Play leaderboard reveal sound
     playSound('leaderboard');
   }, [sessionId]);
+
+  const fetchSessionName = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/session/${sessionId}`);
+      if (response.data.success) {
+        setSessionName(response.data.data.name || 'Trivia Game');
+      }
+    } catch (error) {
+      console.error('Failed to fetch session name:', error);
+      setSessionName('Trivia Game');
+    }
+  };
 
   const fetchLeaderboard = async () => {
     try {
@@ -142,9 +156,10 @@ export default function Results() {
       
       {/* Solace Logo Banner */}
       <div className="w-full bg-gradient-to-r from-millionaire-navy-dark/80 via-millionaire-navy/80 to-millionaire-navy-dark/80 border-b border-orange-500/30 px-6 py-3 flex-shrink-0">
-        <img src="/solace-logo.svg" alt="Solace" className="h-6 md:h-8 opacity-80 hover:opacity-100 transition-opacity" />
-      </div>
-
+        <img src="/solace-logo.svg" alt="Solace" cla2 bg-gradient-to-r from-orange-400 to-amber-500 text-transparent bg-clip-text">
+                Trivia Millionaire
+              </h2>
+              <p className="text-xl text-gray-400 mb-2">Session: {sessionName}</p
       <div className="flex-1 p-4 md:p-6 flex flex-col items-center">
       {/* Hidden Scorecard for Download */}
       <div className="fixed -left-[9999px] -top-[9999px]">
@@ -167,7 +182,7 @@ export default function Results() {
                 {formatMoney(myTotalMoney)}
               </div>
               <div className="flex space-x-16 text-center">
-                <div>
+                <div> px-12
                   <div className="text-5xl font-black text-white">#{myRank}</div>
                   <div className="text-xl text-orange-400 font-bold mt-1">Rank</div>
                 </div>

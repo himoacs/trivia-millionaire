@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import SolaceStatusIndicator from '../components/SolaceStatusIndicator';
+import LandscapePrompt from '../components/LandscapePrompt';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -139,6 +140,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen relative">
+      {/* Landscape Prompt for Mobile */}
+      <LandscapePrompt />
+      
       {/* Top Banner */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 via-black/50 to-transparent backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 py-4">
