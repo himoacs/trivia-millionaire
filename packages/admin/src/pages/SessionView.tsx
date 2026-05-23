@@ -503,7 +503,7 @@ export default function SessionView() {
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Main Content */}
-        <div className={`flex-1 p-6 transition-all duration-300`}>
+        <div className={`flex-1 p-3 md:p-6 transition-all duration-300`}>
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <motion.div
@@ -511,13 +511,13 @@ export default function SessionView() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">{sessionName}</h1>
-                <p className="text-millionaire-gold drop-shadow-lg">Session Code: <span className="font-mono text-3xl">{sessionCode}</span></p>
+                <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">{sessionName}</h1>
+                <p className="text-millionaire-gold drop-shadow-lg text-sm md:text-base">Session Code: <span className="font-mono text-xl md:text-3xl">{sessionCode}</span></p>
               </div>
-              <div className="flex flex-col items-end space-y-2">
-                <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+              <div className="flex flex-col md:items-end space-y-2">
+                <span className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold ${
                   sessionState === 'LOBBY' ? 'bg-blue-500 text-white' :
                   sessionState === 'ACTIVE' ? 'bg-green-500 text-white' :
                   sessionState === 'PAUSED' ? 'bg-yellow-500 text-white' :
@@ -529,12 +529,12 @@ export default function SessionView() {
                    '🏁 Closed'}
                 </span>
                 {currentQuestionIndex >= 0 && (
-                  <span className="text-millionaire-gold font-semibold drop-shadow-lg">
+                  <span className="text-millionaire-gold font-semibold drop-shadow-lg text-xs md:text-base">
                     Question {currentQuestionIndex + 1} of {questions.length}
                   </span>
                 )}
                 {currentRoundIndex >= 0 && rounds[currentRoundIndex] && (
-                  <span className="text-purple-400 font-semibold drop-shadow-lg">
+                  <span className="text-purple-400 font-semibold drop-shadow-lg text-xs md:text-base">
                     {rounds[currentRoundIndex].name} (Round {currentRoundIndex + 1}/{rounds.length})
                   </span>
                 )}
@@ -553,11 +553,11 @@ export default function SessionView() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="card text-center"
               >
-                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                <h2 className="text-lg md:text-xl font-bold text-white mb-4 drop-shadow-lg">
                   Scan to Join
                 </h2>
-                <div className="bg-millionaire-dark p-4 rounded-lg inline-block border-2 border-millionaire-gold">
-                  <QRCodeSVG value={joinUrl} size={160} />
+                <div className="bg-millionaire-dark p-3 md:p-4 rounded-lg inline-block border-2 border-millionaire-gold">
+                  <QRCodeSVG value={joinUrl} size={window.innerWidth < 768 ? 140 : 160} />
                 </div>
                 <p className="mt-4 text-sm text-gray-400">
                   Or visit: <br />
@@ -572,10 +572,10 @@ export default function SessionView() {
                 transition={{ delay: 0.1 }}
                 className="card"
               >
-                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                <h2 className="text-lg md:text-xl font-bold text-white mb-4 drop-shadow-lg">
                   Players ({players.length})
                 </h2>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
+                <div className="space-y-2 max-h-60 md:max-h-80 overflow-y-auto">
                   <AnimatePresence>
                     {players.map((player) => (
                       <motion.div
@@ -652,11 +652,11 @@ export default function SessionView() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="card text-center"
               >
-                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                <h2 className="text-lg md:text-xl font-bold text-white mb-4 drop-shadow-lg">
                   Scan to Join
                 </h2>
-                <div className="bg-millionaire-dark p-4 rounded-lg inline-block border-2 border-millionaire-gold">
-                  <QRCodeSVG value={joinUrl} size={160} />
+                <div className="bg-millionaire-dark p-3 md:p-4 rounded-lg inline-block border-2 border-millionaire-gold">
+                  <QRCodeSVG value={joinUrl} size={window.innerWidth < 768 ? 140 : 160} />
                 </div>
                 <p className="mt-4 text-sm text-gray-400">
                   Or visit: <br />
@@ -671,10 +671,10 @@ export default function SessionView() {
                 transition={{ delay: 0.1 }}
                 className="card"
               >
-                <h2 className="text-xl font-bold text-white mb-4 drop-shadow-lg">
+                <h2 className="text-lg md:text-xl font-bold text-white mb-4 drop-shadow-lg">
                   Players ({players.length})
                 </h2>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
+                <div className="space-y-2 max-h-60 md:max-h-80 overflow-y-auto">
                   <AnimatePresence>
                     {players.map((player) => (
                       <motion.div

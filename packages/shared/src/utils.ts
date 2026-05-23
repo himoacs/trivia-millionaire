@@ -240,3 +240,287 @@ export function generateReconnectToken(): string {
   }
   return segments.join('-');
 }
+
+// ============================================================================
+// Topic Tree Utilities for Sunburst Visualization
+// ============================================================================
+
+import type { TopicTreeNode, SunburstDisplayOptions } from './types';
+
+/**
+ * Creates a new empty topic tree root node
+ */
+export function createTopicTreeRoot(): TopicTreeNode {
+  return {
+    name: 'root',
+    fullPath: '',
+    children: new Map(),
+    messageCount: 0,
+    directMessageCount: 0,
+    byteCount: 0,
+    uniqueTopics: 0,
+    lastArrival: 0,
+    depth: 0,
+  };
+}
+
+/**
+ * Adds a message to the topic tree, creating intermediate nodes as needed
+ * @param root - The root node of the topic tree
+ * @param topic - Full topic string (e.g., "trivia/session/abc/player/123/joined")
+ * @param payloadBytes - Size of the message payload in bytes
+ * @param timestamp - Message arrival timestamp
+ * @returns Updated root node (mutates in place but returns for convenience)
+ */
+export function addMessageToTopicTree(
+  root: TopicTreeNode,
+  topic: string,
+  payloadBytes: number,
+  timestamp: number
+): TopicTreeNode {
+  const levels = topic.split('/').filter(l => l.length > 0);
+  
+  let currentNode = root;
+  let currentPath = '';
+  
+  // Update root metrics
+  root.messageCount++;
+  root.byteCount += payloadBytes;
+  root.lastArrival = Math.max(root.lastArrival, timestamp);
+  
+  // Traverse/create path through tree
+  for (let i = 0; i < levels.length; i++) {
+    const level = levels[i];
+    currentPath = currentPath ? `${currentPath}/${level}` : level;
+    
+    let child = currentNode.children.get(level);
+    
+    if (!child) {
+      // Create new node
+      child = {
+        name: level,
+        fullPath: currentPath,
+        children: new Map(),
+        messageCount: 0,
+        directMessageCount: 0,
+        byteCount: 0,
+        uniqueTopics: 0,
+        lastArrival: 0,
+        depth: i + 1,
+      };
+      currentNode.children.set(level, child);
+    }
+    
+    // Update metrics for this node
+    child.messageCount++;
+    child.byteCount += payloadBytes;
+    child.lastArrival = Math.max(child.lastArrival, timestamp);
+    
+    // If this is the leaf (last level), it's a direct message to this exact topic
+    if (i === levels.length - 1) {
+      child.directMessageCount++;
+    }
+    
+    currentNode = child;
+  }
+  
+  return root;
+}
+
+/**
+ * Recalculates uniqueTopics count for all nodes in the tree
+ * Should be called after batch updates for efficiency
+ */
+export function recalculateUniqueTopics(node: TopicTreeNode): number {
+  if (node.children.size === 0) {
+    // Leaf node - counts as 1 unique topic if it has messages
+    node.uniqueTopics = node.directMessageCount > 0 ? 1 : 0;
+    return node.uniqueTopics;
+  }
+  
+  let total = 0;
+  // Count unique topics from children
+  node.children.forEach(child => {
+    total += recalculateUniqueTopics(child);
+  });
+  
+  // Add 1 if this node itself received direct messages (inner message)
+  if (node.directMessageCount > 0) {
+    total++;
+  }
+  
+  node.uniqueTopics = total;
+  return total;
+}
+
+/**
+ * Converts TopicTreeNode to D3-compatible hierarchy format
+ * Applies sorting and limits based on display options
+ */
+export function topicTreeToD3Hierarchy(
+  node: TopicTreeNode,
+  options: SunburstDisplayOptions,
+  currentDepth: number = 0
+): any {
+  const children = Array.from(node.children.values());
+  
+  // Sort children based on options
+  const sortedChildren = sortTopicNodes(children, options);
+  
+  // Limit children and create *OTHERS* rollup if needed
+  let processedChildren: any[] = [];
+  let othersNode: any | null = null;
+  
+  if (sortedChildren.length > options.maxElementsPerLevel) {
+    const visibleChildren = sortedChildren.slice(0, options.maxElementsPerLevel);
+    const hiddenChildren = sortedChildren.slice(options.maxElementsPerLevel);
+    
+    // Create *OTHERS* rollup
+    othersNode = {
+      name: '*OTHERS*',
+      fullPath: `${node.fullPath}/*OTHERS*`,
+      messageCount: hiddenChildren.reduce((sum, c) => sum + c.messageCount, 0),
+      byteCount: hiddenChildren.reduce((sum, c) => sum + c.byteCount, 0),
+      uniqueTopics: hiddenChildren.reduce((sum, c) => sum + c.uniqueTopics, 0),
+      lastArrival: Math.max(...hiddenChildren.map(c => c.lastArrival)),
+      depth: currentDepth + 1,
+      isOthers: true,
+      hiddenCount: hiddenChildren.length,
+    };
+    
+    processedChildren = visibleChildren.map(child => 
+      topicTreeToD3Hierarchy(child, options, currentDepth + 1)
+    );
+    processedChildren.push(othersNode);
+  } else {
+    processedChildren = sortedChildren.map(child =>
+      topicTreeToD3Hierarchy(child, options, currentDepth + 1)
+    );
+  }
+  
+  // Calculate value for D3 based on viewBy option
+  let value: number;
+  switch (options.viewBy) {
+    case 'messages':
+      value = node.messageCount;
+      break;
+    case 'bytes':
+      value = node.byteCount;
+      break;
+    case 'topics':
+      value = node.uniqueTopics;
+      break;
+    case 'balanced':
+    default:
+      value = 1; // Equal size for all
+      break;
+  }
+  
+  return {
+    name: node.name,
+    fullPath: node.fullPath,
+    messageCount: node.messageCount,
+    directMessageCount: node.directMessageCount,
+    byteCount: node.byteCount,
+    uniqueTopics: node.uniqueTopics,
+    lastArrival: node.lastArrival,
+    depth: currentDepth,
+    value: processedChildren.length === 0 ? value : undefined,
+    children: processedChildren.length > 0 ? processedChildren : undefined,
+    hasInnerMessages: node.directMessageCount > 0 && node.children.size > 0,
+  };
+}
+
+/**
+ * Sorts topic nodes based on display options
+ */
+function sortTopicNodes(
+  nodes: TopicTreeNode[],
+  options: SunburstDisplayOptions
+): TopicTreeNode[] {
+  const sorted = [...nodes];
+  const dir = options.sortDirection === 'asc' ? 1 : -1;
+  
+  sorted.sort((a, b) => {
+    let comparison = 0;
+    switch (options.sortBy) {
+      case 'messages':
+        comparison = a.messageCount - b.messageCount;
+        break;
+      case 'bytes':
+        comparison = a.byteCount - b.byteCount;
+        break;
+      case 'topics':
+        comparison = a.uniqueTopics - b.uniqueTopics;
+        break;
+      case 'busyTopics':
+        // Ratio of messages to unique topics (higher = busier per topic)
+        const busyA = a.uniqueTopics > 0 ? a.messageCount / a.uniqueTopics : 0;
+        const busyB = b.uniqueTopics > 0 ? b.messageCount / b.uniqueTopics : 0;
+        comparison = busyA - busyB;
+        break;
+      case 'lastArrival':
+        comparison = a.lastArrival - b.lastArrival;
+        break;
+      case 'name':
+        comparison = a.name.localeCompare(b.name);
+        break;
+      case 'depth':
+        comparison = getMaxDepth(a) - getMaxDepth(b);
+        break;
+      default:
+        comparison = a.messageCount - b.messageCount;
+    }
+    return comparison * dir;
+  });
+  
+  return sorted;
+}
+
+/**
+ * Gets the maximum depth of any leaf in the subtree
+ */
+function getMaxDepth(node: TopicTreeNode): number {
+  if (node.children.size === 0) {
+    return node.depth;
+  }
+  let maxChildDepth = node.depth;
+  node.children.forEach(child => {
+    maxChildDepth = Math.max(maxChildDepth, getMaxDepth(child));
+  });
+  return maxChildDepth;
+}
+
+/**
+ * Clears all data from the topic tree, keeping structure
+ */
+export function clearTopicTree(root: TopicTreeNode): TopicTreeNode {
+  return createTopicTreeRoot();
+}
+
+/**
+ * Gets color for a sunburst arc based on depth
+ * Uses HSL color space for smooth gradients
+ */
+export function getArcColor(depth: number, isRollup: boolean = false): string {
+  const { arcHueStart, arcHueRange, arcSaturation, arcLightness, arcLightnessRollup } = 
+    // Import from types at runtime to avoid circular deps
+    { arcHueStart: 200, arcHueRange: 160, arcSaturation: 65, arcLightness: 50, arcLightnessRollup: 35 };
+  
+  // Cycle through hue range based on depth
+  const hue = (arcHueStart + (depth * 30) % arcHueRange) % 360;
+  const lightness = isRollup ? arcLightnessRollup : arcLightness;
+  
+  return `hsl(${hue}, ${arcSaturation}%, ${lightness}%)`;
+}
+
+/**
+ * Formats bytes to human readable string
+ */
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}

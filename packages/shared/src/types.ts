@@ -343,3 +343,81 @@ export interface JoinSessionResponse {
   sessionName: string;
   state: SessionState;
 }
+
+// ============================================================================
+// Sunburst Visualization Types (matching explorer.solace.dev)
+// ============================================================================
+
+/**
+ * A node in the topic tree hierarchy
+ * Topics are split by '/' to build this structure
+ */
+export interface TopicTreeNode {
+  name: string;           // This level's name (e.g., "player" from "trivia/session/abc/player")
+  fullPath: string;       // Full topic path up to this node
+  children: Map<string, TopicTreeNode>;
+  
+  // Metrics
+  messageCount: number;   // Total messages at this exact topic + all descendants
+  directMessageCount: number; // Messages published to this exact topic (inner messages)
+  byteCount: number;      // Total payload bytes
+  uniqueTopics: number;   // Number of unique full topics in this subtree
+  lastArrival: number;    // Timestamp of last message arrival
+  
+  // For D3 hierarchy
+  depth: number;          // Depth in tree (0 = root)
+}
+
+/**
+ * Metrics for the sunburst visualization
+ */
+export interface SunburstMetrics {
+  currentMessageRate: number;     // Messages per second
+  totalMessagesReceived: number;  // Total since start/clear
+  uniqueTopicsReceived: number;   // Unique topic count
+  lastUpdateTime: number;         // Last metrics update timestamp
+}
+
+/**
+ * Display options for sunburst visualization (matching explorer.solace.dev)
+ */
+export interface SunburstDisplayOptions {
+  detailLevel: number;            // 1-5, affects arc angular size
+  maxElementsPerLevel: number;    // Before rolling up into *OTHERS*
+  viewBy: 'balanced' | 'messages' | 'bytes' | 'topics';
+  sortBy: 'messages' | 'bytes' | 'topics' | 'busyTopics' | 'lastArrival' | 'name' | 'depth';
+  sortDirection: 'asc' | 'desc';
+  accurateOthersSize: boolean;    // True = *OTHERS* arc reflects actual metrics
+}
+
+/**
+ * Connection status for status bar (matching explorer.solace.dev colors)
+ */
+export type SunburstConnectionStatus = 
+  | 'disconnected'   // Red
+  | 'connecting'     // Orange  
+  | 'paused'         // Blue
+  | 'scanning';      // Green
+
+/**
+ * Color constants for sunburst visualization (matching explorer.solace.dev)
+ */
+export const SUNBURST_COLORS = {
+  // Status bar colors
+  status: {
+    disconnected: '#EF4444',  // Red
+    connecting: '#F59E0B',    // Orange
+    paused: '#3B82F6',        // Blue
+    scanning: '#22C55E',      // Green
+  },
+  // Arc colors by depth (HSL-based palette)
+  arcHueStart: 200,           // Starting hue (blue-ish)
+  arcHueRange: 160,           // Hue range to spread across depths
+  arcSaturation: 65,          // % saturation
+  arcLightness: 50,           // % lightness for normal arcs
+  arcLightnessRollup: 35,     // % lightness for rollup arcs (less saturated)
+  // Special colors
+  othersColor: '#6B7280',     // Gray for *OTHERS* rollup
+  innerMessageBorder: '#F59E0B', // Dashed border for inner message nodes
+  emptyLevelBorder: '#EF4444',   // Solid border for empty topic levels
+} as const;
