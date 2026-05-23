@@ -625,12 +625,14 @@ export default function Game() {
             </p>
           </motion.div>
           
-          {/* Footer Credit */}
-          <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
-            <span>Created by Himanshu Gupta</span>
-            <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-            </a>
+          {/* Footer Credit Banner */}
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
+            <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+              <span>Created by Himanshu Gupta</span>
+              <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              </a>
+            </div>
           </div>
         </div>
       );
@@ -728,12 +730,14 @@ export default function Game() {
           )}
         </motion.div>
         
-        {/* Footer Credit */}
-        <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
-          <span>Created by Himanshu Gupta</span>
-          <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-          </a>
+        {/* Footer Credit Banner */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
+          <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+            <span>Created by Himanshu Gupta</span>
+            <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -790,12 +794,14 @@ export default function Game() {
             <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             <div className="text-sm text-gray-400 mt-1">{correctAnswers} correct</div>
           </div>
-        </motion.div>
-        
-        {/* Footer Credit */}
-        <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
-          <span>Created by Himanshu Gupta</span>
-          <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+        </motion.div>Banner */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
+          <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+            <span>Created by Himanshu Gupta</span>
+            <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+          </divhref="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
           </a>
         </div>
@@ -831,12 +837,14 @@ export default function Game() {
             <div className="bg-gradient-to-br from-millionaire-navy-dark via-millionaire-navy-light to-millionaire-blue rounded-xl p-4 border-2 border-millionaire-gold">
               <div className="text-lg font-semibold text-millionaire-gold">Your Winnings</div>
               <div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{formatMoney(totalMoney)}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Footer Credit */}
-        <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            </div>Banner */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
+          <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+            <span>Created by Himanshu Gupta</span>
+            <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+          </divclassName="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
           <span>Created by Himanshu Gupta</span>
           <a href="https://www.linkedin.com/in/guptahim/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
@@ -1259,19 +1267,21 @@ export default function Game() {
             questionResults={questionResults}
             className="sticky top-4"
           />
-        </div>
-      )}
-    </div>
-
-      {/* Footer Credit */}
-      <div className="fixed bottom-safe right-4 z-50 flex items-center gap-2 text-[#2DD4BF] text-sm bg-[#0D1B2A]/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
-        <span>Created by Himanshu Gupta</span>
-        <a 
-          href="https://www.linkedin.com/in/guptahim/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:opacity-80 transition-opacity"
-        >
+        </div>Banner */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
+        <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+          <span>Created by Himanshu Gupta</span>
+          <a 
+            href="https://www.linkedin.com/in/guptahim/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#2DD4BF">
+              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+          </a>
+        </div
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#2DD4BF">
             <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
           </svg>
