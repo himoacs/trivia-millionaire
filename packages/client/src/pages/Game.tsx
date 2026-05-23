@@ -585,6 +585,40 @@ export default function Game() {
               <div className="text-sm font-semibold text-orange-400">Your Winnings</div>
               <div className="text-4xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             </div>
+
+            {/* Game Instructions */}
+            <motion.div
+              className="mt-6 max-w-md mx-auto bg-gradient-to-br from-millionaire-blue/20 to-millionaire-navy/20 rounded-xl p-5 border border-millionaire-blue/40 backdrop-blur-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📋</span>
+                <h3 className="text-lg font-bold text-orange-400">How to Play</h3>
+              </div>
+              <ul className="text-left text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">1.</span>
+                  <span>Answer trivia questions correctly to climb the money ladder</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">2.</span>
+                  <span>You have limited time to submit your answer - choose wisely!</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">3.</span>
+                  <span>Each correct answer increases your winnings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">4.</span>
+                  <span>Compete with other players for the top spot on the leaderboard</span>
+                </li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-millionaire-blue/30 text-center">
+                <p className="text-xs text-orange-300 font-semibold">🎯 Good luck, and may the best trivia master win!</p>
+              </div>
+            </motion.div>
             
             <p className="text-gray-400 mt-6 text-sm">
               Waiting for the host to start the next round...
@@ -643,6 +677,42 @@ export default function Game() {
             <div className="text-5xl font-black text-white mt-2 drop-shadow-lg">{formatMoney(totalMoney)}</div>
             <div className="text-sm text-gray-400 mt-2">{correctAnswers} correct {correctAnswers === 1 ? 'answer' : 'answers'}</div>
           </motion.div>
+
+          {/* Game Instructions - Show in lobby */}
+          {sessionState === 'LOBBY' && (
+            <motion.div
+              className="mt-6 max-w-md bg-gradient-to-br from-millionaire-blue/20 to-millionaire-navy/20 rounded-xl p-5 border border-millionaire-blue/40 backdrop-blur-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📋</span>
+                <h3 className="text-lg font-bold text-orange-400">How to Play</h3>
+              </div>
+              <ul className="text-left text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">1.</span>
+                  <span>Answer trivia questions correctly to climb the money ladder</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">2.</span>
+                  <span>You have limited time to submit your answer - choose wisely!</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">3.</span>
+                  <span>Each correct answer increases your winnings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold mt-0.5">4.</span>
+                  <span>Compete with other players for the top spot on the leaderboard</span>
+                </li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-millionaire-blue/30 text-center">
+                <p className="text-xs text-orange-300 font-semibold">🎯 Good luck, and may the best trivia master win!</p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Show View Leaderboard button when game is closed */}
           {sessionState === 'CLOSED' && (
