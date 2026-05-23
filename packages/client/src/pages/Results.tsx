@@ -28,7 +28,6 @@ export default function Results() {
   const [myTotalAnswers, setMyTotalAnswers] = useState(0);
   const [myTotalMoney, setMyTotalMoney] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
-  const [sessionName, setSessionName] = useState('');
   const scoreCardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -41,24 +40,11 @@ export default function Results() {
   const { play: playSound } = useSound();
 
   useEffect(() => {
-    fetchSessionName();
     fetchLeaderboard();
     
     // Play leaderboard reveal sound
     playSound('leaderboard');
   }, [sessionId]);
-
-  const fetchSessionName = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/session/${sessionId}`);
-      if (response.data.success) {
-        setSessionName(response.data.data.name || 'Trivia Game');
-      }
-    } catch (error) {
-      console.error('Failed to fetch session name:', error);
-      setSessionName('Trivia Game');
-    }
-  };
 
   const fetchLeaderboard = async () => {
     try {
