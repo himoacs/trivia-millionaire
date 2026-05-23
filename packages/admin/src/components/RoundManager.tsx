@@ -650,6 +650,145 @@ export default function RoundManager({
                           </div>
                         </div>
 
+                        {/* Game Controls - Show when round is active (Always visible) */}
+                        {isActive && gameState && gameHandlers && (() => {
+                          // Calculate round-relative question index from global index
+                          const globalCurrentQ = gameState.currentQuestionIndex;
+                          const currentQuestionId = globalCurrentQ >= 0 ? questions[globalCurrentQ]?.id : null;
+                          const currentQIndexInRound = currentQuestionId ? round.questionIds.indexOf(currentQuestionId) : -1;
+                          
+                          return (
+                          <div className="p-4 bg-gradient-to-r from-green-900/30 to-green-800/30 border-t border-green-500/30">
+                            {/* Answer Progress */}
+                            <div className="text-center mb-4">
+                              <div className="text-3xl font-black text-white">
+                                {gameState.answeredCount} / {gameState.totalPlayers}
+                              </div>
+                              <div className="text-sm text-gray-300 font-semibold">
+                                players have answered
+                              </div>
+                              {gameState.allAnswered && (
+                                <div className="text-green-400 font-bold mt-1">
+                                  ✅ All players answered!
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Control Buttons */}
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              {/* Start Game - Release First Question */}
+                              {currentQIndexInRound === -1 && (
+                                <button
+                                  onClick={gameHandlers.onStartGame}
+                                  className="btn-success btn-lg"
+                                  title="Release the first question to players"
+                                >
+                                  🎮 Start Game (Release First Question)
+                                </button>
+                              )}
+                              
+                              {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && (() => {
+                                const canShowDistribution = timerExpired || gameState.allAnswered;
+                                return (
+                                  <button
+                                    onClick={gameHandlers.onShowResults}
+                                    disabled={!canShowDistribution}
+                                    className="btn-secondary"
+                                    title={canShowDistribution ? 'Show answer distribution to players' : 'Wait for timer or all answers'}
+                                  >
+                                    {canShowDistribution 
+                                      ? '📊 Show Distribution' 
+                                      : `⏳ ${timeRemaining}s remaining (${gameState.answeredCount}/${gameState.totalPlayers} answered)`}
+                                  </button>
+                                );
+                              })()}
+                              
+                              {gameState.showAnswerDistribution && !gameState.showCorrectAnswer && (
+                                <button
+                                  onClick={gameHandlers.onRevealAnswer}
+                                  className="btn-warning"
+                                  title="Reveal the correct answer to all players"
+                                >
+                                  ✨ Reveal Answer
+                                </button>
+                              )}
+                              
+                              {gameState.showCorrectAnswer && currentQIndexInRound < roundQuestions.length - 1 && (
+                                <button
+                                  onClick={gameHandlers.onNextQuestion}
+                                  className="btn-success"
+                                  title="Move to the next question"
+                                >
+                                  🚀 Next Question
+                                </button>
+                              )}
+                              
+                              {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && currentQIndexInRound < roundQuestions.length - 1 && (
+                                <button
+                                  onClick={gameHandlers.onSkipQuestion}
+                                  className="btn-ghost btn-sm"
+                                  title="Skip this question and move to next"
+                                >
+                                  ⏭️ Skip
+                                </button>
+                              )}
+                              
+                              {currentQIndexInRound >= roundQuestions.length - 1 && gameState.showCorrectAnswer && (
+                                <button
+                                  onClick={gameHandlers.onCloseSession}
+                                  className="btn-danger-solid"
+                                  title="End the game and show final leaderboard"
+                                >
+                                  🏁 End Game
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* Advanced Controls - Round Skip */}
+                            <div className="mt-4 pt-4 border-t border-green-500/20">
+                              <div className="flex flex-wrap gap-4 justify-center items-center">
+                                {/* Skip to Different Round */}
+                                {gameHandlers.onSkipToRound && rounds.length > 1 && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400">Skip to round:</span>
+                                    <select
+                                      onChange={(e) => {
+                                        const idx = parseInt(e.target.value);
+                                        if (idx >= 0) {
+                                          gameHandlers.onSkipToRound!(idx);
+                                        }
+                                      }}
+                                      className="bg-millionaire-navy border border-millionaire-gold/30 rounded px-2 py-1 text-sm text-white"
+                                      defaultValue=""
+                                    >
+                                      <option value="" disabled>Select round...</option>
+                                      {rounds.map((r, rIdx) => (
+                                        <option 
+                                          key={r.id} 
+                                          value={rIdx}
+                                          disabled={rIdx === currentRoundIndex}
+                                        >
+                                          {rIdx + 1}. {r.name} {rIdx === currentRoundIndex ? '(current)' : ''}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                
+                                {/* End Current Round Early */}
+                                <button
+                                  onClick={handleEndCurrentRound}
+                                  className="btn-warning btn-sm"
+                                  title="End this round early and take a break"
+                                >
+                                  ⏸️ End Round Early
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          );
+                        })()}
+
                         {/* Questions List (Expandable) */}
                         <AnimatePresence>
                           {isRoundExpanded && (
@@ -728,6 +867,19 @@ export default function RoundManager({
                                             </span>
                                           )}
                                           <p className="text-white text-sm flex-1 truncate">{q.text}</p>
+                                          {/* Skip to Question Button */}
+                                          {isActive && gameHandlers?.onJumpToQuestion && !isCurrentQuestion && (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                gameHandlers.onJumpToQuestion!(qIndex);
+                                              }}
+                                              className="btn-ghost btn-sm text-xs px-2 py-1"
+                                              title={`Skip to this question`}
+                                            >
+                                              ⏭️ Skip to Q{qIndex + 1}
+                                            </button>
+                                          )}
                                           <div className="flex items-center gap-2 text-xs text-gray-500">
                                             {q.difficulty && (
                                               <span className={`px-2 py-0.5 rounded ${
@@ -809,172 +961,6 @@ export default function RoundManager({
                                     No questions in this round yet. Add questions above.
                                   </div>
                                 )}
-                                
-                                {/* Game Controls - Show when round is active */}
-                                {isActive && gameState && gameHandlers && (() => {
-                                  // Calculate round-relative question index from global index
-                                  const globalCurrentQ = gameState.currentQuestionIndex;
-                                  const currentQuestionId = globalCurrentQ >= 0 ? questions[globalCurrentQ]?.id : null;
-                                  const currentQIndexInRound = currentQuestionId ? round.questionIds.indexOf(currentQuestionId) : -1;
-                                  
-                                  return (
-                                  <div className="p-4 bg-gradient-to-r from-green-900/30 to-green-800/30 border-t border-green-500/30">
-                                    {/* Answer Progress */}
-                                    <div className="text-center mb-4">
-                                      <div className="text-3xl font-black text-white">
-                                        {gameState.answeredCount} / {gameState.totalPlayers}
-                                      </div>
-                                      <div className="text-sm text-gray-300 font-semibold">
-                                        players have answered
-                                      </div>
-                                      {gameState.allAnswered && (
-                                        <div className="text-green-400 font-bold mt-1">
-                                          ✅ All players answered!
-                                        </div>
-                                      )}
-                                    </div>
-                                    
-                                    {/* Control Buttons */}
-                                    <div className="flex flex-wrap gap-2 justify-center">
-                                      {/* Start Game - Release First Question */}
-                                      {currentQIndexInRound === -1 && (
-                                        <button
-                                          onClick={gameHandlers.onStartGame}
-                                          className="btn-success btn-lg"
-                                          title="Release the first question to players"
-                                        >
-                                          🎮 Start Game (Release First Question)
-                                        </button>
-                                      )}
-                                      
-                                      {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && (() => {
-                                        const canShowDistribution = timerExpired || gameState.allAnswered;
-                                        return (
-                                          <button
-                                            onClick={gameHandlers.onShowResults}
-                                            disabled={!canShowDistribution}
-                                            className="btn-secondary"
-                                            title={canShowDistribution ? 'Show answer distribution to players' : 'Wait for timer or all answers'}
-                                          >
-                                            {canShowDistribution 
-                                              ? '📊 Show Distribution' 
-                                              : `⏳ ${timeRemaining}s remaining (${gameState.answeredCount}/${gameState.totalPlayers} answered)`}
-                                          </button>
-                                        );
-                                      })()}
-                                      
-                                      {gameState.showAnswerDistribution && !gameState.showCorrectAnswer && (
-                                        <button
-                                          onClick={gameHandlers.onRevealAnswer}
-                                          className="btn-warning"
-                                          title="Reveal the correct answer to all players"
-                                        >
-                                          ✨ Reveal Answer
-                                        </button>
-                                      )}
-                                      
-                                      {gameState.showCorrectAnswer && currentQIndexInRound < roundQuestions.length - 1 && (
-                                        <button
-                                          onClick={gameHandlers.onNextQuestion}
-                                          className="btn-success"
-                                          title="Move to the next question"
-                                        >
-                                          🚀 Next Question
-                                        </button>
-                                      )}
-                                      
-                                      {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && currentQIndexInRound < roundQuestions.length - 1 && (
-                                        <button
-                                          onClick={gameHandlers.onSkipQuestion}
-                                          className="btn-ghost btn-sm"
-                                          title="Skip this question and move to next"
-                                        >
-                                          ⏭️ Skip
-                                        </button>
-                                      )}
-                                      
-                                      {currentQIndexInRound >= roundQuestions.length - 1 && gameState.showCorrectAnswer && (
-                                        <button
-                                          onClick={gameHandlers.onCloseSession}
-                                          className="btn-danger-solid"
-                                          title="End the game and show final leaderboard"
-                                        >
-                                          🏁 End Game
-                                        </button>
-                                      )}
-                                    </div>
-                                    
-                                    {/* Advanced Controls - Question Navigation & Round Skip */}
-                                    <div className="mt-4 pt-4 border-t border-green-500/20">
-                                      <div className="flex flex-wrap gap-4 justify-center items-center">
-                                        {/* Jump to Question */}
-                                        {gameHandlers.onJumpToQuestion && roundQuestions.length > 1 && (
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-400">Jump to:</span>
-                                            <div className="flex gap-1">
-                                              {roundQuestions.map((_q: Question, qIdx: number) => {
-                                                const isCurrent = qIdx === currentQIndexInRound;
-                                                return (
-                                                  <button
-                                                    key={qIdx}
-                                                    onClick={() => gameHandlers.onJumpToQuestion!(qIdx)}
-                                                    disabled={isCurrent}
-                                                    className={`w-8 h-8 rounded text-sm font-bold transition-all ${
-                                                      isCurrent 
-                                                        ? 'bg-green-500 text-white cursor-default' 
-                                                        : 'bg-millionaire-navy hover:bg-millionaire-navy-light text-gray-300'
-                                                    }`}
-                                                    title={`Jump to Q${qIdx + 1}`}
-                                                  >
-                                                    {qIdx + 1}
-                                                  </button>
-                                                );
-                                              })}
-                                            </div>
-                                          </div>
-                                        )}
-                                        
-                                        {/* Skip to Different Round */}
-                                        {gameHandlers.onSkipToRound && rounds.length > 1 && (
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-400">Skip to round:</span>
-                                            <select
-                                              onChange={(e) => {
-                                                const idx = parseInt(e.target.value);
-                                                if (idx >= 0) {
-                                                  gameHandlers.onSkipToRound!(idx);
-                                                }
-                                              }}
-                                              className="bg-millionaire-navy border border-millionaire-gold/30 rounded px-2 py-1 text-sm text-white"
-                                              defaultValue=""
-                                            >
-                                              <option value="" disabled>Select round...</option>
-                                              {rounds.map((r, rIdx) => (
-                                                <option 
-                                                  key={r.id} 
-                                                  value={rIdx}
-                                                  disabled={rIdx === currentRoundIndex}
-                                                >
-                                                  {rIdx + 1}. {r.name} {rIdx === currentRoundIndex ? '(current)' : ''}
-                                                </option>
-                                              ))}
-                                            </select>
-                                          </div>
-                                        )}
-                                        
-                                        {/* End Current Round Early */}
-                                        <button
-                                          onClick={handleEndCurrentRound}
-                                          className="btn-warning btn-sm"
-                                          title="End this round early and take a break"
-                                        >
-                                          ⏸️ End Round Early
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  );
-                                })()}
                               </div>
                             </motion.div>
                           )}
