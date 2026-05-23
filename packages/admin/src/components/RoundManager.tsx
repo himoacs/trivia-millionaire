@@ -699,17 +699,20 @@ export default function RoundManager({
                               
                               {currentQIndexInRound >= 0 && !gameState.showAnswerDistribution && (() => {
                                 const canShowDistribution = timerExpired || gameState.allAnswered;
-                                return (
+                                return canShowDistribution ? (
                                   <button
                                     onClick={gameHandlers.onShowResults}
-                                    disabled={!canShowDistribution}
                                     className="btn-secondary"
-                                    title={canShowDistribution ? 'Show answer distribution to players' : 'Wait for timer or all answers'}
+                                    title="Show answer distribution to players"
                                   >
-                                    {canShowDistribution 
-                                      ? '📊 Show Distribution' 
-                                      : `⏳ ${timeRemaining}s remaining (${gameState.answeredCount}/${gameState.totalPlayers} answered)`}
+                                    📊 Show Distribution
                                   </button>
+                                ) : (
+                                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-millionaire-blue-light/30 border-2 border-millionaire-blue-light/80 text-white font-semibold text-sm animate-pulse">
+                                    <span className="text-xl">⏳</span>
+                                    <span>{timeRemaining}s remaining</span>
+                                    <span className="text-millionaire-gold-light">({gameState.answeredCount}/{gameState.totalPlayers} answered)</span>
+                                  </div>
                                 );
                               })()}
                               
