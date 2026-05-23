@@ -102,7 +102,7 @@ export default function Login() {
 
       {/* Footer Credit Banner */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-millionaire-navy-dark/95 backdrop-blur-sm border-t border-millionaire-gold/30">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
+        <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
           <span>Created by Himanshu Gupta</span>
           <a 
             href="https://www.linkedin.com/in/guptahim/" 
