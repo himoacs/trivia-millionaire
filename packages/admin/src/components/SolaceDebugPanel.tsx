@@ -21,7 +21,13 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
   const [width, setWidth] = useState(500);
   const [isResizing, setIsResizing] = useState(false);
   const [unsubscribeFn, setUnsubscribeFn] = useState<(() => void) | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  
+  // Persist view mode across remounts
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('solace-debug-viewMode');
+    return (saved === 'sunburst' || saved === 'list') ? saved : 'list';
+  });
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -78,6 +84,30 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
       }
     };
   }, [unsubscribeFn]);
+
+  // Persist viewMode to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('solace-debug-viewMode', viewMode);
+  }, [viewMode]);
+
+  // Persist sunburst scanning state
+  useEffect(() => {
+    localStorage.setItem(`solace-sunburst-scanning-${sessionId}`, sunburstData.isScanning.toString());
+  }, [sunburstData.isScanning, sessionId]);
+
+  // Resume scanning on mount if it was previously active
+  useEffect(() => {
+    const wasPreviouslyScanning = localStorage.getItem(`solace-sunburst-scanning-${sessionId}`) === 'true';
+    
+    if (wasPreviouslyScanning && connected && !sunburstData.isScanning) {
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        sunburstData.startScanning();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connected, sessionId]); // Only run when connection status or sessionId changes
 
   // Handle resizing
   useEffect(() => {
