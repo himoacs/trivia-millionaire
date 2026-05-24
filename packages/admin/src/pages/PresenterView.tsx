@@ -766,7 +766,7 @@ export default function PresenterView() {
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-orange-400 font-bold text-xl mt-0.5">2.</span>
-                          <span>You have limited time to submit your answer - choose wisely!</span>
+                          <span>You have 30 seconds to submit your answer - choose wisely!</span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-orange-400 font-bold text-xl mt-0.5">3.</span>
