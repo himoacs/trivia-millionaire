@@ -123,10 +123,48 @@ export default function Results() {
     }
   };
 
-  const handleShareLinkedIn = () => {
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}`;
-    window.open(url, '_blank');
-    alert(`Share your ${formatMoney(myTotalMoney)} winnings! Remember to upload your downloaded scorecard image to your LinkedIn post!`);
+  const handleShareLinkedIn = async () => {
+    // First download the scorecard automatically
+    if (scoreCardRef.current) {
+      try {
+        const dataUrl = await toPng(scoreCardRef.current, {
+          quality: 1.0,
+          pixelRatio: 2,
+        });
+
+        const link = document.createElement('a');
+        link.download = `trivia-score-${nickname}-${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (error) {
+        console.error('Failed to download scorecard:', error);
+      }
+    }
+
+    // Create suggested post text
+    const rankText = myRank === 1 ? '🥇 1st place!' : myRank === 2 ? '🥈 2nd place!' : myRank === 3 ? '🥉 3rd place!' : `Ranked #${myRank}`;
+    const postText = `Just played Trivia Millionaire and won ${formatMoney(myTotalMoney)}! ${rankText}
+
+🎯 ${accuracy}% accuracy (${myCorrectAnswers}/${myTotalAnswers} correct)
+🏆 Competed against ${totalPlayers} players
+
+Built with @Solace PubSub+ for real-time event-driven gaming! Try it yourself 👇
+
+#Trivia #Solace #EventDriven #RealTime`;
+
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(postText);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+
+    // Open LinkedIn - use the feed share URL for creating a new post
+    const linkedInUrl = 'https://www.linkedin.com/feed/';
+    window.open(linkedInUrl, '_blank');
+
+    // Show instructions
+    alert(`✅ Scorecard downloaded!\n✅ Post text copied to clipboard!\n\nOn LinkedIn:\n1. Click "Start a post"\n2. Paste the text (Cmd/Ctrl+V)\n3. Add your scorecard image\n4. Post! 🎉`);
   };
 
   const handlePlayAgain = () => {
