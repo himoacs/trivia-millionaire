@@ -604,11 +604,11 @@ export default function Game() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">2.</span>
-                  <span>You have limited time to submit your answer - choose wisely!</span>
+                  <span><strong className="text-green-400">Answer faster for bonus points!</strong> Up to 50% extra</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">3.</span>
-                  <span>Each correct answer increases your winnings</span>
+                  <span>Each correct answer increases your winnings on the ladder</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">4.</span>
@@ -699,11 +699,11 @@ export default function Game() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">2.</span>
-                  <span>You have limited time to submit your answer - choose wisely!</span>
+                  <span><strong className="text-green-400">Answer faster for bonus points!</strong> Up to 50% extra</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">3.</span>
-                  <span>Each correct answer increases your winnings</span>
+                  <span>Each correct answer increases your winnings on the ladder</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 font-bold mt-0.5">4.</span>
