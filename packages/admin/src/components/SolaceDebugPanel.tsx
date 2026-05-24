@@ -372,7 +372,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                     setSelectedPattern(e.target.value);
                     setCustomPattern('');
                   }}
-                  className="w-full px-3 py-2 border border-millionaire-gold/30 bg-millionaire-dark text-white rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm"
+                  className="w-full px-3 py-2 border-2 border-blue-500/60 bg-blue-900/30 text-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm font-medium hover:bg-blue-900/40"
                 >
                   <option value="">Select preset pattern...</option>
                   {PRESET_SUBSCRIPTIONS.map((sub, idx) => (
@@ -390,15 +390,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                     setSelectedPattern('');
                   }}
                   placeholder="Or enter custom topic (e.g., trivia/session/*/question)"
-                  className="w-full px-3 py-2 border border-millionaire-gold/30 bg-millionaire-dark text-white rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-sm font-mono placeholder-gray-500"
-                />
-
-                <button
-                  onClick={handleSubscribe}
-                  disabled={!customPattern && !selectedPattern}
-                  className="w-full px-4 py-2 bg-millionaire-gold hover:bg-millionaire-gold-light disabled:bg-gray-700 disabled:cursor-not-allowed text-millionaire-dark disabled:text-gray-400 rounded font-semibold transition-colors"
-                >
-                  Subscribe to Topic
+                  className="w-full px-3 py-2 border-2 border-blue-500/60 bg-blue-900/30 text-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm font-mono placeholder-gray-400 hover:bg-blue-900/40"
                 </button>
               </div>
 
@@ -540,7 +532,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                   <select
                     value={sunburstData.displayOptions.maxElementsPerLevel}
                     onChange={(e) => sunburstData.setDisplayOptions({ maxElementsPerLevel: Number(e.target.value) })}
-                    className="bg-millionaire-dark text-white text-xs rounded px-2 py-1 border border-millionaire-gold/30"
+                    className="bg-blue-900/30 text-blue-200 text-xs rounded px-2 py-1 border-2 border-blue-500/60 font-medium hover:bg-blue-900/40"
                   >
                     {[5, 8, 10, 15, 20].map(n => (
                       <option key={n} value={n}>{n}</option>
@@ -553,7 +545,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                   <select
                     value={sunburstData.displayOptions.viewBy}
                     onChange={(e) => sunburstData.setDisplayOptions({ viewBy: e.target.value as any })}
-                    className="bg-millionaire-dark text-white text-xs rounded px-2 py-1 border border-millionaire-gold/30"
+                    className="bg-blue-900/30 text-blue-200 text-xs rounded px-2 py-1 border-2 border-blue-500/60 font-medium hover:bg-blue-900/40"
                   >
                     <option value="balanced">Balanced</option>
                     <option value="messages"># Messages</option>
@@ -567,7 +559,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                   <select
                     value={sunburstData.displayOptions.sortBy}
                     onChange={(e) => sunburstData.setDisplayOptions({ sortBy: e.target.value as any })}
-                    className="bg-millionaire-dark text-white text-xs rounded px-2 py-1 border border-millionaire-gold/30"
+                    className="bg-blue-900/30 text-blue-200 text-xs rounded px-2 py-1 border-2 border-blue-500/60 font-medium hover:bg-blue-900/40"
                   >
                     <option value="messages">Messages</option>
                     <option value="bytes">Bytes</option>
