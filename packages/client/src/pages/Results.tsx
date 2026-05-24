@@ -148,7 +148,7 @@ export default function Results() {
 🎯 ${accuracy}% accuracy (${myCorrectAnswers}/${myTotalAnswers} correct)
 🏆 Competed against ${totalPlayers} players
 
-Built with @Solace PubSub+ for real-time event-driven gaming! Try it yourself 👇
+Built with @Solace for real-time event-driven gaming! Try it yourself 👇
 
 #Trivia #Solace #EventDriven #RealTime`;
 
