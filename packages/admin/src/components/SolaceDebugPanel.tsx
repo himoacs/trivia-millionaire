@@ -391,7 +391,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
                   }}
                   placeholder="Or enter custom topic (e.g., trivia/session/*/question)"
                   className="w-full px-3 py-2 border-2 border-blue-500/60 bg-blue-900/30 text-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm font-mono placeholder-gray-400 hover:bg-blue-900/40"
-                </button>
+                />
               </div>
 
               <div className="mt-3 text-xs text-gray-400 bg-millionaire-dark p-2 rounded border border-millionaire-gold/20">
