@@ -1614,19 +1614,14 @@ app.post('/api/admin/templates', (req: Request, res: Response) => {
       return;
     }
     
-    // Build YAML content from session - extract all questions as unassigned pool
-    const allQuestions: any[] = [];
+    // Build YAML content from session - preserve rounds structure
+    const roundsData: any[] = [];
+    const unassignedQuestions: any[] = [];
     
-    // Collect questions from all rounds
+    // Collect questions organized by round
     for (const round of session.rounds) {
-      const roundQuestions = round.questions?.map(q => ({
-        text: q.text,
-        choices: q.choices,
-        correctIndex: q.correctIndex,
-        timeLimit: q.timeLimit,
-        difficulty: q.difficulty,
-        category: q.category
-      })) || session.questions
+      // Get questions for this round from session.questions
+      const roundQuestions = session.questions
         .filter(q => q.roundId === round.id)
         .map(q => ({
           text: q.text,
@@ -1637,11 +1632,16 @@ app.post('/api/admin/templates', (req: Request, res: Response) => {
           category: q.category
         }));
       
-      allQuestions.push(...roundQuestions);
+      if (roundQuestions.length > 0) {
+        roundsData.push({
+          name: round.name,
+          questions: roundQuestions
+        });
+      }
     }
     
-    // Also include any unassigned questions
-    const unassignedQuestions = session.questions
+    // Also include any unassigned questions (not in any round)
+    const unassigned = session.questions
       .filter(q => !q.roundId)
       .map(q => ({
         text: q.text,
@@ -1652,13 +1652,20 @@ app.post('/api/admin/templates', (req: Request, res: Response) => {
         category: q.category
       }));
     
-    allQuestions.push(...unassignedQuestions);
+    unassignedQuestions.push(...unassigned);
     
-    // Save as unassigned questions pool (no rounds)
-    const exportData = {
-      name: name,
-      questions: allQuestions
+    // Build export data with rounds structure preserved
+    const exportData: any = {
+      name: name
     };
+    
+    if (roundsData.length > 0) {
+      exportData.rounds = roundsData;
+    }
+    
+    if (unassignedQuestions.length > 0) {
+      exportData.questions = unassignedQuestions;
+    }
     
     const content = yaml.dump(exportData);
     const templateId = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
