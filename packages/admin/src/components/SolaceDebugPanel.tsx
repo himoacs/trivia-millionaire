@@ -145,34 +145,6 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     };
   }, [isResizing]);
 
-  const handleSubscribe = () => {
-    const pattern = customPattern || selectedPattern;
-    if (!pattern) return;
-
-    // Unsubscribe from previous subscription
-    if (unsubscribeFn) {
-      unsubscribeFn();
-    }
-
-    const finalPattern = replaceTopicPlaceholder(pattern, sessionId);
-    setActiveSubscription(finalPattern);
-    
-    // Subscribe to Solace
-    const unsub = subscribe(finalPattern, (message) => {
-      const solaceMsg: SolaceMessage = {
-        id: `msg-${Date.now()}-${Math.random()}`,
-        topic: message.topic,
-        payload: message.payload,
-        timestamp: message.timestamp,
-        messageType: getMessageTypeFromTopic(message.topic)
-      };
-      setMessages(prev => [...prev, solaceMsg]);
-    });
-
-    setUnsubscribeFn(() => unsub);
-    addSystemMessage(`✅ Subscribed to: ${finalPattern}`);
-  };
-
   const handleClear = () => {
     setMessages([]);
   };
