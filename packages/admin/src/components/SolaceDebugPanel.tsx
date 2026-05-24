@@ -158,17 +158,6 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     a.download = `solace-messages-${Date.now()}.json`;
     a.click();
   };
-
-  const addSystemMessage = (text: string) => {
-    const msg: SolaceMessage = {
-      id: `sys-${Date.now()}`,
-      topic: 'SYSTEM',
-      payload: { message: text },
-      timestamp: Date.now(),
-      messageType: 'other'
-    };
-    setMessages(prev => [...prev, msg]);
-  };
   
   const handleSunburstSubscribe = () => {
     const pattern = sunburstCustomPattern || sunburstSelectedPattern;
