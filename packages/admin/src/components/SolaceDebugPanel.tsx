@@ -22,6 +22,11 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
   const [isResizing, setIsResizing] = useState(false);
   const [unsubscribeFn, setUnsubscribeFn] = useState<(() => void) | null>(null);
   
+  // Sunburst topic pattern state
+  const [sunburstSelectedPattern, setSunburstSelectedPattern] = useState('');
+  const [sunburstCustomPattern, setSunburstCustomPattern] = useState('');
+  const [activeSunburstPattern, setActiveSunburstPattern] = useState<string>('');
+  
   // Persist view mode across remounts
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem('solace-debug-viewMode');
@@ -90,24 +95,33 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     localStorage.setItem('solace-debug-viewMode', viewMode);
   }, [viewMode]);
 
-  // Persist sunburst scanning state
+  // Persist sunburst scanning state and pattern
   useEffect(() => {
     localStorage.setItem(`solace-sunburst-scanning-${sessionId}`, sunburstData.isScanning.toString());
   }, [sunburstData.isScanning, sessionId]);
+  
+  useEffect(() => {
+    if (activeSunburstPattern) {
+      localStorage.setItem(`solace-sunburst-pattern-${sessionId}`, activeSunburstPattern);
+    }
+  }, [activeSunburstPattern, sessionId]);
 
-  // Resume scanning on mount if it was previously active
+  // Resume scanning on mount if it was previously active OR auto-start in sunburst mode
   useEffect(() => {
     const wasPreviouslyScanning = localStorage.getItem(`solace-sunburst-scanning-${sessionId}`) === 'true';
+    const savedPattern = localStorage.getItem(`solace-sunburst-pattern-${sessionId}`);
     
-    if (wasPreviouslyScanning && connected && !sunburstData.isScanning) {
-      // Small delay to ensure component is fully mounted
+    if (viewMode === 'sunburst' && connected && !sunburstData.isScanning) {
+      // Auto-start with saved pattern or default
       const timer = setTimeout(() => {
-        sunburstData.startScanning();
+        const pattern = savedPattern || `trivia/session/${sessionId}/>`;
+        sunburstData.startScanning(pattern);
+        setActiveSunburstPattern(pattern);
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [connected, sessionId]); // Only run when connection status or sessionId changes
+  }, [connected, sessionId, viewMode]); // Auto-start when switching to sunburst or on connect
 
   // Handle resizing
   useEffect(() => {
@@ -183,6 +197,20 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
       messageType: 'other'
     };
     setMessages(prev => [...prev, msg]);
+  };
+  
+  const handleSunburstSubscribe = () => {
+    const pattern = sunburstCustomPattern || sunburstSelectedPattern;
+    if (!pattern) return;
+
+    const finalPattern = replaceTopicPlaceholder(pattern, sessionId);
+    setActiveSunburstPattern(finalPattern);
+    
+    // Stop current scanning and restart with new pattern
+    sunburstData.stopScanning();
+    setTimeout(() => {
+      sunburstData.startScanning(finalPattern);
+    }, 100);
   };
 
   const getMessageColor = (type: SolaceMessage['messageType']) => {
@@ -270,30 +298,40 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
             </div>
           )}
           
-          {/* Current Path Breadcrumb - Only show in sunburst view */}
-          {viewMode === 'sunburst' && sunburstData.currentPath && (
-            <div className="mt-2 flex items-center gap-2 text-sm flex-wrap">
-              <button 
-                onClick={sunburstData.resetView}
-                className="text-green-400 hover:text-green-300"
-              >
-                root
-              </button>
-              {sunburstData.currentPath.split('/').filter((p: string) => p).map((part: string, i: number, arr: string[]) => (
-                <span key={i} className="flex items-center gap-2">
-                  <span className="text-gray-500">/</span>
-                  {i === arr.length - 1 ? (
-                    <span className="text-white font-mono">{part}</span>
-                  ) : (
-                    <button 
-                      onClick={() => sunburstData.drillDown(arr.slice(0, i + 1).join('/'))}
-                      className="text-green-400 hover:text-green-300 font-mono"
-                    >
-                      {part}
-                    </button>
-                  )}
-                </span>
-              ))}
+          {/* Active Subscription or Path - Only show in sunburst view */}
+          {viewMode === 'sunburst' && (
+            <div className="mt-2">
+              {activeSunburstPattern && (
+                <div className="bg-millionaire-gold text-millionaire-dark px-3 py-2 rounded text-sm font-mono mb-2">
+                  <div className="text-xs opacity-75 mb-1">Subscribed to:</div>
+                  <div className="break-all">{activeSunburstPattern}</div>
+                </div>
+              )}
+              {sunburstData.currentPath && (
+                <div className="flex items-center gap-2 text-sm flex-wrap">
+                  <button 
+                    onClick={sunburstData.resetView}
+                    className="text-green-400 hover:text-green-300"
+                  >
+                    root
+                  </button>
+                  {sunburstData.currentPath.split('/').filter((p: string) => p).map((part: string, i: number, arr: string[]) => (
+                    <span key={i} className="flex items-center gap-2">
+                      <span className="text-gray-500">/</span>
+                      {i === arr.length - 1 ? (
+                        <span className="text-white font-mono">{part}</span>
+                      ) : (
+                        <button 
+                          onClick={() => sunburstData.drillDown(arr.slice(0, i + 1).join('/'))}
+                          className="text-green-400 hover:text-green-300 font-mono"
+                        >
+                          {part}
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -408,6 +446,44 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
           <>
             {/* Sunburst View Controls */}
             <div className="bg-millionaire-dark-light p-3 border-b border-millionaire-gold/30 flex-shrink-0">
+              {/* Subscription Controls */}
+              <div className="space-y-2 mb-3">
+                <select
+                  value={sunburstSelectedPattern}
+                  onChange={(e) => {
+                    setSunburstSelectedPattern(e.target.value);
+                    setSunburstCustomPattern('');
+                  }}
+                  className="w-full px-2 py-1.5 border border-millionaire-gold/30 bg-millionaire-dark text-white rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-xs"
+                >
+                  <option value="">Select preset pattern...</option>
+                  {PRESET_SUBSCRIPTIONS.map((sub, idx) => (
+                    <option key={idx} value={sub.pattern}>
+                      {sub.description}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="text"
+                  value={sunburstCustomPattern}
+                  onChange={(e) => {
+                    setSunburstCustomPattern(e.target.value);
+                    setSunburstSelectedPattern('');
+                  }}
+                  placeholder="Or custom topic (e.g., trivia/session/*/question)"
+                  className="w-full px-2 py-1.5 border border-millionaire-gold/30 bg-millionaire-dark text-white rounded focus:outline-none focus:ring-2 focus:ring-millionaire-gold text-xs font-mono placeholder-gray-500"
+                />
+
+                <button
+                  onClick={handleSunburstSubscribe}
+                  disabled={!sunburstCustomPattern && !sunburstSelectedPattern}
+                  className="w-full px-3 py-1.5 bg-millionaire-gold hover:bg-millionaire-gold-light disabled:bg-gray-700 disabled:cursor-not-allowed text-millionaire-dark disabled:text-gray-400 rounded font-semibold transition-colors text-xs"
+                >
+                  Subscribe to Topic
+                </button>
+              </div>
+              
               {/* Real-time Metrics */}
               <div className="grid grid-cols-3 gap-4 text-center mb-3">
                 <div>
@@ -433,14 +509,21 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
               {/* Control Buttons */}
               <div className="flex items-center gap-2 mb-3">
                 <button
-                  onClick={() => sunburstData.isScanning ? sunburstData.stopScanning() : sunburstData.startScanning()}
+                  onClick={() => {
+                    if (sunburstData.isScanning) {
+                      sunburstData.stopScanning();
+                    } else {
+                      const pattern = activeSunburstPattern || `trivia/session/${sessionId}/>`;
+                      sunburstData.startScanning(pattern);
+                    }
+                  }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                     sunburstData.isScanning 
                       ? 'bg-yellow-600 hover:bg-yellow-500 text-white' 
                       : 'bg-green-600 hover:bg-green-500 text-white'
                   }`}
                 >
-                  {sunburstData.isScanning ? '⏸️ Pause' : '▶️ Start'}
+                  {sunburstData.isScanning ? '⏸️ Stop' : '▶️ Start'}
                 </button>
                 
                 <button
@@ -510,10 +593,10 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
               />
             </div>
             
-            {/* Footer with subscription info */}
+            {/* Footer with help text */}
             <div className="bg-millionaire-dark-light p-2 border-t border-millionaire-gold/30 flex-shrink-0">
-              <div className="text-xs text-gray-500 text-center">
-                Subscribing to: <span className="font-mono text-gray-400">trivia/session/{sessionId}/&gt;</span>
+              <div className="text-xs text-gray-400 text-center">
+                💡 Click segments to drill down • Click center to go back up
               </div>
             </div>
           </>
