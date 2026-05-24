@@ -552,24 +552,6 @@ export default function PresenterView() {
           </AnimatePresence>
         </div>
       </motion.div>
-
-      {/* Sliding Debug Panel */}
-      <AnimatePresence>
-        {showDebugPanel && sessionId && (
-          <motion.div
-            initial={{ x: 500 }}
-            animate={{ x: 0 }}
-            exit={{ x: 500 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-          >
-            <SolaceDebugPanel
-              sessionId={sessionId}
-              onClose={() => setShowDebugPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
       </div>
       );
@@ -667,24 +649,6 @@ export default function PresenterView() {
           </motion.div>
         </div>
       </motion.div>
-
-      {/* Sliding Debug Panel */}
-      <AnimatePresence>
-        {showDebugPanel && sessionId && (
-          <motion.div
-            initial={{ x: 500 }}
-            animate={{ x: 0 }}
-            exit={{ x: 500 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-          >
-            <SolaceDebugPanel
-              sessionId={sessionId}
-              onClose={() => setShowDebugPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
       </div>
       );
@@ -870,24 +834,6 @@ export default function PresenterView() {
               </div>
             </div>
           </motion.div>
-
-          {/* Sliding Debug Panel */}
-          <AnimatePresence>
-            {showDebugPanel && sessionId && (
-              <motion.div
-                initial={{ x: 500 }}
-                animate={{ x: 0 }}
-                exit={{ x: 500 }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-              >
-                <SolaceDebugPanel
-                  sessionId={sessionId}
-                  onClose={() => setShowDebugPanel(false)}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
       );
@@ -1084,24 +1030,6 @@ export default function PresenterView() {
           </motion.div>
         </div>
       </motion.div>
-
-      {/* Sliding Debug Panel */}
-      <AnimatePresence>
-        {showDebugPanel && sessionId && (
-          <motion.div
-            initial={{ x: 500 }}
-            animate={{ x: 0 }}
-            exit={{ x: 500 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-          >
-            <SolaceDebugPanel
-              sessionId={sessionId}
-              onClose={() => setShowDebugPanel(false)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
       </div>
       );
@@ -1366,24 +1294,6 @@ export default function PresenterView() {
         )}
       </div>
     </motion.div>
-
-    {/* Sliding Debug Panel */}
-    <AnimatePresence>
-      {showDebugPanel && sessionId && (
-        <motion.div
-          initial={{ x: 500 }}
-          animate={{ x: 0 }}
-          exit={{ x: 500 }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="flex-shrink-0 h-full border-l border-millionaire-gold/30"
-        >
-          <SolaceDebugPanel
-            sessionId={sessionId}
-            onClose={() => setShowDebugPanel(false)}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
   </div>
 
       {/* Footer Credit Banner */}
