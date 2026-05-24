@@ -60,7 +60,7 @@ export default function SolaceStatusIndicator() {
 
       {/* Detailed Tooltip */}
       {showDetails && (
-        <div className="absolute top-full right-0 mt-3 w-72 bg-gradient-to-br from-millionaire-dark to-gray-900 border-2 border-millionaire-gold/60 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-50">
+        <div className="absolute top-full right-0 mt-3 w-[500px] bg-gradient-to-br from-millionaire-dark to-gray-900 border-2 border-millionaire-gold/60 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-50">
           {/* Header with gradient */}
           <div className="bg-gradient-to-r from-millionaire-gold/20 to-transparent px-4 py-3 border-b border-millionaire-gold/30">
             <div className="font-bold text-millionaire-gold flex items-center gap-2">
@@ -94,9 +94,9 @@ export default function SolaceStatusIndicator() {
               </span>
             </div>
             
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Broker</span>
-              <span className="text-gray-200 font-mono text-xs">{config?.url || 'Not configured'}</span>
+            <div className="space-y-1.5">
+              <span className="text-gray-400 block">Broker</span>
+              <span className="text-gray-200 font-mono text-xs block break-all bg-white/5 p-2 rounded">{config?.url || 'Not configured'}</span>
             </div>
             
             <div className="flex justify-between items-center">
