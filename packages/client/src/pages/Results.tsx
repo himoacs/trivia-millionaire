@@ -143,7 +143,7 @@ export default function Results() {
 
     // Create suggested post text
     const rankText = myRank === 1 ? '🥇 1st place!' : myRank === 2 ? '🥈 2nd place!' : myRank === 3 ? '🥉 3rd place!' : `Ranked #${myRank}`;
-    const postText = `Just played Trivia Millionaire and won ${formatMoney(myTotalMoney)}! ${rankText}
+    const postText = `Just played Trivia Millionaire and won ${formatMoney(myTotalMoney)} in bragging rights! ${rankText}
 
 🎯 ${accuracy}% accuracy (${myCorrectAnswers}/${myTotalAnswers} correct)
 🏆 Competed against ${totalPlayers} players
