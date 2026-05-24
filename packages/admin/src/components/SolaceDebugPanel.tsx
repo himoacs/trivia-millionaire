@@ -106,9 +106,8 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
     }
   }, [activeSunburstPattern, sessionId]);
 
-  // Resume scanning on mount if it was previously active OR auto-start in sunburst mode
+  // Auto-start in sunburst mode with saved or default pattern
   useEffect(() => {
-    const wasPreviouslyScanning = localStorage.getItem(`solace-sunburst-scanning-${sessionId}`) === 'true';
     const savedPattern = localStorage.getItem(`solace-sunburst-pattern-${sessionId}`);
     
     if (viewMode === 'sunburst' && connected && !sunburstData.isScanning) {
