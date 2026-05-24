@@ -40,7 +40,7 @@ export default function SolaceDebugPanel({ sessionId, onClose }: SolaceDebugPane
   const { connected, subscribe } = useSolace();
   
   // Sunburst data hook
-  const sunburstData = useSunburstData({ sessionId });
+  const sunburstData = useSunburstData({ sessionId, autoSubscribe: true });
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive

@@ -28,7 +28,7 @@ export default function SolaceSunburstPanel({ sessionId, onClose }: SolaceSunbur
     drillDown,
     drillUp,
     resetView,
-  } = useSunburstData({ sessionId });
+  } = useSunburstData({ sessionId, autoSubscribe: true });
   
   // Handle resizing
   useEffect(() => {
