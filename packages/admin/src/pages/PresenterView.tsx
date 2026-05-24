@@ -497,7 +497,7 @@ export default function PresenterView() {
         <div className="flex flex-1 overflow-hidden">
           <motion.div
             animate={{ 
-              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+              width: '100%' 
             }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="flex flex-col overflow-hidden"
@@ -592,7 +592,7 @@ export default function PresenterView() {
         <div className="flex flex-1 overflow-hidden">
           <motion.div
             animate={{ 
-              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+              width: '100%' 
             }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="flex flex-col overflow-hidden"
@@ -686,7 +686,7 @@ export default function PresenterView() {
           {/* Main Content Area - Slides left when debug panel opens */}
           <motion.div
             animate={{ 
-              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+              width: '100%' 
             }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="flex flex-col overflow-hidden"
@@ -878,7 +878,7 @@ export default function PresenterView() {
         <div className="flex flex-1 overflow-hidden">
           <motion.div
             animate={{ 
-              width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+              width: '100%' 
             }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="flex flex-col overflow-auto"
@@ -1102,7 +1102,7 @@ export default function PresenterView() {
       <div className="flex flex-1 overflow-hidden">
         <motion.div
           animate={{ 
-            width: showDebugPanel ? 'calc(100% - 500px)' : '100%' 
+            width: '100%' 
           }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className="flex flex-col overflow-hidden"
