@@ -492,6 +492,17 @@ export default function SessionView() {
                 <span>📡</span>
                 <span className="hidden md:inline">{showDebugPanel ? 'Hide' : 'Show'} Solace</span>
               </button>
+              {(sessionState === 'ACTIVE' || sessionState === 'PAUSED') && (
+                <button
+                  onClick={handleCloseSession}
+                  className="btn-danger btn-sm"
+                  title="End the game early and show final leaderboard"
+                  aria-label="End Game"
+                >
+                  <span>🛑</span>
+                  <span className="hidden md:inline">End Game</span>
+                </button>
+              )}
             </div>
           </div>
           
