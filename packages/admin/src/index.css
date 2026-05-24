@@ -77,9 +77,9 @@ code {
 
   /* Secondary: Outlined blue - important secondary actions */
   .btn-secondary {
-    @apply btn btn-md bg-millionaire-blue/20 hover:bg-millionaire-blue/30
-           text-millionaire-blue-light border border-millionaire-blue-light/70 hover:border-millionaire-blue-light
-           focus:ring-millionaire-blue/30;
+    @apply btn btn-md bg-blue-600/40 hover:bg-blue-600/50
+           text-blue-300 border-2 border-blue-400/90 hover:border-blue-300
+           focus:ring-blue-500/50 font-medium;
   }
 
   /* Tertiary: Outlined gold - tertiary actions */
