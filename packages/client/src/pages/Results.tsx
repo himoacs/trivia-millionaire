@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { toPng } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import axios from 'axios';
 import { getAvatarEmoji, formatMoney } from '@trivia-millionaire/shared';
 import { useSound } from '../utils/sound';
@@ -105,41 +105,66 @@ export default function Results() {
     }, 250);
   };
 
-  const handleDownloadScoreCard = async () => {
-    if (!scoreCardRef.current) return;
+  // iOS Safari ignores the `download` attribute on <a>, so a synthesised click
+  // navigates instead of saving. For those browsers we open the blob in a new
+  // tab and let the user long-press to save. The tab is reserved synchronously
+  // (inside the user gesture) before the async toBlob call to dodge popup
+  // blockers.
+  const isIosSafari = (() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent;
+    const isIos = /iP(ad|hone|od)/.test(ua);
+    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+    return isIos && isSafari;
+  })();
+
+  // Render the scorecard and either download it (desktop / Android Chrome) or
+  // open it in a new tab (iOS Safari). Returns true if the file was actually
+  // downloaded, false if the user has to save it manually from the new tab.
+  const downloadScoreCard = async (): Promise<boolean> => {
+    if (!scoreCardRef.current) return false;
+
+    // Pre-open the tab on iOS while we're still inside the user gesture.
+    const placeholder = isIosSafari ? window.open('', '_blank') : null;
 
     try {
-      const dataUrl = await toPng(scoreCardRef.current, {
+      const blob = await toBlob(scoreCardRef.current, {
         quality: 1.0,
         pixelRatio: 2,
       });
+      if (!blob) throw new Error('Empty blob');
 
-      const link = document.createElement('a');
-      link.download = `trivia-score-${nickname}-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
+      const url = URL.createObjectURL(blob);
+      const filename = `trivia-score-${nickname}-${Date.now()}.png`;
+
+      if (placeholder) {
+        placeholder.location.href = url;
+        // Revoke later so the new tab has time to load the image first.
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        return false;
+      }
+
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      return true;
     } catch (error) {
       console.error('Failed to download scorecard:', error);
+      placeholder?.close();
+      return false;
     }
   };
 
-  const handleShareLinkedIn = async () => {
-    // First download the scorecard automatically
-    if (scoreCardRef.current) {
-      try {
-        const dataUrl = await toPng(scoreCardRef.current, {
-          quality: 1.0,
-          pixelRatio: 2,
-        });
+  const handleDownloadScoreCard = async () => {
+    await downloadScoreCard();
+  };
 
-        const link = document.createElement('a');
-        link.download = `trivia-score-${nickname}-${Date.now()}.png`;
-        link.href = dataUrl;
-        link.click();
-      } catch (error) {
-        console.error('Failed to download scorecard:', error);
-      }
-    }
+  const handleShareLinkedIn = async () => {
+    const downloaded = await downloadScoreCard();
 
     // Create suggested post text
     const rankText = myRank === 1 ? '🥇 1st place!' : myRank === 2 ? '🥈 2nd place!' : myRank === 3 ? '🥉 3rd place!' : `Ranked #${myRank}`;
@@ -164,7 +189,10 @@ Built with @Solace for real-time event-driven gaming! Try it yourself 👇
     window.open(linkedInUrl, '_blank');
 
     // Show instructions
-    alert(`✅ Scorecard downloaded!\n✅ Post text copied to clipboard!\n\nOn LinkedIn:\n1. Click "Start a post"\n2. Paste the text (Cmd/Ctrl+V)\n3. Add your scorecard image\n4. Post! 🎉`);
+    const scoreCardLine = downloaded
+      ? '✅ Scorecard downloaded!'
+      : '✅ Scorecard opened in a new tab — long-press to save it!';
+    alert(`${scoreCardLine}\n✅ Post text copied to clipboard!\n\nOn LinkedIn:\n1. Click "Start a post"\n2. Paste the text (Cmd/Ctrl+V)\n3. Add your scorecard image\n4. Post! 🎉`);
   };
 
   const handlePlayAgain = () => {
