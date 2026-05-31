@@ -54,7 +54,8 @@ export default function SessionView() {
         // Check if player already exists
         const exists = prev.some(p => p.id === newPlayer.id);
         if (exists) return prev;
-        return [...prev, newPlayer];
+        // Prepend so the latest joiner stays visible at the top of the list.
+        return [newPlayer, ...prev];
       });
     });
 
@@ -629,9 +630,9 @@ export default function SessionView() {
                         exit={{ opacity: 0, x: 20 }}
                         className="flex items-center space-x-3 p-3 bg-millionaire-navy-dark/50 rounded-lg border border-millionaire-blue-dark/50"
                       >
-                        <div className="text-2xl">{getAvatarEmoji(player.avatar)}</div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-white">{player.nickname}</div>
+                        <div className="text-2xl flex-shrink-0">{getAvatarEmoji(player.avatar)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-white truncate">{player.nickname}</div>
                           <div className="text-sm text-gray-400">
                             Score: {player.score}
                           </div>
@@ -728,9 +729,9 @@ export default function SessionView() {
                         exit={{ opacity: 0, x: 20 }}
                         className="flex items-center space-x-3 p-3 bg-millionaire-navy-dark/50 rounded-lg border border-millionaire-blue-dark/50"
                       >
-                        <div className="text-2xl">{getAvatarEmoji(player.avatar)}</div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-white">{player.nickname}</div>
+                        <div className="text-2xl flex-shrink-0">{getAvatarEmoji(player.avatar)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-white truncate">{player.nickname}</div>
                           <div className="text-sm text-gray-400">
                             Score: {player.score}
                           </div>

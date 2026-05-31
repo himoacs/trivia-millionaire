@@ -132,7 +132,9 @@ export default function PresenterView() {
         const exists = prev.some(p => p.id === newPlayer.id);
         if (exists) return prev;
         play('player-join');
-        return [...prev, newPlayer];
+        // Prepend so the audience always sees the freshest joiner at the top
+        // of the column without the admin needing to scroll.
+        return [newPlayer, ...prev];
       });
       setTotalPlayers(prev => prev + 1);
     });
@@ -837,22 +839,22 @@ export default function PresenterView() {
                       </div>
                       
                       {/* Player List */}
-                      <div className="flex-1 overflow-y-auto space-y-2 max-h-[400px]">
+                      <div className="flex-1 overflow-y-auto space-y-2 max-h-[60vh]">
                         <AnimatePresence>
                           {players.length === 0 ? (
                             <p className="text-gray-400 text-center py-4">Waiting for players to join...</p>
                           ) : (
-                            players.map((player, index) => (
+                            players.map((player) => (
                               <motion.div
                                 key={player.id}
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                transition={{ delay: index * 0.05 }}
+                                transition={{ duration: 0.25 }}
                                 className="flex items-center gap-3 bg-millionaire-navy-dark/50 rounded-lg p-3 border border-millionaire-blue/30"
                               >
-                                <span className="text-2xl">{getAvatarEmoji(player.avatar)}</span>
-                                <span className="text-white font-medium">{player.nickname}</span>
+                                <span className="text-2xl flex-shrink-0">{getAvatarEmoji(player.avatar)}</span>
+                                <span className="text-white font-medium truncate min-w-0">{player.nickname}</span>
                               </motion.div>
                             ))
                           )}
