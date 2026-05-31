@@ -138,7 +138,33 @@ export default function Results() {
       const filename = `trivia-score-${nickname}-${Date.now()}.png`;
 
       if (placeholder) {
-        placeholder.location.href = url;
+        // Navigating Safari directly to a blob URL triggers the file preview
+        // / "Save to Files" path. Wrapping the image in a real HTML page makes
+        // long-press surface "Save to Photos" instead, which is what the user
+        // actually wants for a scorecard.
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Your Trivia Score</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html,body{margin:0;padding:0;background:#0D1B2A;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;}
+  main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-height:100vh;box-sizing:border-box;}
+  img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);display:block;}
+  p{margin:16px 8px 0;font-size:14px;opacity:0.85;text-align:center;line-height:1.4;}
+</style>
+</head>
+<body>
+<main>
+  <img src="${url}" alt="Trivia score">
+  <p>Long-press the image and choose <strong>Save to Photos</strong>.</p>
+</main>
+</body>
+</html>`;
+        placeholder.document.open();
+        placeholder.document.write(html);
+        placeholder.document.close();
         // Revoke later so the new tab has time to load the image first.
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
         return false;
