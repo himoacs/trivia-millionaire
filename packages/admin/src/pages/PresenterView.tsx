@@ -582,7 +582,7 @@ export default function PresenterView() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="absolute bottom-4 right-4 bg-white p-4 rounded-xl shadow-2xl"
+                className="absolute bottom-20 right-4 bg-white p-4 rounded-xl shadow-2xl z-50"
               >
                 <div className="text-center mb-2">
                   <p className="text-gray-800 font-bold text-sm">Scan to Join!</p>
@@ -1129,7 +1129,7 @@ export default function PresenterView() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-4 right-4 bg-white p-4 rounded-xl shadow-2xl z-20"
+            className="absolute bottom-20 right-4 bg-white p-4 rounded-xl shadow-2xl z-50"
           >
             <div className="text-center mb-2">
               <p className="text-gray-800 font-bold text-sm">Scan to Join!</p>
