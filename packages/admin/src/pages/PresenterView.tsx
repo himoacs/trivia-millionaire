@@ -184,6 +184,43 @@ export default function PresenterView() {
     return unsubscribe;
   }, [connected, sessionId, subscribe]);
 
+  // Refresh answer stats from the server when the tab returns to the
+  // foreground or the Solace connection re-establishes — same rationale as
+  // SessionView: closes the gap where stats/answersUpdated events were dropped
+  // while the WebSocket was down (common on mobile).
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const refresh = async () => {
+      if (!currentQuestion) return;
+      try {
+        const response = await axios.get(`${API_URL}/api/session/${sessionId}/answer-stats`);
+        if (response.data.success && response.data.data) {
+          const stats = response.data.data;
+          setAnsweredCount(stats.answeredCount ?? 0);
+          if (typeof stats.totalPlayers === 'number') {
+            setTotalPlayers(stats.totalPlayers);
+          }
+          if (stats.distribution) {
+            setAnswerDistribution(stats.distribution);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh answer stats:', error);
+      }
+    };
+
+    if (connected) {
+      refresh();
+    }
+
+    const handleVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [connected, sessionId, currentQuestion]);
+
   // Subscribe to admin show distribution event
   useEffect(() => {
     if (!connected || !sessionId) return;

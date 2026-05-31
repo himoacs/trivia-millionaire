@@ -99,6 +99,42 @@ export default function SessionView() {
     return unsubscribe;
   }, [connected, sessionId, subscribe]);
 
+  // Refresh answer stats from the server when the tab returns to the
+  // foreground or the Solace connection re-establishes. Closes the gap where
+  // stats/answersUpdated events were dropped while the WebSocket was down
+  // (common on mobile when the browser backgrounds the tab).
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const refresh = async () => {
+      if (currentQuestionIndex < 0) return;
+      try {
+        const response = await axios.get(`${API_URL}/api/session/${sessionId}/answer-stats`);
+        if (response.data.success && response.data.data) {
+          const stats = response.data.data;
+          setAnsweredCount(stats.answeredCount ?? 0);
+          setAllAnswered(stats.allAnswered ?? false);
+          if (stats.distribution) {
+            setAnswerCounts(stats.distribution);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh answer stats:', error);
+      }
+    };
+
+    // Fire once whenever connection recovers.
+    if (connected) {
+      refresh();
+    }
+
+    const handleVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [connected, sessionId, currentQuestionIndex]);
+
   // Load session data initially
   useEffect(() => {
     loadSessionData();
@@ -295,21 +331,18 @@ export default function SessionView() {
       alert('Failed to release next question.');
     }
   };
-  const handleShowResults = () => {
+  const handleShowResults = async () => {
     setShowAnswerDistribution(true);
-    
-    // Publish event to show distribution to all players (including Presenter view)
-    if (connected && sessionId) {
-      console.log('Publishing show distribution:', {
-        questionIndex: currentQuestionIndex,
-        distribution: answerCounts,
-        totalPlayers: players.length
-      });
-      publish(`trivia/session/${sessionId}/admin/showDistribution`, {
-        questionIndex: currentQuestionIndex,
-        distribution: answerCounts,
-        totalPlayers: players.length
-      });
+
+    // Server computes and publishes the authoritative distribution. Going
+    // through the server avoids broadcasting stale local state if this admin
+    // missed any stats/answersUpdated events (common on mobile when the tab
+    // backgrounds and the WebSocket drops).
+    if (!sessionId) return;
+    try {
+      await axios.post(`${API_URL}/api/admin/session/${sessionId}/show-distribution`);
+    } catch (error) {
+      console.error('Failed to show distribution:', error);
     }
   };
 

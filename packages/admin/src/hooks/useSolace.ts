@@ -16,6 +16,8 @@ interface SolaceMessage {
 
 type MessageCallback = (message: SolaceMessage) => void;
 
+const MAX_RECONNECT_DELAY_MS = 30_000;
+
 export function useSolace(config?: SolaceConfig) {
   const [connected, setConnected] = useState(false);
   const sessionRef = useRef<solace.Session | null>(null);
@@ -44,7 +46,6 @@ export function useSolace(config?: SolaceConfig) {
       }
     }
 
-    // Create session properties object
     const sessionProperties: any = {
       url: solaceConfig.url,
       vpnName: solaceConfig.vpnName,
@@ -52,73 +53,137 @@ export function useSolace(config?: SolaceConfig) {
       password: solaceConfig.password
     };
 
-    const session = solace.SolclientFactory.createSession(sessionProperties);
-    sessionRef.current = session;
+    let isUnmounted = false;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempt = 0;
 
-    // Set up event handlers
-    session.on(solace.SessionEventCode.UP_NOTICE, () => {
-      console.log('✅ [Admin] Connected to Solace broker');
-      setConnected(true);
-    });
+    const disposeSession = (session: solace.Session | null) => {
+      if (!session) return;
+      try { session.disconnect(); } catch { /* ignore */ }
+      try { session.dispose(); } catch { /* ignore */ }
+    };
 
-    session.on(solace.SessionEventCode.CONNECT_FAILED_ERROR, (error) => {
-      console.error('❌ [Admin] Connection failed:', error);
-      setConnected(false);
-    });
+    const scheduleReconnect = () => {
+      if (isUnmounted || reconnectTimeout) return;
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), MAX_RECONNECT_DELAY_MS);
+      reconnectAttempt += 1;
+      console.log(`🔄 [Admin] Reconnecting in ${delay}ms (attempt ${reconnectAttempt})`);
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        createAndConnect();
+      }, delay);
+    };
 
-    session.on(solace.SessionEventCode.DISCONNECTED, () => {
-      console.log('🔌 [Admin] Disconnected from Solace broker');
-      setConnected(false);
-    });
+    const createAndConnect = () => {
+      if (isUnmounted) return;
 
-    session.on(solace.SessionEventCode.SUBSCRIPTION_ERROR, (error) => {
-      console.error('⚠️ [Admin] Subscription error:', error);
-    });
+      // Clear stale session before creating a new one. Null out sessionRef first
+      // so that any DISCONNECTED event fired during teardown is ignored by
+      // the stale-handler check below.
+      const old = sessionRef.current;
+      sessionRef.current = null;
+      disposeSession(old);
 
-    session.on(solace.SessionEventCode.SUBSCRIPTION_OK, (event) => {
-      console.log('📥 [Admin] Subscription confirmed:', event.correlationKey);
-    });
-
-    session.on(solace.SessionEventCode.MESSAGE, (message: solace.Message) => {
-      const topic = message.getDestination()?.getName() || '';
-      const payloadText = message.getBinaryAttachment();
-      
+      let session: solace.Session;
       try {
-        let payload = {};
-        if (payloadText) {
-          const text = typeof payloadText === 'string' ? payloadText : new TextDecoder().decode(payloadText);
-          payload = JSON.parse(text);
-        }
-        const solaceMsg: SolaceMessage = {
-          topic,
-          payload,
-          timestamp: Date.now()
-        };
-
-        // Call all subscribers for this topic pattern
-        subscribersRef.current.forEach((callbacks, pattern) => {
-          if (topicMatches(topic, pattern)) {
-            callbacks.forEach(cb => cb(solaceMsg));
-          }
-        });
+        session = solace.SolclientFactory.createSession(sessionProperties);
       } catch (error) {
-        console.error('Error parsing message:', error);
+        console.error('Error creating Solace session:', error);
+        scheduleReconnect();
+        return;
       }
-    });
+      sessionRef.current = session;
 
-    // Connect
-    try {
-      session.connect();
-    } catch (error) {
-      console.error('Error connecting to Solace:', error);
-    }
+      session.on(solace.SessionEventCode.UP_NOTICE, () => {
+        if (sessionRef.current !== session) return;
+        console.log('✅ [Admin] Connected to Solace broker');
+        reconnectAttempt = 0;
+        setConnected(true);
+      });
 
-    // Cleanup
+      session.on(solace.SessionEventCode.CONNECT_FAILED_ERROR, (error) => {
+        if (sessionRef.current !== session) return;
+        console.error('❌ [Admin] Connection failed:', error);
+        setConnected(false);
+        scheduleReconnect();
+      });
+
+      session.on(solace.SessionEventCode.DISCONNECTED, () => {
+        if (sessionRef.current !== session) return;
+        console.log('🔌 [Admin] Disconnected from Solace broker');
+        setConnected(false);
+        scheduleReconnect();
+      });
+
+      session.on(solace.SessionEventCode.SUBSCRIPTION_ERROR, (error) => {
+        console.error('⚠️ [Admin] Subscription error:', error);
+      });
+
+      session.on(solace.SessionEventCode.SUBSCRIPTION_OK, (event) => {
+        console.log('📥 [Admin] Subscription confirmed:', event.correlationKey);
+      });
+
+      session.on(solace.SessionEventCode.MESSAGE, (message: solace.Message) => {
+        const topic = message.getDestination()?.getName() || '';
+        const payloadText = message.getBinaryAttachment();
+
+        try {
+          let payload = {};
+          if (payloadText) {
+            const text = typeof payloadText === 'string' ? payloadText : new TextDecoder().decode(payloadText);
+            payload = JSON.parse(text);
+          }
+          const solaceMsg: SolaceMessage = {
+            topic,
+            payload,
+            timestamp: Date.now()
+          };
+
+          subscribersRef.current.forEach((callbacks, pattern) => {
+            if (topicMatches(topic, pattern)) {
+              callbacks.forEach(cb => cb(solaceMsg));
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing message:', error);
+        }
+      });
+
+      try {
+        session.connect();
+      } catch (error) {
+        console.error('Error connecting to Solace:', error);
+        scheduleReconnect();
+      }
+    };
+
+    // Wake up immediately when the tab/app returns to the foreground — mobile
+    // browsers commonly close the WebSocket while backgrounded.
+    const handleVisibility = () => {
+      if (document.hidden || isUnmounted) return;
+      if (connectedRef.current) return;
+      if (reconnectTimeout !== null) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+      console.log('👁 [Admin] Page visible — reconnecting now');
+      reconnectAttempt = 0;
+      createAndConnect();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    createAndConnect();
+
     return () => {
-      if (session) {
-        session.disconnect();
-        sessionRef.current = null;
+      isUnmounted = true;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
       }
+      document.removeEventListener('visibilitychange', handleVisibility);
+      const sess = sessionRef.current;
+      sessionRef.current = null;
+      disposeSession(sess);
     };
   }, [solaceConfig.url, solaceConfig.vpnName, solaceConfig.username, solaceConfig.password]);
 
@@ -136,7 +201,7 @@ export function useSolace(config?: SolaceConfig) {
 
     try {
       const topic = solace.SolclientFactory.createTopicDestination(topicPattern);
-      
+
       // Subscribe to topic
       sessionRef.current.subscribe(
         topic,

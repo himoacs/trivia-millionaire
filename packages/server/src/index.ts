@@ -23,7 +23,8 @@ import type {
   RoundStartedMessage,
   RoundEndedMessage,
   ReconnectResponse,
-  Question
+  Question,
+  Session
 } from '@trivia-millionaire/shared';
 
 // Load environment variables from root .env file
@@ -52,6 +53,33 @@ const solaceConfig = {
 const solaceService = new SolaceService(solaceConfig);
 const sessionManager = new SessionManager();
 const aiGenerator = new AIQuestionGenerator();
+
+/**
+ * Compute current answer stats for a session's active question.
+ * Returns zeros if no question is active.
+ */
+function computeAnswerStats(session: Session) {
+  const distribution: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
+  let answeredCount = 0;
+
+  if (session.currentQuestionIndex >= 0 && session.currentQuestionStartTime) {
+    session.players.forEach(player => {
+      if (player.lastAnswerTime && player.lastAnswerTime >= session.currentQuestionStartTime!) {
+        answeredCount++;
+        if (player.lastAnswerChoice !== undefined && player.lastAnswerChoice >= 0 && player.lastAnswerChoice <= 3) {
+          distribution[player.lastAnswerChoice]++;
+        }
+      }
+    });
+  }
+
+  return {
+    totalPlayers: session.players.size,
+    answeredCount,
+    allAnswered: answeredCount >= session.players.size && session.players.size > 0,
+    distribution
+  };
+}
 
 // --- API Routes ---
 
@@ -512,6 +540,57 @@ app.post('/api/admin/session/:sessionId/release-question', (req: Request, res: R
 });
 
 /**
+ * Show answer distribution to all clients.
+ * Server is the source of truth: it computes the current distribution from
+ * session state and publishes it, so the chart is correct even if the admin's
+ * local Solace stream has missed updates (common on mobile).
+ */
+app.post('/api/admin/session/:sessionId/show-distribution', (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const session = sessionManager.getSession(sessionId);
+
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      } as ApiResponse);
+      return;
+    }
+
+    if (session.currentQuestionIndex < 0) {
+      res.status(400).json({
+        success: false,
+        error: 'No active question'
+      } as ApiResponse);
+      return;
+    }
+
+    const stats = computeAnswerStats(session);
+    const payload = {
+      questionIndex: session.currentQuestionIndex,
+      distribution: stats.distribution,
+      totalPlayers: stats.totalPlayers
+    };
+
+    solaceService.publish(
+      `trivia/session/${sessionId}/admin/showDistribution`,
+      payload
+    );
+
+    res.json({
+      success: true,
+      data: payload
+    } as ApiResponse);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to show distribution'
+    } as ApiResponse);
+  }
+});
+
+/**
  * Delete session permanently
  */
 app.delete('/api/admin/session/:sessionId', (req: Request, res: Response) => {
@@ -761,29 +840,9 @@ app.post('/api/session/:sessionId/answer', (req: Request, res: Response) => {
     // Publish answer stats update to Solace
     const session = sessionManager.getSession(sessionId);
     if (session && session.currentQuestionIndex >= 0) {
-      let answeredCount = 0;
-      const distribution: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
-      
-      session.players.forEach(player => {
-        if (player.lastAnswerTime && player.lastAnswerTime >= session.currentQuestionStartTime!) {
-          answeredCount++;
-          // Track the answer choice in distribution
-          if (player.lastAnswerChoice !== undefined && player.lastAnswerChoice >= 0 && player.lastAnswerChoice <= 3) {
-            distribution[player.lastAnswerChoice]++;
-          }
-        }
-      });
-
-      const answerStats = {
-        totalPlayers: session.players.size,
-        answeredCount,
-        allAnswered: answeredCount >= session.players.size && session.players.size > 0,
-        distribution
-      };
-
       solaceService.publish(
         `trivia/session/${sessionId}/stats/answersUpdated`,
-        answerStats
+        computeAnswerStats(session)
       );
     }
 
@@ -909,53 +968,9 @@ app.get('/api/session/:sessionId/answer-stats', (req: Request, res: Response) =>
       return;
     }
 
-    if (session.currentQuestionIndex < 0) {
-      res.json({
-        success: true,
-        data: {
-          totalPlayers: session.players.size,
-          answeredCount: 0,
-          allAnswered: false
-        }
-      } as ApiResponse);
-      return;
-    }
-
-    const currentQuestion = session.questions[session.currentQuestionIndex];
-    if (!currentQuestion) {
-      res.json({
-        success: true,
-        data: {
-          totalPlayers: session.players.size,
-          answeredCount: 0,
-          allAnswered: false
-        }
-      } as ApiResponse);
-      return;
-    }
-
-    // Count players who answered current question
-    let answeredCount = 0;
-    const answerDistribution: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
-
-    session.players.forEach(player => {
-      if (player.lastAnswerTime && player.lastAnswerTime >= session.currentQuestionStartTime!) {
-        answeredCount++;
-        // Track the answer choice in distribution
-        if (player.lastAnswerChoice !== undefined && player.lastAnswerChoice >= 0 && player.lastAnswerChoice <= 3) {
-          answerDistribution[player.lastAnswerChoice]++;
-        }
-      }
-    });
-
     res.json({
       success: true,
-      data: {
-        totalPlayers: session.players.size,
-        answeredCount,
-        allAnswered: answeredCount >= session.players.size && session.players.size > 0,
-        distribution: answerDistribution
-      }
+      data: computeAnswerStats(session)
     } as ApiResponse);
   } catch (error) {
     res.status(500).json({
