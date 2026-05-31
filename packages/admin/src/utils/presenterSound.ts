@@ -531,14 +531,25 @@ class PresenterSoundManager {
 export const presenterSoundManager = new PresenterSoundManager();
 
 /**
- * Hook for using presenter sounds in React components
+ * Hook for using presenter sounds in React components.
+ *
+ * The returned object MUST be referentially stable across renders — many
+ * effects in PresenterView put `play` / `startTicking` / `stopTicking` in
+ * their dep arrays, and re-creating the functions every render makes those
+ * effects re-run constantly. For Solace subscription effects that meant
+ * tearing down and re-establishing the broker subscription on every render,
+ * which raced with incoming `question/released` messages and dropped them.
+ *
+ * Bind once at module load using the singleton manager.
  */
+const stablePresenterSound = {
+  play: (sound: PresenterSoundType) => presenterSoundManager.play(sound),
+  startTicking: () => presenterSoundManager.startTicking(),
+  stopTicking: () => presenterSoundManager.stopTicking(),
+  setEnabled: (enabled: boolean) => presenterSoundManager.setEnabled(enabled),
+  isEnabled: () => presenterSoundManager.isEnabled(),
+};
+
 export function usePresenterSound() {
-  return {
-    play: (sound: PresenterSoundType) => presenterSoundManager.play(sound),
-    startTicking: () => presenterSoundManager.startTicking(),
-    stopTicking: () => presenterSoundManager.stopTicking(),
-    setEnabled: (enabled: boolean) => presenterSoundManager.setEnabled(enabled),
-    isEnabled: () => presenterSoundManager.isEnabled(),
-  };
+  return stablePresenterSound;
 }
