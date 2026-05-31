@@ -255,10 +255,12 @@ export default function Game() {
         correct: scoreUpdate.correct
       };
       
-      // Store this question's result as pending (will show on ladder when next question starts)
+      // Store this question's result as pending (will show on ladder when next question starts).
+      // Key the result by the round-relative ladder position so the MoneyLadder, which is
+      // also indexed round-relatively, lights up the right rung.
       if (currentQuestion) {
         pendingQuestionResult.current = {
-          questionNumber: currentQuestion.questionNumber,
+          questionNumber: currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber,
           correct: scoreUpdate.correct
         };
       }
@@ -1087,13 +1089,19 @@ export default function Game() {
         )}
 
         {/* Mobile Money Ladder - Condensed Horizontal */}
-        {currentQuestion && (
+        {currentQuestion && (() => {
+          // Use round-relative position when the game is split into rounds —
+          // currentQuestion.questionNumber is a global index, which makes the
+          // ladder/highlight wrong in any non-first round.
+          const ladderPosition = currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber;
+          const ladderTotal = currentQuestion.roundInfo?.totalQuestionsInRound ?? currentQuestion.totalQuestions;
+          return (
           <div className="xl:hidden mb-4">
             <div className="flex items-center justify-center gap-1 overflow-x-auto py-2 px-1">
-              {MONEY_LADDER.slice(0, currentQuestion.totalQuestions).map((level, index) => {
+              {MONEY_LADDER.slice(0, ladderTotal).map((level, index) => {
                 const levelNum = index + 1;
-                const isCurrent = levelNum === currentQuestion.questionNumber;
-                const isPassed = levelNum < currentQuestion.questionNumber;
+                const isCurrent = levelNum === ladderPosition;
+                const isPassed = levelNum < ladderPosition;
                 const isMilestone = level.milestone;
                 
                 return (
@@ -1117,7 +1125,8 @@ export default function Game() {
               })}
             </div>
           </div>
-        )}
+          );
+        })()}
 
       {/* Question */}
       <AnimatePresence mode="wait">
@@ -1130,18 +1139,24 @@ export default function Game() {
             className="flex-1 flex flex-col"
           >
             {/* Question Number & Money Value */}
+            {(() => {
+              const ladderPosition = currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber;
+              const ladderTotal = currentQuestion.roundInfo?.totalQuestionsInRound ?? currentQuestion.totalQuestions;
+              return (
             <div className="text-center text-white mb-6">
               <div className="text-sm md:text-base font-bold text-blue-300/90 mb-2 tracking-wide">
-                Question {currentQuestion.questionNumber} of {currentQuestion.totalQuestions}
+                Question {ladderPosition} of {ladderTotal}
               </div>
               <div className="text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text"
-                   style={{ 
+                   style={{
                      filter: 'drop-shadow(0 0 20px rgba(255,149,0,0.7))',
                      WebkitTextStroke: '1px rgba(255,149,0,0.2)'
                    }}>
-                {formatMoneyLadder(MONEY_LADDER[currentQuestion.questionNumber - 1]?.amount || 0)}
+                {formatMoneyLadder(MONEY_LADDER[ladderPosition - 1]?.amount || 0)}
               </div>
             </div>
+              );
+            })()}
 
             {/* Question Text - Premium WWTBAM Hexagonal Box with Gold Border */}
             <motion.div
@@ -1261,9 +1276,9 @@ export default function Game() {
       {/* Money Ladder - Right Side */}
       {currentQuestion && (
         <div className="hidden xl:block w-56 ml-6">
-          <MoneyLadder 
-            currentQuestion={currentQuestion.questionNumber} 
-            totalQuestions={currentQuestion.totalQuestions}
+          <MoneyLadder
+            currentQuestion={currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber}
+            totalQuestions={currentQuestion.roundInfo?.totalQuestionsInRound ?? currentQuestion.totalQuestions}
             questionResults={questionResults}
             className="sticky top-4"
           />

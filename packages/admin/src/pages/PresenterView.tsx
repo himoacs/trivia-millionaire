@@ -253,11 +253,14 @@ export default function PresenterView() {
       setShowDistribution(true);
       if (data && typeof data.correctIndex === 'number') {
         setRevealedCorrectIndex(data.correctIndex);
-        // Update question results for the ladder
+        // Update question results for the ladder. Key by the round-relative
+        // ladder position so the MoneyLadder (also round-relative) lights up
+        // the right rung in multi-round games.
         if (currentQuestion) {
+          const ladderKey = currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber;
           setQuestionResults(prev => ({
             ...prev,
-            [currentQuestion.questionNumber]: true
+            [ladderKey]: true
           }));
         }
         play('reveal-answer');
@@ -1223,18 +1226,24 @@ export default function PresenterView() {
                 className="flex-1 flex flex-col"
               >
                 {/* Question Number & Money Value */}
+                {(() => {
+                  const ladderPosition = currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber;
+                  const ladderTotal = currentQuestion.roundInfo?.totalQuestionsInRound ?? currentQuestion.totalQuestions;
+                  return (
                 <div className="text-center text-white mb-6">
                   <div className="text-sm md:text-base font-bold text-blue-300/90 mb-2 tracking-wide">
-                    Question {currentQuestion.questionNumber} of {currentQuestion.totalQuestions}
+                    Question {ladderPosition} of {ladderTotal}
                   </div>
                   <div className="text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-br from-orange-400 via-amber-400 to-orange-500 text-transparent bg-clip-text"
-                       style={{ 
+                       style={{
                          filter: 'drop-shadow(0 0 20px rgba(255,149,0,0.7))',
                          WebkitTextStroke: '1px rgba(255,149,0,0.2)'
                        }}>
-                    {formatMoney(MONEY_LADDER[currentQuestion.questionNumber - 1]?.amount || 0)}
+                    {formatMoney(MONEY_LADDER[ladderPosition - 1]?.amount || 0)}
                   </div>
                 </div>
+                  );
+                })()}
 
                 {/* Question Text Box */}
                 <motion.div
@@ -1321,9 +1330,9 @@ export default function PresenterView() {
         {/* Money Ladder - Right Side */}
         {currentQuestion && (
           <div className="hidden xl:block w-56 ml-6 pl-3">
-            <MoneyLadder 
-              currentQuestion={currentQuestion.questionNumber} 
-              totalQuestions={currentQuestion.totalQuestions}
+            <MoneyLadder
+              currentQuestion={currentQuestion.roundInfo?.questionInRound ?? currentQuestion.questionNumber}
+              totalQuestions={currentQuestion.roundInfo?.totalQuestionsInRound ?? currentQuestion.totalQuestions}
               questionResults={questionResults}
               className="sticky top-4"
             />

@@ -751,10 +751,19 @@ export class SessionManager {
       session.config.timeBonusMultiplier
     );
 
+    // Ladder index for money calculation is *round-relative* when a round is
+    // active. session.currentQuestionIndex is a global index into
+    // session.questions and may be >= MONEY_LADDER.length (15), which would
+    // silently return $0 even for correct answers.
+    const currentRound = this.getCurrentRound(sessionId);
+    const ladderIndex = currentRound
+      ? currentRound.questionIds.indexOf(question.id)
+      : session.currentQuestionIndex;
+
     // Calculate money earned with speed bonus (only for correct answers)
-    const moneyEarned = correct 
+    const moneyEarned = correct
       ? calculateMoneyWithSpeedBonus(
-          session.currentQuestionIndex,
+          ladderIndex,
           answer.timeTaken,
           question.timeLimit,
           1.5 // Max 50% speed bonus
@@ -771,7 +780,6 @@ export class SessionManager {
     }
 
     // Track round-specific scores
-    const currentRound = this.getCurrentRound(sessionId);
     if (currentRound) {
       if (!player.roundScores) player.roundScores = {};
       player.roundScores[currentRound.id] = (player.roundScores[currentRound.id] || 0) + moneyEarned;
