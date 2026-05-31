@@ -28,6 +28,8 @@ export default function Results() {
   const [myTotalAnswers, setMyTotalAnswers] = useState(0);
   const [myTotalMoney, setMyTotalMoney] = useState(0);
   const [totalPlayers, setTotalPlayers] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewOnCloseRef = useRef<(() => void) | null>(null);
   const scoreCardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -105,27 +107,24 @@ export default function Results() {
     }, 250);
   };
 
-  // iOS Safari ignores the `download` attribute on <a>, so a synthesised click
-  // navigates instead of saving. For those browsers we open the blob in a new
-  // tab and let the user long-press to save. The tab is reserved synchronously
-  // (inside the user gesture) before the async toBlob call to dodge popup
-  // blockers.
-  const isIosSafari = (() => {
+  // On iOS, web pages can't save an image directly to Photos — Safari treats
+  // <a download> as a file-preview navigation and pops open the Files app save
+  // sheet. The only reliable path to the camera roll is long-pressing an
+  // <img> rendered in a real DOM, so on iOS we show the rendered scorecard in
+  // an in-page modal and let the user long-press → Save to Photos. On other
+  // platforms we trigger a normal anchor download.
+  const isIos = (() => {
     if (typeof navigator === 'undefined') return false;
-    const ua = navigator.userAgent;
-    const isIos = /iP(ad|hone|od)/.test(ua);
-    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
-    return isIos && isSafari;
+    const ua = navigator.userAgent || '';
+    if (/iP(ad|hone|od)/.test(ua)) return true;
+    // iPadOS 13+ reports as desktop Mac. Disambiguate via touch points.
+    return (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints ?? 0) > 1);
   })();
 
-  // Render the scorecard and either download it (desktop / Android Chrome) or
-  // open it in a new tab (iOS Safari). Returns true if the file was actually
-  // downloaded, false if the user has to save it manually from the new tab.
-  const downloadScoreCard = async (): Promise<boolean> => {
+  // Returns true when a real file download fired (desktop / Android); false
+  // when we opened the in-page preview modal instead (iOS).
+  const downloadScoreCard = async (onModalDone?: () => void): Promise<boolean> => {
     if (!scoreCardRef.current) return false;
-
-    // Pre-open the tab on iOS while we're still inside the user gesture.
-    const placeholder = isIosSafari ? window.open('', '_blank') : null;
 
     try {
       const blob = await toBlob(scoreCardRef.current, {
@@ -135,44 +134,16 @@ export default function Results() {
       if (!blob) throw new Error('Empty blob');
 
       const url = URL.createObjectURL(blob);
-      const filename = `trivia-score-${nickname}-${Date.now()}.png`;
 
-      if (placeholder) {
-        // Navigating Safari directly to a blob URL triggers the file preview
-        // / "Save to Files" path. Wrapping the image in a real HTML page makes
-        // long-press surface "Save to Photos" instead, which is what the user
-        // actually wants for a scorecard.
-        const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Your Trivia Score</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  html,body{margin:0;padding:0;background:#0D1B2A;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;}
-  main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-height:100vh;box-sizing:border-box;}
-  img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);display:block;}
-  p{margin:16px 8px 0;font-size:14px;opacity:0.85;text-align:center;line-height:1.4;}
-</style>
-</head>
-<body>
-<main>
-  <img src="${url}" alt="Trivia score">
-  <p>Long-press the image and choose <strong>Save to Photos</strong>.</p>
-</main>
-</body>
-</html>`;
-        placeholder.document.open();
-        placeholder.document.write(html);
-        placeholder.document.close();
-        // Revoke later so the new tab has time to load the image first.
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      if (isIos) {
+        previewOnCloseRef.current = onModalDone ?? null;
+        setPreviewUrl(url);
         return false;
       }
 
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = filename;
+      anchor.download = `trivia-score-${nickname}-${Date.now()}.png`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -180,9 +151,18 @@ export default function Results() {
       return true;
     } catch (error) {
       console.error('Failed to download scorecard:', error);
-      placeholder?.close();
       return false;
     }
+  };
+
+  const closePreview = () => {
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    const cb = previewOnCloseRef.current;
+    previewOnCloseRef.current = null;
+    cb?.();
   };
 
   const handleDownloadScoreCard = async () => {
@@ -190,9 +170,7 @@ export default function Results() {
   };
 
   const handleShareLinkedIn = async () => {
-    const downloaded = await downloadScoreCard();
-
-    // Create suggested post text
+    // Suggested post text — copied to clipboard either way.
     const rankText = myRank === 1 ? '🥇 1st place!' : myRank === 2 ? '🥈 2nd place!' : myRank === 3 ? '🥉 3rd place!' : `Ranked #${myRank}`;
     const postText = `Just played Trivia Millionaire and won ${formatMoney(myTotalMoney)} in bragging rights! ${rankText}
 
@@ -203,21 +181,29 @@ Built with @Solace for real-time event-driven gaming! Try it yourself 👇
 
 #Trivia #Solace #EventDriven #RealTime`;
 
-    // Copy to clipboard
     try {
       await navigator.clipboard.writeText(postText);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
 
-    // Open LinkedIn - use the feed share URL for creating a new post
     const linkedInUrl = 'https://www.linkedin.com/feed/';
-    window.open(linkedInUrl, '_blank');
 
-    // Show instructions
+    if (isIos) {
+      // Defer LinkedIn open until after the user closes the preview modal —
+      // otherwise we'd send them off to LinkedIn before they had a chance to
+      // long-press and save the image.
+      await downloadScoreCard(() => {
+        window.open(linkedInUrl, '_blank');
+      });
+      return;
+    }
+
+    const downloaded = await downloadScoreCard();
+    window.open(linkedInUrl, '_blank');
     const scoreCardLine = downloaded
       ? '✅ Scorecard downloaded!'
-      : '✅ Scorecard opened in a new tab — long-press to save it!';
+      : '⚠️ Scorecard download failed — try the Download Score button.';
     alert(`${scoreCardLine}\n✅ Post text copied to clipboard!\n\nOn LinkedIn:\n1. Click "Start a post"\n2. Paste the text (Cmd/Ctrl+V)\n3. Add your scorecard image\n4. Post! 🎉`);
   };
 
@@ -453,9 +439,9 @@ Built with @Solace for real-time event-driven gaming! Try it yourself 👇
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1B2A]/95 backdrop-blur-sm border-t border-orange-500/30">
         <div className="px-6 py-3 flex items-center justify-end gap-2 text-[#2DD4BF] text-sm">
           <span>Created by Himanshu Gupta</span>
-          <a 
-            href="https://www.linkedin.com/in/guptahim/" 
-            target="_blank" 
+          <a
+            href="https://www.linkedin.com/in/guptahim/"
+            target="_blank"
             rel="noopener noreferrer"
             className="hover:opacity-80 transition-opacity"
           >
@@ -465,6 +451,32 @@ Built with @Solace for real-time event-driven gaming! Try it yourself 👇
           </a>
         </div>
       </div>
+
+      {/* iOS save-to-Photos modal. Long-pressing an <img> in the live DOM is
+          the only path on iOS that surfaces "Save to Photos" reliably; any
+          synthesised <a download> click drops the file into the Files app. */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <p className="text-white text-center mb-4 max-w-md text-base leading-snug">
+            Long-press the image and choose <strong className="text-amber-400">Save to Photos</strong>, then tap <strong>Done</strong>.
+          </p>
+          <img
+            src={previewUrl}
+            alt="Your trivia scorecard"
+            className="max-w-full max-h-[65vh] h-auto rounded-lg shadow-2xl"
+          />
+          <button
+            onClick={closePreview}
+            className="mt-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(255,149,0,0.5)]"
+          >
+            Done
+          </button>
+        </div>
+      )}
     </div>
   );
 }
